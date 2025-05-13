@@ -1,0 +1,66 @@
+/* src/assets/styles/base.css */
+@import './variables.css';
+:root {
+  --primary-mint: #5ECFBC;
+  --primary-purple: #8E77FF;
+  --background-white: #FFFFFF;
+  --text-black: #333333;
+  --text-gray: #666666;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family:'Marines', sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+  color: #333;
+}
+
+h1, h2, h3, h4, h5, h6, .font-bold {
+  font-weight: 700;
+}
+
+p, span, button, input, label {
+  font-weight: 400;
+}
+
+.font-regular {
+  font-weight: 400;
+}
+.font-semibold {
+  font-weight: 600;
+}
+.font-bold {
+  font-weight: 700;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: var(--primary-purple);
+  color: white;
+}
+
+.rounded-box {
+  border-radius: 16px;
+}
