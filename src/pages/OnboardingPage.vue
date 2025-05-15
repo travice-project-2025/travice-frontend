@@ -5,16 +5,17 @@
     <div class="content" ref="scrollContainer">
       <!-- 1) 첫 스냅: hero 단독 -->
       <div class="snap-unit">
-        <HeroSection :is-shrunk="false" :scale="1" />
+        <HeroSection :is-shrunk="false" :scale="1" class="first-landing"/>
       </div>
 
       <!-- 2) 두 번째 스냅: shrink된 hero + features -->
+
       <div class="snap-unit">
         <HeroSection :is-shrunk="isShrunk" :scale="scale" />
         <FeaturesSection />
       </div>
-
       <!-- 3+) 나머지 섹션들 -->
+       
       <OnboardingSection
         v-for="(sec, i) in sections"
         :key="i"
@@ -23,6 +24,7 @@
         :image-src="sec.image"
         :text-align="sec.align"
       />
+         
     </div>
   </div>
 </template>
@@ -40,6 +42,7 @@ import step3Image from '@/assets/images/airplane_img.png';
 import step4Image from '@/assets/images/jeju_img.png';
 
 export default {
+  name: 'OnboardingPage',
   components: { AppHeader, HeroSection, FeaturesSection, OnboardingSection },
   setup() {
     const isShrunk = ref(false);
@@ -48,14 +51,13 @@ export default {
 
     const onScroll = () => {
       const y = scrollContainer.value.scrollTop
-      // 0→300px 사이에만 1→0.7 스케일
+      //0→300px 사이에만 1→0.7 스케일
       scale.value = y < 100 ? 1
-                   : y < 300 ? 1 - ((y-100)/200)*0.3
-                   : 0.7
+                  : y < 300 ? 1 - ((y-100)/200)*0.3
+                  : 0.7
       isShrunk.value = y > 100
     };
 
-    // setup() 내부
     onMounted(() => {
         if (scrollContainer.value) {
         scrollContainer.value.addEventListener('scroll', onScroll)
@@ -66,6 +68,7 @@ export default {
         scrollContainer.value.removeEventListener('scroll', onScroll)
         }
     })
+
 
     const sections = [
       { title: '취향대로 검색하기', description: '내가 원하는 여행지를 세부 필터로 찾아보세요', image: step1Image, align: 'left' },
@@ -84,7 +87,7 @@ export default {
   height: calc(100vh - 60px);  /* 헤더(60px) 제외한 뷰포트 */
   overflow-y: auto;
   scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
+  /*scroll-behavior: smooth;*/
 }
 
 /* 한 화면에 Hero + Features 묶음 */
@@ -92,15 +95,28 @@ export default {
   scroll-snap-align: start;
   height: calc(100vh - 60px);
   /*overflow: hidden;          /* 축소된 뒤 나머지는 잘라서 안 보이게 */
-  overflow: visible;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 /* 축소된 HeroSection 아래에 피처 텍스트 뜨도록 */
+
 .below-hero {
   /* Hero가 (100vh-60px)*0.7 높이만차지하고 나머지 공간 남겨둡니다 */
   margin-top: calc( (100vh - 60px) - ((100vh - 60px) * 0.7) + 20px );
+  width: 100%;
 }
+
+.hero-unit {
+  position: relative;
+  height: calc(100vh - 60px);
+  overflow: hidden;
+}
+
+.first-landing {
+  
+}
+
 </style>

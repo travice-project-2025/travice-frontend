@@ -2,7 +2,9 @@
   <section
     class="hero-section"
     :class="{ scrolled: isShrunk }"
-    :style="{ transform: `scale(${scale})` }"
+    :style="{ transform: `scale(${scale})`,
+              transformOrigin: 'center bottom'
+            }"
   >
     <div class="container hero-container">
       <div class="hero-text">

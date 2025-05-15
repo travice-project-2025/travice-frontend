@@ -20,7 +20,6 @@ export default {
 <style scoped>
 .features-section {
   /* 헤더(60px) 제외한 뷰포트 전체 높이 */
-  min-height: calc(100vh - 60px);
   /* 기본 페이지 배경색과 동일하게 */
   background-color: white;
   /* 위아래 여백 */

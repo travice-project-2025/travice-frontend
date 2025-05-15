@@ -3,7 +3,9 @@
   <header :class="['header', { shrink: isShrunk }]">
     <div class="container header-container">
       <div class="logo">Travice</div>
-      <button class="btn btn-login">로그인</button>
+      <router-link to="/login" class="login-btn">
+        로그인
+      </router-link>
     </div>
   </header>
 </template>
@@ -50,7 +52,7 @@ export default {
   color: #333;
 }
 
-.btn-login {
+.login-btn {
   background-color: #F0F0FF;
   color: #333;
   padding: 8px 16px;
