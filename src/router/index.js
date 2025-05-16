@@ -2,7 +2,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import OnboardingPage from '../pages/OnboardingPage.vue'
 import LoginPage from '../pages/LoginPage.vue'
-import PlansPage from '../pages/PlansPage.vue' // 새로운 페이지 임포트
+import PlansPage from '../pages/PlansPage.vue'
+import Board from '../pages/Board.vue'
+import BoardDetailPage from '../pages/BoardDetailPage.vue'
+import PartnerRequestPage from '../pages/PartnerRequestPage.vue'
+import CreatePlanWizard from '../pages/CreatePlanWizard.vue'
 
 const routes = [
   {
@@ -22,7 +26,27 @@ const routes = [
     path: '/plans',
     name: 'Plans',
     component: PlansPage
-  }
+  },
+  {
+    path: '/create-plan',
+    name: 'CreatePlan',
+    component: CreatePlanWizard
+  },
+  {
+    path: '/board',
+    name: 'Board',
+    component: Board
+  },
+  {
+    path: '/boarddetail',
+    name: 'BoardDetail',
+    component: BoardDetailPage
+  },
+  {
+    path: '/partner',
+    name: 'PartnerRequest',
+    component: PartnerRequestPage
+  },
 ]
 
 const router = createRouter({
