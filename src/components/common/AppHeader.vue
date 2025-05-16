@@ -1,25 +1,38 @@
 <!-- src/components/common/AppHeader.vue -->
 <template>
   <header :class="['header', { shrink: isShrunk }]">
-    <div class="container header-container">
-      <div class="logo">Travice</div>
-      <router-link to="/login" class="login-btn">
-        로그인
-      </router-link>
+    <div class="logo">Travice</div>
+    <div class="header-right">
+      <div v-if="loggedIn" class="user-controls">
+        <span class="user-name">{{ userName }}님 </span>
+        <button @click="logout" class="login-btn">로그아웃</button>
+      </div>
+      <div v-else>
+        <button @click="goToLogin" class="login-btn">로그인</button>
+      </div>
     </div>
   </header>
 </template>
 
-<script>
-export default {
-  name: 'AppHeader',
-  props: {
-    isShrunk: {
-      type: Boolean,
-      default: false
-    }
+<script setup>
+import { onMounted } from 'vue'
+import { useAuth } from '@/composables/userAuth'
+
+// Props 정의
+defineProps({
+  isShrunk: {
+    type: Boolean,
+    default: false
   }
-}
+})
+
+// 인증 컴포저블 사용
+const { loggedIn, userName, checkLoginStatus, logout, goToLogin } = useAuth()
+
+// 컴포넌트가 마운트될 때 로그인 상태 확인
+onMounted(() => {
+  checkLoginStatus()
+})
 </script>
 
 <style scoped>
@@ -30,7 +43,9 @@ export default {
   width: 100%;
   height: 60px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  padding: 0 20px;
   z-index: 100;
   background-color: #F9FAFC;
   transition: box-shadow 0.3s ease;
@@ -40,10 +55,18 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.header-container {
+.header-right {
+  margin-left: auto;
+}
+
+.user-controls {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
+}
+
+.user-name {
+  margin-right: 10px;
 }
 
 .logo {
