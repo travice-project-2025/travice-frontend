@@ -15,13 +15,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import Cookies from 'js-cookie'
-
-const router = useRouter()
-const loggedIn = ref(false)
-const userName = ref('')
+import { onMounted } from 'vue'
+import { useAuth } from '@/composables/userAuth'
 
 // Props 정의
 defineProps({
@@ -31,52 +26,8 @@ defineProps({
   }
 })
 
-// 로그인 페이지로 이동
-const goToLogin = () => {
-  router.push('/login')
-}
-
-// 로그인 상태 확인 함수
-const checkLoginStatus = async () => {
-  const hasToken = !!Cookies.get('JWT-TOKEN');
-  loggedIn.value = hasToken;
-  
-  if (hasToken) {
-    await fetchUserName();
-  } else {
-    userName.value = '';
-  }
-}
-
-// 서버에서 사용자 정보 가져오기
-const fetchUserName = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/auth/info', {
-      credentials: 'include' // 쿠키 포함
-    });
-    
-    if (response.ok) {
-      const userData = await response.json();
-      userName.value = userData.name;
-    } else {
-      // 인증 실패 처리
-      loggedIn.value = false;
-      userName.value = '';
-    }
-  } catch (error) {
-    console.error('사용자 정보 요청 오류:', error);
-    loggedIn.value = false;
-    userName.value = '';
-  }
-}
-
-// 로그아웃 처리
-const logout = () => {
-  Cookies.remove('JWT-TOKEN');
-  loggedIn.value = false;
-  userName.value = '';
-  router.push('/');
-}
+// 인증 컴포저블 사용
+const { loggedIn, userName, checkLoginStatus, logout, goToLogin } = useAuth()
 
 // 컴포넌트가 마운트될 때 로그인 상태 확인
 onMounted(() => {

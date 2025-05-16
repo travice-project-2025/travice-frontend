@@ -64,10 +64,13 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/common/AppHeader.vue';
+import { useAuth } from '@/composables/userAuth';
+
+// 인증 관련 컴포저블
+const { userName, requireAuth } = useAuth();
 
 // 반응형 상태 정의
 const isScrolled = ref(false);
-const userName = ref(); // 기본값 설정
 const isLoading = ref(true);
 const hasPlans = ref(false);
 
@@ -114,30 +117,6 @@ const viewPlanDetails = (planId) => {
   router.push(`/plan/${planId}`); // 상세보기 페이지로 이동
 };
 
-
-// 서버에서 사용자 정보 가져오기
-const fetchUserName = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/api/auth/info', {
-      credentials: 'include' // 쿠키 포함
-    });
-    
-    if (response.ok) {
-      const userData = await response.json();
-      userName.value = userData.name;
-    } else {
-      // 인증 실패 처리
-      loggedIn.value = false;
-      userName.value = '';
-    }
-  } catch (error) {
-    console.error('사용자 정보 요청 오류:', error);
-    loggedIn.value = false;
-    userName.value = '';
-  }
-}
-
-
 // 여행 계획 데이터 가져오기 (API 연결 시 구현)
 const fetchPlans = async () => {
   // 실제 구현 시 API 호출로 대체
@@ -154,11 +133,12 @@ const fetchPlans = async () => {
 };
 
 // 컴포넌트 마운트 시 이벤트 리스너 등록 및 데이터 로드
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('scroll', handleScroll);
   
-  // 실제 API 연동 시 아래 함수 사용
-  // checkLoginStatus(); 
+  // 인증 상태 확인 (로그인이 필요한 페이지)
+  const isAuthenticated = await requireAuth();
+  if (!isAuthenticated) return; // 인증되지 않았으면 requireAuth 내부에서 리다이렉트
   
   // 데모용 코드 (API 연동 전)
   setTimeout(() => {
@@ -175,15 +155,14 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .plans-page {
+  padding-top: 60px;
   min-height: 100vh;
-  background-color: var(--background-white, #fff);
 }
 
 .main-content {
-  padding-top: 100px; /* 헤더 높이 + 여백 */
-  min-height: calc(100vh - 60px);
-  display: flex;
-  flex-direction: column;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
 }
 
 .welcome-section {
@@ -193,61 +172,54 @@ onBeforeUnmount(() => {
 
 .welcome-title {
   font-size: 28px;
-  font-weight: 700;
-  color: var(--text-black, #333);
   margin-bottom: 8px;
 }
 
 .highlight {
-  color: var(--primary-purple, #8E77FF);
+  color: #4a6ee0;
 }
 
 .welcome-subtitle {
   font-size: 16px;
-  color: var(--text-gray, #666);
+  color: #666;
 }
 
-/* 여행 계획이 없을 때 (중앙 배치된 새 여행 추가 블록) */
+/* 여행 계획이 없을 때 */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-grow: 1;
-  padding: 40px 0;
+  margin-top: 80px;
 }
 
 .empty-card {
-  width: 220px;
-  height: 220px;
-  background-color: var(--primary-purple, #8E77FF);
-  border-radius: 20px;
+  width: 180px;
+  height: 180px;
+  background-color: #4a6ee0;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 20px rgba(142, 119, 255, 0.2);
+  margin-bottom: 20px;
+  transition: transform 0.3s ease;
 }
 
 .empty-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(142, 119, 255, 0.3);
+  transform: scale(1.05);
 }
 
 .create-text {
   color: white;
   font-size: 18px;
-  font-weight: 500;
+  margin-top: 12px;
 }
 
 .empty-text {
-  margin-top: 24px;
   font-size: 16px;
-  color: var(--text-gray, #666);
-  animation: fadeIn 0.8s ease-in-out;
+  color: #666;
 }
 
 /* 로딩 상태 */
@@ -256,46 +228,48 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex-grow: 1;
-  padding: 40px 0;
+  margin-top: 100px;
 }
 
 .loading-spinner {
   width: 40px;
   height: 40px;
-  margin-bottom: 16px;
-  border: 3px solid rgba(142, 119, 255, 0.2);
-  border-top: 3px solid var(--primary-purple, #8E77FF);
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4a6ee0;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  margin-bottom: 20px;
 }
 
-/* 여행 계획 그리드 (한 줄에 4개씩) */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 여행 계획 그리드 */
 .plans-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
-  padding: 20px 0;
 }
 
 .plan-card {
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
-  background-color: #F9F7FF;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-color: white;
 }
 
 .plan-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
 
 .plan-image {
   height: 160px;
   overflow: hidden;
-  background-color: #EEEAF9;
 }
 
 .plan-image img {
@@ -310,93 +284,38 @@ onBeforeUnmount(() => {
 
 .plan-info h3 {
   font-size: 18px;
-  font-weight: 600;
   margin-bottom: 8px;
-  color: var(--text-black, #333);
 }
 
 .plan-date {
   font-size: 14px;
-  color: var(--text-gray, #666);
+  color: #666;
 }
 
-/* 새 여행 추가 카드 (계획이 있을 때) */
+/* 새 여행 추가 카드 */
 .add-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: rgba(142, 119, 255, 0.1);
-  border: 2px dashed var(--primary-purple, #8E77FF);
-  padding: 40px 20px;
-  text-align: center;
-  height: 100%;
-  min-height: 250px;
+  background-color: #f5f7ff;
+  height: 236px; /* 여행 계획 카드와 동일한 높이 */
+  border: 2px dashed #d0d8ff;
 }
 
 .add-icon {
+  background-color: #4a6ee0;
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: var(--primary-purple, #8E77FF);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .add-text {
   font-size: 16px;
-  font-weight: 500;
-  color: var(--primary-purple, #8E77FF);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* 반응형 스타일 */
-@media (max-width: 1200px) {
-  .plans-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 992px) {
-  .plans-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .welcome-title {
-    font-size: 24px;
-  }
-  
-  .empty-card {
-    width: 180px;
-    height: 180px;
-  }
-}
-
-@media (max-width: 576px) {
-  .plans-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .welcome-title {
-    font-size: 22px;
-  }
-  
-  .empty-card {
-    width: 160px;
-    height: 160px;
-  }
+  color: #666;
 }
 </style>
