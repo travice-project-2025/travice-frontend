@@ -22,6 +22,44 @@ function handleSocialLogin(provider) {
   // 예: router.push('/')
 }
 
+
+
+// LoginPage.vue 또는 로그인 처리 컴포넌트에서
+
+const handleLogin = async () => {
+  try {
+    // 로그인 API 호출
+    const response = await fetch('http://localhost:8080/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value
+      }),
+      credentials: 'include'
+    });
+    
+    if (response.ok) {
+      // 로그인 성공 시 PlansPage로 리다이렉트
+      router.push({ name: 'Plans' });
+    } else {
+      // 로그인 실패 시 에러 메시지 표시 후 Onboarding 페이지 유지
+      // (현재 페이지가 Login이라면 Onboarding으로 이동)
+      if (router.currentRoute.value.name === 'Login') {
+        router.push({ name: 'Onboarding' });
+      }
+    }
+  } catch (error) {
+    console.error('로그인 오류:', error);
+    // 오류 발생 시에도 Onboarding 페이지로 이동
+    if (router.currentRoute.value.name === 'Login') {
+      router.push({ name: 'Onboarding' });
+    }
+  }
+};
+
 </script>
 
 <style scoped>
