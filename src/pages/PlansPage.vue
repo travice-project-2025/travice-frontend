@@ -81,21 +81,21 @@ const plans = ref([
     title: '강릉 2025 2월 1-3',
     startDate: '2025-02-01',
     endDate: '2025-02-03',
-    imageUrl: '/images/gangneung.jpg' // 실제 이미지 경로로 대체
+    imageUrl: 'https://img1.daumcdn.net/thumb/R1280x0.fjpg/?fname=http://t1.daumcdn.net/brunch/service/user/atiO/image/eVh-qzkzAtEi5dVsK6jrZQvzKsA.jpg' // 실제 이미지 경로로 대체
   },
   {
     id: 2,
     title: '제주 2025 5월 11-13',
     startDate: '2025-05-11',
     endDate: '2025-05-13',
-    imageUrl: '/images/jeju.jpg' // 실제 이미지 경로로 대체
+    imageUrl: 'https://media.istockphoto.com/id/579410588/ko/%EC%82%AC%EC%A7%84/%EC%A0%9C%EC%A3%BC%EB%A5%BC-%EB%8F%84%EC%84%9C%EC%A7%80%EC%97%AD.jpg?s=612x612&w=0&k=20&c=jU4K8EmzuBGjw8B3eEN03znT6I533DGPAgohBjC6GzE=' // 실제 이미지 경로로 대체
   },
   {
     id: 3,
     title: '부산 2025 7월 21-25',
     startDate: '2025-07-21',
     endDate: '2025-07-25',
-    imageUrl: '/images/busan.jpg' // 실제 이미지 경로로 대체
+    imageUrl: 'https://www.visitbusan.net/uploadImgs/files/hqimgfiles/20200326112404471_thumbL' // 실제 이미지 경로로 대체
   }
 ]);
 

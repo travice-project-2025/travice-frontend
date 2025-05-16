@@ -5,6 +5,7 @@
     <div class="header-right">
       <div v-if="loggedIn" class="user-controls">
         <span class="user-name">{{ userName }}님 </span>
+        <button @click="goToProfile" class="profile-btn">내 정보</button>
         <button @click="logout" class="login-btn">로그아웃</button>
       </div>
       <div v-else>
@@ -16,6 +17,7 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/userAuth'
 
 // Props 정의
@@ -26,8 +28,15 @@ defineProps({
   }
 })
 
+const router = useRouter()
+
 // 인증 컴포저블 사용
 const { loggedIn, userName, checkLoginStatus, logout, goToLogin } = useAuth()
+
+// 프로필 페이지로 이동
+const goToProfile = () => {
+  router.push('/profile')
+}
 
 // 컴포넌트가 마운트될 때 로그인 상태 확인
 onMounted(() => {
@@ -75,7 +84,7 @@ onMounted(() => {
   color: #333;
 }
 
-.login-btn {
+.login-btn, .profile-btn {
   background-color: #F0F0FF;
   color: #333;
   padding: 8px 16px;
@@ -84,5 +93,9 @@ onMounted(() => {
   font-weight: 500;
   cursor: pointer;
   border: none;
+}
+
+.profile-btn {
+  background-color: #E6F0FF;
 }
 </style>
