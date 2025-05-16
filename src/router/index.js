@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import OnboardingPage from '../pages/OnboardingPage.vue'
 import LoginPage from '../pages/LoginPage.vue'
 import PlansPage from '../pages/PlansPage.vue' // 새로운 페이지 임포트
-import ProfilePage from '../pages/ProfilePage.vue'
 
 const routes = [
   {
@@ -23,11 +22,6 @@ const routes = [
     path: '/plans',
     name: 'Plans',
     component: PlansPage
-  },
-   {
-    path: '/profile',
-    name: 'profile',
-    component: ProfilePage
   }
 ]
 
