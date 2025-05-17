@@ -99,7 +99,6 @@
               @click="tripData.purpose = purpose.code"
             >
               <div class="purpose-content">
-                <div class="purpose-code">{{ purpose.code }}</div>
                 <div class="purpose-label">{{ purpose.label }}</div>
               </div>
             </div>
@@ -352,8 +351,6 @@ import { useRouter } from "vue-router";
 import AppHeader from "@/components/common/AppHeader.vue";
 import { DatePicker } from "v-calendar";
 
-
-
 // 라우터 설정
 const router = useRouter();
 
@@ -366,8 +363,8 @@ const today = new Date();
 
 // 날짜 형식 마스크 추가
 const masks = {
-  input: 'YYYY년 MM월 DD일',
-  title: 'YYYY년 MM월'
+  input: "YYYY년 MM월 DD일",
+  title: "YYYY년 MM월",
 };
 
 // 여행 정보 데이터
@@ -387,24 +384,26 @@ const tripDuration = ref(0);
 const calculateDuration = () => {
   if (tripData.value.startDate && tripData.value.endDate) {
     // Date 객체 처리
-    const start = tripData.value.startDate instanceof Date 
-      ? tripData.value.startDate 
-      : new Date(tripData.value.startDate);
-      
-    const end = tripData.value.endDate instanceof Date 
-      ? tripData.value.endDate 
-      : new Date(tripData.value.endDate);
-      
+    const start =
+      tripData.value.startDate instanceof Date
+        ? tripData.value.startDate
+        : new Date(tripData.value.startDate);
+
+    const end =
+      tripData.value.endDate instanceof Date
+        ? tripData.value.endDate
+        : new Date(tripData.value.endDate);
+
     const difference = end - start;
     tripDuration.value = Math.round(difference / (1000 * 60 * 60 * 24)) + 1; // 당일도 1일로 계산
   }
 };
 
 // 지역 검색
-const regionSearch = ref('');
+const regionSearch = ref("");
 const filteredRegions = computed(() => {
   if (!regionSearch.value) return regions;
-  return regions.filter(region => 
+  return regions.filter((region) =>
     region.name.toLowerCase().includes(regionSearch.value.toLowerCase())
   );
 });
@@ -498,12 +497,34 @@ const submitTripData = () => {
   }, 5000);
 };
 
-// 날짜 포맷팅 (YYYY-MM-DD -> YYYY년 MM월 DD일)
-const formatDate = (dateString) => {
-  if (!dateString) return "";
-
-  const [year, month, day] = dateString.split("-");
-  return `${year}년 ${month}월 ${day}일`;
+// 날짜 포맷팅 함수 - 완전히 새로 작성
+const formatDate = (dateInput) => {
+  if (!dateInput) return "";
+  
+  try {
+    // Date 객체인 경우
+    if (dateInput instanceof Date) {
+      const year = dateInput.getFullYear();
+      const month = String(dateInput.getMonth() + 1).padStart(2, '0');
+      const day = String(dateInput.getDate()).padStart(2, '0');
+      return `${year}년 ${month}월 ${day}일`;
+    }
+    
+    // 문자열인 경우
+    if (typeof dateInput === 'string') {
+      const parts = dateInput.split("-");
+      if (parts.length === 3) {
+        const [year, month, day] = parts;
+        return `${year}년 ${month}월 ${day}일`;
+      }
+    }
+    
+    // 다른 모든 경우, 그대로 반환
+    return String(dateInput);
+  } catch (error) {
+    console.error("날짜 포맷팅 오류:", error);
+    return String(dateInput);
+  }
 };
 
 // 여행 목적 라벨 가져오기
@@ -568,9 +589,14 @@ const transportations = [
     icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16.5H17C19.2091 16.5 21 14.7091 21 12.5V12.5C21 10.2909 19.2091 8.5 17 8.5H7C4.79086 8.5 3 10.2909 3 12.5V12.5C3 14.7091 4.79086 16.5 7 16.5Z" /><path d="M5.5 16.5V19.5" /><path d="M18.5 16.5V19.5" /><path d="M6 11H8" /><path d="M16 11H18" /><path d="M3 13.5H21" /></svg>',
   },
   {
-    id: "public",
-    label: "대중교통",
-    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 18H17C18.6569 18 20 16.6569 20 15V7C20 5.34315 18.6569 4 17 4H7C5.34315 4 4 5.34315 4 7V15C4 16.6569 5.34315 18 7 18Z" /><path d="M5 11H19" /><path d="M8 21L8 18" /><path d="M16 21L16 18" /><path d="M7 8H9" /><path d="M15 8H17" /><path d="M7 14.5C7 15.0523 7.44772 15.5 8 15.5H9C9.55228 15.5 10 15.0523 10 14.5V14.5C10 13.9477 9.55228 13.5 9 13.5H8C7.44772 13.5 7 13.9477 7 14.5V14.5Z" /><path d="M14 14.5C14 15.0523 14.4477 15.5 15 15.5H16C16.5523 15.5 17 15.0523 17 14.5V14.5C17 13.9477 16.5523 13.5 16 13.5H15C14.4477 13.5 14 13.9477 14 14.5V14.5Z" /></svg>',
+    id: "subway",
+    label: "지하철",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path><path d="M8 10h8"></path><path d="M8 16h8"></path><path d="M9 22h6"></path><circle cx="6.5" cy="13.5" r="1.5"></circle><circle cx="17.5" cy="13.5" r="1.5"></circle></svg>',
+  },
+  {
+    id: "bus",
+    label: "버스",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8a4 4 0 0 1 4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a4 4 0 0 1 4-4z"></path><line x1="4" y1="10" x2="20" y2="10"></line><line x1="7" y1="15" x2="7" y2="15"></line><line x1="17" y1="15" x2="17" y2="15"></line><line x1="8" y1="19" x2="8" y2="22"></line><line x1="16" y1="19" x2="16" y2="22"></line></svg>',
   },
   {
     id: "walk",
@@ -586,6 +612,16 @@ const transportations = [
     id: "taxi",
     label: "택시",
     icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 17H18C19.1046 17 20 16.1046 20 15V12C20 10.8954 19.1046 10 18 10H6C4.89543 10 4 10.8954 4 12V15C4 16.1046 4.89543 17 6 17Z" /><rect x="7" y="17" width="2" height="2" /><rect x="15" y="17" width="2" height="2" /><path d="M14.8 7L16.8 10H7.2L9.2 7H14.8Z" /><path d="M5 14H19" /><path d="M6.2 14L6.8 12" /><path d="M17.8 14L17.2 12" /></svg>',
+  },
+  {
+    id: "train",
+    label: "기차/KTX",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15.5h16c.8 0 1.5-.7 1.5-1.5V6c0-.8-.7-1.5-1.5-1.5H4c-.8 0-1.5.7-1.5 1.5v8c0 .8.7 1.5 1.5 1.5z"></path><path d="M16 20v-4"></path><path d="M8 20v-4"></path><path d="M5 10h14"></path><path d="M8 20h8"></path><circle cx="7.5" cy="7.5" r="1"></circle><circle cx="16.5" cy="7.5" r="1"></circle></svg>',
+  },
+  {
+    id: "plane",
+    label: "항공",
+    icon: '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12H8l4-8H8l-4 8H2" /><path d="M22 12H8l4 8H8l-4-8H2" /></svg>',
   },
 ];
 
@@ -607,21 +643,40 @@ onMounted(() => {
 });
 </script>
 
+<style>
+@font-face {
+  font-family: "Marines";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/2502-1@1.0/MarinesBold.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Marines";
+  src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/2502-1@1.0/MarinesBold.woff2")
+    format("woff2");
+  font-weight: 700;
+  font-style: normal;
+}
+</style>
+
 <style scoped>
 .wizard-container {
   min-height: 100vh;
-  padding-top: 60px;
+  padding-top: 40px;
   padding-bottom: 80px;
   background-color: #fbfaff;
-  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, system-ui,
-    Roboto, "Helvetica Neue", "Segoe UI", sans-serif;
+  font-family: "Marines", "Pretendard", -apple-system, BlinkMacSystemFont,
+    system-ui, Roboto, "Helvetica Neue", "Segoe UI", sans-serif;
+  font-weight: 400;
 }
 
 /* 진행 표시 바 */
 .wizard-progress {
   width: 90%;
   max-width: 600px;
-  margin: 40px auto 30px;
+  margin: 10px auto 30px;
 }
 
 .progress-bar {
@@ -656,7 +711,8 @@ onMounted(() => {
   color: #9895a7;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-weight: 600;
+  font-family: "Marines", "Pretendard", sans-serif;
+  font-weight: 700;
 }
 
 .step-indicator.active {
@@ -687,6 +743,7 @@ onMounted(() => {
   margin-bottom: 32px;
   text-align: center;
   color: #2c3e50;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .step-description {
@@ -694,6 +751,8 @@ onMounted(() => {
   color: #667080;
   margin-bottom: 24px;
   font-size: 15px;
+  font-family: "Marines", "Pretendard", sans-serif;
+  font-weight: 400;
 }
 
 /* 단계 전환 애니메이션 */
@@ -730,6 +789,7 @@ onMounted(() => {
   margin-bottom: 8px;
   font-weight: 500;
   color: #4b5563;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .date-input {
@@ -740,6 +800,8 @@ onMounted(() => {
   width: 100%;
   min-width: 150px;
   transition: all 0.2s;
+  font-family: "Marines", "Pretendard", sans-serif;
+  font-weight: 400;
 }
 
 .date-input:focus {
@@ -756,13 +818,15 @@ onMounted(() => {
   background-color: #f7f2ff;
   padding: 14px;
   border-radius: 12px;
-  font-weight: 500;
+  font-family: "Marines", "Pretendard", sans-serif;
+  font-weight: 400;
 }
 
 .duration-highlight {
   font-weight: 700;
   color: #8e6ad9;
   font-size: 22px;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 /* 2단계: 인원 수 및 여행 목적 */
@@ -777,6 +841,7 @@ onMounted(() => {
   font-weight: 500;
   color: #4b5563;
   font-size: 16px;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .people-dropdown {
@@ -793,6 +858,8 @@ onMounted(() => {
   background-position: right 16px center;
   padding-right: 40px;
   cursor: pointer;
+  font-family: "Marines", "Pretendard", sans-serif;
+  font-weight: 400;
 }
 
 .people-dropdown:focus {
@@ -807,6 +874,7 @@ onMounted(() => {
   color: #2c3e50;
   text-align: center;
   font-weight: 600;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .trip-purpose-grid {
@@ -841,18 +909,19 @@ onMounted(() => {
 
 .purpose-content {
   text-align: center;
-}
-
-.purpose-code {
-  font-weight: 600;
-  margin-bottom: 6px;
-  font-size: 16px;
-  color: #2c3e50;
+  padding: 10px;
 }
 
 .purpose-label {
-  font-size: 14px;
-  color: #667080;
+  font-size: 16px;
+  font-weight: 500;
+  color: #2c3e50;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.trip-purpose-card {
+  height: 100px; /* 높이를 약간 줄여도 될 수 있음 */
+  /* 나머지 스타일은 그대로 유지 */
 }
 
 /* 3단계: 지역 선택 */
@@ -893,6 +962,7 @@ onMounted(() => {
   transition: all 0.25s ease;
   border: 2px solid transparent;
   font-weight: 500;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .region-card:hover {
@@ -956,6 +1026,7 @@ onMounted(() => {
   font-weight: 500;
   color: #2c3e50;
   text-align: center;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 /* 5단계: 여행 컨셉 */
@@ -1002,6 +1073,8 @@ onMounted(() => {
 .concept-label {
   font-size: 14px;
   color: #667080;
+  font-family: "Marines", "Pretendard", sans-serif;
+  font-weight: 700;
 }
 
 /* 6단계: MBTI 선택 */
@@ -1034,6 +1107,8 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.25s ease;
   margin-bottom: 10px;
+  font-family: "Marines", "Pretendard", sans-serif;
+  font-weight: 700;
 }
 
 .mbti-option button:hover {
@@ -1052,6 +1127,7 @@ onMounted(() => {
   font-size: 15px;
   color: #4b5563;
   font-weight: 500;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .mbti-vs {
@@ -1099,6 +1175,7 @@ onMounted(() => {
   color: #2c3e50;
   font-size: 20px;
   font-weight: 700;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .summary-item {
@@ -1118,11 +1195,14 @@ onMounted(() => {
   flex: 1;
   font-weight: 600;
   color: #4b5563;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .summary-value {
   flex: 2;
   color: #2c3e50;
+  font-family: "Marines", "Pretendard", sans-serif;
+  font-weight: 400;
 }
 
 .generating-message {
@@ -1173,6 +1253,7 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.25s ease;
   border: none;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .back-button {
