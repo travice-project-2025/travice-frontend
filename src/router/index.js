@@ -3,7 +3,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import OnboardingPage from '../pages/OnboardingPage.vue'
 import LoginPage from '../pages/LoginPage.vue'
 import PlansPage from '../pages/PlansPage.vue' 
-import CreatePlanWizard from '../pages/CreatePlanWizard.vue';
+import CreatePlanWizard from '../pages/CreatePlanWizard.vue'
+import ProfilePage from '../pages/ProfilePage.vue'
 
 const routes = [
   {
@@ -28,6 +29,11 @@ const routes = [
     path: '/create-plan', 
     name: 'CreatePlan',
     component: CreatePlanWizard
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: ProfilePage
   },
 ]
 

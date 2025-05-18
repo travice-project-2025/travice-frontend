@@ -7,10 +7,10 @@
         <div class="dropdown" @click.stop>
           <div class="dropdown-trigger" @click="toggleDropdown">
             <span class="user-name">{{ userName }}님</span>
-            <span class="dropdown-arrow" :class="{ 'open': isDropdownOpen }">▼</span>
+            <span class="dropdown-arrow" :class="{ 'open': isDropdownOpen }"></span>
           </div>
           <div v-if="isDropdownOpen" class="dropdown-menu">
-            <div class="dropdown-item">
+            <div class="dropdown-item" @click="goToProfile">
               <span>내 정보</span>
             </div>
             <div class="dropdown-item" @click="logout">
@@ -29,6 +29,8 @@
 <script setup>
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { useAuth } from '@/composables/userAuth'
+import { useRouter } from 'vue-router'
+const router = useRouter()
 
 // Props 정의
 defineProps({
@@ -37,6 +39,12 @@ defineProps({
     default: false
   }
 })
+
+// script setup 부분에 추가할 함수
+const goToProfile = () => {
+  router.push('/profile')
+  isDropdownOpen.value = false
+}
 
 // 드롭다운 상태 관리
 const isDropdownOpen = ref(false)
