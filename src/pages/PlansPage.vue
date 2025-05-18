@@ -67,7 +67,7 @@ import AppHeader from '@/components/common/AppHeader.vue';
 import { useAuth } from '@/composables/userAuth';
 
 // 인증 관련 컴포저블
-const { userName, requireAuth } = useAuth();
+const { userName, loggedIn, checkLoginStatus, requireAuth } = useAuth();
 
 // 반응형 상태 정의
 const isScrolled = ref(false);
@@ -136,6 +136,8 @@ const fetchPlans = async () => {
 onMounted(async () => {
   window.addEventListener('scroll', handleScroll);
   
+  checkLoginStatus();
+
   // 인증 상태 확인 (로그인이 필요한 페이지)
   const isAuthenticated = await requireAuth();
   if (!isAuthenticated) return; // 인증되지 않았으면 requireAuth 내부에서 리다이렉트
@@ -176,7 +178,7 @@ onBeforeUnmount(() => {
 }
 
 .highlight {
-  color: #4a6ee0;
+  color: #8e6ad9;
 }
 
 .welcome-subtitle {
@@ -196,7 +198,7 @@ onBeforeUnmount(() => {
 .empty-card {
   width: 180px;
   height: 180px;
-  background-color: #4a6ee0;
+  background-color: #8e6ad9;
   border-radius: 16px;
   display: flex;
   flex-direction: column;
@@ -235,7 +237,7 @@ onBeforeUnmount(() => {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #4a6ee0;
+  border-top: 4px solid #8e6ad9;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -264,11 +266,11 @@ onBeforeUnmount(() => {
 
 .plan-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 20px rgba(142, 106, 217, 0.15);
 }
 
 .plan-image {
-  height: 160px;
+  height: 200px;
   overflow: hidden;
 }
 
@@ -279,7 +281,7 @@ onBeforeUnmount(() => {
 }
 
 .plan-info {
-  padding: 16px;
+  padding: 20px;
 }
 
 .plan-info h3 {
@@ -298,13 +300,13 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #f5f7ff;
-  height: 236px; /* 여행 계획 카드와 동일한 높이 */
-  border: 2px dashed #d0d8ff;
+  background-color: #f7f2ff;
+  height: 276px; /* 여행 계획 카드와 동일한 높이 */
+  border: 2px dashed #a78bfa;
 }
 
 .add-icon {
-  background-color: #4a6ee0;
+  background-color: #8e6ad9;
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -316,6 +318,6 @@ onBeforeUnmount(() => {
 
 .add-text {
   font-size: 16px;
-  color: #666;
+  color: #4b5563;
 }
 </style>
