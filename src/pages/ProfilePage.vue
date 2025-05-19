@@ -255,27 +255,8 @@ const userStats = ref({
     { code: 'andong', name: '안동', visited: false },
   ],
   
-  // 최근 여행 목록
-  recentTrips: [
-    {
-      id: 1,
-      title: '강릉 2025',
-      date: '2025-02-01 ~ 2025-02-03',
-      imageUrl: '/images/gangneung.jpg'
-    },
-    {
-      id: 2,
-      title: '제주 2025',
-      date: '2025-05-11 ~ 2025-05-13',
-      imageUrl: '/images/jeju.jpg'
-    },
-    {
-      id: 3,
-      title: '부산 2025',
-      date: '2025-07-21 ~ 2025-07-25',
-      imageUrl: '/images/busan.jpg'
-    }
-  ]
+  // 최근 여행 목록 초기화
+  recentTrips: []
 });
 
 // 이미지 업로드 트리거
@@ -303,11 +284,12 @@ const handleImageChange = (event) => {
   // 이미지 미리보기 생성
   const reader = new FileReader();
   reader.onload = (e) => {
-    previewImage.userInfo.value = e.target.result;
-    userInfo.profileImage = file; // 실제 파일 저장
+    previewImage.value = e.target.result;
+    userInfo.value.profileImage = file; // 실제 파일 저장
   };
   reader.readAsDataURL(file);
 };
+
 
 // 나이 유효성 검사
 const validateAge = () => {
@@ -343,15 +325,15 @@ const updateProfile = async () => {
     // 변경할 필드만 포함하는 객체 생성
     const updateData = {
       nickname: userInfo.value.nickname,
-      gender: userInfo.value.gender === 'male' ? 'M' : 'F',
+      gender: userInfo.value.gender === 'male' ? 'M' : 'W',
       age: userInfo.value.age
     };
     
-    console.log('프로필 업데이트 시작 (PATCH):', updateData);
+    console.log('프로필 업데이트 시작:', updateData);
     
     // PATCH 메서드로 데이터 전송
     const response = await fetch('http://localhost:8080/api/v1/users/me', {
-      method: 'PATCH', // PUT 대신 PATCH 사용
+      method: 'PATCH',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
@@ -365,18 +347,18 @@ const updateProfile = async () => {
       throw new Error(errorData.message || `서버 오류: ${response.status}`);
     }
     
-    // 성공 응답 처리
     const result = await response.json();
-    console.log('프로필 업데이트 성공:', result);
+    console.log('응답:', result);
     
-    // 성공 메시지 표시
-    alert('프로필이 성공적으로 업데이트되었습니다.');
-    
-    // 이미지는 별도로 처리 (필요한 경우)
-    if (userInfo.value.profileImage && userInfo.value.profileImage instanceof File) {
-      await uploadProfileImage();
+    if (result.success) {
+      // 성공 메시지 표시
+      alert(result.message || '프로필이 성공적으로 업데이트되었습니다.');
+      
+      // 최신 정보로 프로필 다시 불러오기
+      await fetchUserProfile();
+    } else {
+      throw new Error(result.message || '업데이트에 실패했습니다.');
     }
-    
   } catch (error) {
     console.error('프로필 업데이트 실패:', error);
     alert('프로필 업데이트에 실패했습니다: ' + error.message);
@@ -384,8 +366,6 @@ const updateProfile = async () => {
     isLoading.value = false;
   }
 };
-
-
 
 // 여행 상세 페이지로 이동
 const viewTripDetails = (tripId) => {
@@ -397,11 +377,8 @@ const goToCreate = () => {
   router.push('/create-plan');
 };
 
-// 사용자 데이터 가져오기 - 컴포넌트 마운트 시
-onMounted(async () => {
-  // 임시 지연 시간
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
+// 사용자 프로필 정보 가져오기 함수 추가 (재사용 가능)
+const fetchUserProfile = async () => {
 
   try {
     const response = await fetch('http://localhost:8080/api/v1/users/me', {
@@ -428,9 +405,70 @@ onMounted(async () => {
     console.error('프로필 데이터 로드 실패:', error);
   }
   
-
+};
  
+// 날짜 형식 변환 함수
+const formatDate = (dateString) => {
+  if (!dateString) return '날짜 미정';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '날짜 형식 오류';
+    return date.toLocaleDateString('ko-KR', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit'
+    });
+  } catch (error) {
+    console.error('날짜 변환 오류:', error);
+    return '날짜 형식 오류';
+  }
+};
 
+// 수정됨: 최근 여행 목록 가져오기 함수 추가
+const fetchRecentTrips = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/api/v1/plans', {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`API 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('여행 계획 데이터:', data);
+
+    // 여행 계획 데이터를 최신순으로 정렬
+    const sortedTrips = [...data].sort((a, b) => {
+      return new Date(b.startDate) - new Date(a.startDate);
+    });
+
+    // 최대 3개의 최근 여행만 가져오기
+    const recentTrips = sortedTrips.slice(0, 3).map(trip => ({
+      id: trip.id,
+      title: trip.planTitle,
+      date: `${formatDate(trip.startDate)} ~ ${formatDate(trip.endDate)}`,
+      imageUrl: trip.thumbnail
+    }));
+
+    userStats.value.recentTrips = recentTrips;
+
+    console.log('최근 여행 목록:', userStats.value.recentTrips);
+    
+  } catch (error) {
+    console.error('여행 목록을 불러오는 중 오류 발생:', error);
+    userStats.value.recentTrips = [];
+  }
+};
+
+
+// 사용자 데이터 가져오기 - 컴포넌트 마운트 시
+onMounted(async () => {
+ await fetchUserProfile(); 
+ await fetchRecentTrips();
 });
 </script>
 

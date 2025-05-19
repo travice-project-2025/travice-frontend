@@ -6,17 +6,23 @@ import Cookies from 'js-cookie'
 export function useAuth() {
   const loggedIn = ref(false)
   const userName = ref('')
+  const userNickname = ref('')
   const router = useRouter()
 
   // 로그인 상태 확인 함수
   const checkLoginStatus = async () => {
-    const hasToken = !!Cookies.get('JWT-TOKEN')
+    let hasToken = !!Cookies.get('JWT-TOKEN')
     loggedIn.value = hasToken
     
     if (hasToken) {
-      await fetchUserName()
+      const userDate = await fetchUserName()
+      if(!userDate){
+        hasToken = false
+        loggedIn.value = false
+      }
     } else {
       userName.value = ''
+      userNickname .value= ''
     }
     
     return hasToken
@@ -32,17 +38,20 @@ export function useAuth() {
       if (response.ok) {
         const userData = await response.json()
         userName.value = userData.name
+        userNickname.value = userData.nickname;
         return userData
       } else {
         // 인증 실패 처리
         loggedIn.value = false
         userName.value = ''
+        userNickname = ''
         return null
       }
     } catch (error) {
       console.error('사용자 정보 요청 오류:', error)
       loggedIn.value = false
       userName.value = ''
+      userNickname = ''
       return null
     }
   }
@@ -52,6 +61,7 @@ export function useAuth() {
     Cookies.remove('JWT-TOKEN')
     loggedIn.value = false
     userName.value = ''
+    userNickname.value = ''
     router.push('/')
   }
 
@@ -73,6 +83,7 @@ export function useAuth() {
   return {
     loggedIn,
     userName,
+    userNickname,
     checkLoginStatus,
     fetchUserName,
     logout,

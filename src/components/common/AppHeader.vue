@@ -1,12 +1,16 @@
-
 <template>
   <header :class="['header', { shrink: isShrunk }]">
-    <div class="logo">Travice</div>
+    <!-- 로고 부분: 클릭 시 로그인 상태에 따라 다른 페이지로 이동 -->
+    <div class="logo-container" @click="navigateByLoginStatus">
+      <img src="../../assets/images/logo.png" alt="Travice Logo" class="logo-image">
+      <div class="logo-text">Travice</div>
+    </div>
+    
     <div class="header-right">
       <div v-if="loggedIn" class="user-controls">
         <div class="dropdown" @click.stop>
           <div class="dropdown-trigger" @click="toggleDropdown">
-            <span class="user-name">{{ userName }}님</span>
+            <span class="user-name">{{ userNickname ? userNickname : userName }}님</span>
             <span class="dropdown-arrow" :class="{ 'open': isDropdownOpen }"></span>
           </div>
           <div v-if="isDropdownOpen" class="dropdown-menu">
@@ -40,6 +44,15 @@ defineProps({
   }
 })
 
+// 로그인 상태에 따라 네비게이션 처리하는 함수 추가
+const navigateByLoginStatus = () => {
+  if (loggedIn.value) {
+    router.push('/plans')
+  } else {
+    router.push('/')
+  }
+}
+
 // script setup 부분에 추가할 함수
 const goToProfile = () => {
   router.push('/profile')
@@ -49,8 +62,9 @@ const goToProfile = () => {
 // 드롭다운 상태 관리
 const isDropdownOpen = ref(false)
 
+
 // 인증 컴포저블 사용
-const { loggedIn, userName, checkLoginStatus, logout, goToLogin } = useAuth()
+const { loggedIn, userName, userNickname, checkLoginStatus, logout, goToLogin } = useAuth()
 
 // 드롭다운 토글 함수
 const toggleDropdown = (event) => {
@@ -96,6 +110,28 @@ onBeforeUnmount(() => {
 
 .header.shrink {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.logo-container:hover {
+  opacity: 0.8;
+}
+
+.logo-image {
+  height: 28px;
+  margin-right: 8px;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
 }
 
 .header-right {
@@ -171,12 +207,6 @@ onBeforeUnmount(() => {
 
 .dropdown-item:hover {
   background-color: #F8F8FF;
-  color: #333;
-}
-
-.logo {
-  font-size: 24px;
-  font-weight: 700;
   color: #333;
 }
 

@@ -4,7 +4,7 @@
     <main class="container main-content">
       <!-- 사용자 환영 메시지 -->
       <div class="welcome-section">
-        <h1 class="welcome-title">안녕하세요, <span class="highlight">{{ userName }}</span>님!</h1>
+        <h1 class="welcome-title">안녕하세요, <span class="highlight">{{ userNickname ? userNickname : userName }}</span>님!</h1>
         <p class="welcome-subtitle">여행 계획을 생성하거나 관리해보세요</p>
       </div>
       
@@ -68,6 +68,36 @@
         <p>{{ apiErrorMessage }}</p>
         <button @click="fetchPlans" class="retry-button">다시 시도</button>
       </div>
+
+      
+      <!-- 새로 추가: 프로필 설정 안내 모달 -->
+      <div v-if="showProfileModal" class="modal-overlay">
+        <div class="profile-modal">
+          <div class="modal-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#8e6ad9" stroke-width="2"/>
+              <path d="M12 16V12" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="12" cy="8" r="1" fill="#8e6ad9"/>
+            </svg>
+          </div>
+          <h3 class="modal-title">개인 정보를 설정하시겠어요?</h3>
+          <div class="modal-description">
+            나이와 성별을 설정하시면<br>
+            더 정확한 AI 맞춤 여행 추천을 받으실 수 있습니다.
+          </div>
+          <div class="modal-buttons">
+            <button class="modal-button secondary" @click="continueToCreate">
+              다음에 설정하기
+            </button>
+            <button class="modal-button primary" @click="goToProfile">
+              개인 정보 설정하기
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+
     </main>
   </div>
 </template>
@@ -79,9 +109,67 @@ import AppHeader from '@/components/common/AppHeader.vue';
 import { useAuth } from '../composables/userAuth';
 import axios from 'axios';
 
+// 새로 추가: 모달 상태 관리
+const showProfileModal = ref(false);
+const userAge = ref(null);
+
+
+// 새로 추가: 사용자 정보 가져오기
+const fetchUserInfo = async () => {
+  try {
+    const response = await axios.get('http://localhost:8080/api/v1/users/me', {
+      withCredentials: true,
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (response.data) {
+      userAge.value = response.data.age || 0;
+      console.log('사용자 나이:', userAge.value);
+    }
+  } catch (error) {
+    console.error('사용자 정보를 불러오는 중 오류 발생:', error);
+  }
+};
+
+
+
+// 새 여행 생성 페이지로 이동 (기존 함수 수정)
+const goToCreate = async () => {
+  // 사용자 나이가 설정되지 않았다면 모달 표시
+  if (userAge.value === 0) {
+    showProfileModal.value = true;
+  } else {
+    // 바로 생성 페이지로 이동
+    router.push('/create-plan');
+  }
+};
+
+// 새로 추가: 계속해서 생성 페이지로 이동
+const continueToCreate = () => {
+  showProfileModal.value = false;
+  router.push('/create-plan');
+};
+
+// 새로 추가: 프로필 페이지로 이동
+const goToProfile = () => {
+  showProfileModal.value = false;
+  router.push('/profile');
+};
+
+// 컴포넌트 마운트 시 초기화 (기존 함수 수정)
+onMounted(() => {
+  console.log('컴포넌트 마운트됨');
+  window.addEventListener('scroll', handleScroll);
+  checkLoginStatus();
+  fetchPlans();
+  fetchUserInfo(); // 사용자 정보 가져오기 추가
+});
+
 
 // 인증 컴포저블 사용
-const { loggedIn, userName, checkLoginStatus, logout, goToLogin } = useAuth()
+const { loggedIn, userName, userNickname, checkLoginStatus, logout, goToLogin } = useAuth()
 
 // 반응형 상태 정의
 const isScrolled = ref(false);
@@ -129,10 +217,6 @@ const handleScroll = () => {
   isScrolled.value = window.scrollY > 10;
 };
 
-// 새 여행 생성 페이지로 이동
-const goToCreate = () => {
-  router.push('/create-plan');
-};
 
 // 여행 상세보기 페이지로 이동
 const viewPlanDetails = (planId) => {
@@ -193,9 +277,7 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
-/* 스타일 코드는 동일하게 유지 */
-</style>
+
 <style scoped>
 /* 기존 스타일 유지하고 추가 */
 .plans-page {
@@ -393,5 +475,97 @@ onBeforeUnmount(() => {
 .add-text {
   font-size: 16px;
   color: #4b5563;
+}
+
+
+/* 모달 스타일 추가 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.profile-modal {
+  background-color: white;
+  border-radius: 16px;
+  padding: 30px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  animation: modal-appear 0.3s ease;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-icon {
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 12px;
+}
+
+.modal-description {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.modal-button {
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.modal-button.primary {
+  background-color: #8e6ad9;
+  color: white;
+}
+
+.modal-button.primary:hover {
+  background-color: #7c59c5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(142, 106, 217, 0.15);
+}
+
+.modal-button.secondary {
+  background-color: #f0ebfa;
+  color: #8e6ad9;
+}
+
+.modal-button.secondary:hover {
+  background-color: #e4daff;
+  transform: translateY(-2px);
 }
 </style>
