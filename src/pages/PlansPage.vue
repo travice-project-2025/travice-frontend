@@ -1,4 +1,3 @@
-<!-- PlansPage.vue -->
 <template>
   <div class="plans-page">
     <AppHeader :is-shrunk="isScrolled" />
@@ -37,11 +36,18 @@
           @click="viewPlanDetails(plan.id)"
         >
           <div class="plan-image">
-            <img :src="plan.imageUrl || '/placeholder-image.jpg'" alt="여행 이미지">
+            <img :src="plan.thumbnail || '/placeholder-image.jpg'" alt="여행 이미지">
           </div>
           <div class="plan-info">
-            <h3>{{ plan.title }}</h3>
-            <p class="plan-date">{{ plan.startDate }} - {{ plan.endDate }}</p>
+            <h3>{{ plan.planTitle }}</h3>
+            <p class="plan-date">{{ formatDate(plan.startDate) }} - {{ formatDate(plan.endDate) }}</p>
+            <p class="plan-location">{{ getCityName(plan.cityName) }}</p>
+            <div class="plan-meta">
+              <span class="member-count">인원: {{ plan.memberCount }}명</span>
+              <span class="visibility-badge" :class="{ 'private': !plan.isPublic }">
+                {{ plan.isPublic ? '공개' : '비공개' }}
+              </span>
+            </div>
           </div>
         </div>
         
@@ -56,6 +62,12 @@
           <p class="add-text">새로 여행을 추가해보세요</p>
         </div>
       </div>
+      
+      <!-- 오류 메시지 -->
+      <div v-if="apiError" class="error-message">
+        <p>{{ apiErrorMessage }}</p>
+        <button @click="fetchPlans" class="retry-button">다시 시도</button>
+      </div>
     </main>
   </div>
 </template>
@@ -64,40 +76,50 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/common/AppHeader.vue';
-import { useAuth } from '@/composables/userAuth';
+import { useAuth } from '../composables/userAuth';
+import axios from 'axios';
 
-// 인증 관련 컴포저블
-const { userName, loggedIn, checkLoginStatus, requireAuth } = useAuth();
+
+// 인증 컴포저블 사용
+const { loggedIn, userName, checkLoginStatus, logout, goToLogin } = useAuth()
 
 // 반응형 상태 정의
 const isScrolled = ref(false);
 const isLoading = ref(true);
 const hasPlans = ref(false);
+const plans = ref([]);
+const apiError = ref(false);
+const apiErrorMessage = ref('');
 
-// 샘플 데이터 (실제로는 API에서 가져올 데이터)
-const plans = ref([
-  {
-    id: 1,
-    title: '강릉 2025 2월 1-3',
-    startDate: '2025-02-01',
-    endDate: '2025-02-03',
-    imageUrl: '/images/gangneung.jpg' // 실제 이미지 경로로 대체
-  },
-  {
-    id: 2,
-    title: '제주 2025 5월 11-13',
-    startDate: '2025-05-11',
-    endDate: '2025-05-13',
-    imageUrl: '/images/jeju.jpg' // 실제 이미지 경로로 대체
-  },
-  {
-    id: 3,
-    title: '부산 2025 7월 21-25',
-    startDate: '2025-07-21',
-    endDate: '2025-07-25',
-    imageUrl: '/images/busan.jpg' // 실제 이미지 경로로 대체
+// API URL - 개발용 공개 API로 변경
+const API_URL = 'http://localhost:8080/api/v1/plans';
+
+// 날짜 형식 변환 함수
+const formatDate = (dateString) => {
+  if (!dateString) return '날짜 미정';
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '날짜 형식 오류';
+    return date.toLocaleDateString('ko-KR', { 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit'
+    });
+  } catch (error) {
+    console.error('날짜 변환 오류:', error);
+    return '날짜 형식 오류';
   }
-]);
+};
+
+const getCityName = (cityId) => {
+  const cityMap = {
+    1: '서울',
+    2: '부산',
+    3: '제주',
+    // 더 많은 도시 추가
+  };
+  return cityMap[cityId] || '알 수 없는 지역';
+};
 
 // 라우터 설정
 const router = useRouter();
@@ -109,44 +131,60 @@ const handleScroll = () => {
 
 // 새 여행 생성 페이지로 이동
 const goToCreate = () => {
-  router.push('/create-plan'); // 새 여행 생성 페이지 경로로 변경
+  router.push('/create-plan');
 };
 
 // 여행 상세보기 페이지로 이동
 const viewPlanDetails = (planId) => {
-  router.push(`/plan/${planId}`); // 상세보기 페이지로 이동
+  router.push(`/plan/${planId}`);
 };
 
-// 여행 계획 데이터 가져오기 (API 연결 시 구현)
+// 여행 계획 데이터 가져오기
 const fetchPlans = async () => {
-  // 실제 구현 시 API 호출로 대체
-  // const response = await fetch('/api/plans', { credentials: 'include' });
-  // const plansData = await response.json();
-  // plans.value = plansData;
+  console.log('여행 계획 가져오기 시작');
+  isLoading.value = true;
+  apiError.value = false;
   
-  // 예시 데이터를 사용하여 시각적 표현
-  // plans.value는 이미 위에서 정의됨
-  hasPlans.value = plans.value.length > 0;
-  
-  // API 연동 시 아래와 같이 구현
-  // hasPlans.value = plansData.length > 0;
+  try {
+    const response = await axios.get(API_URL, {
+      withCredentials: true,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('API 응답 받음:', response);
+    
+    // 데이터 받아오기 성공
+    if (response.data && Array.isArray(response.data)) {
+      plans.value = response.data;
+      hasPlans.value = plans.value.length > 0;
+      console.log('받아온 여행 계획 데이터:', plans.value);
+    } else {
+      console.warn('API 응답이 배열이 아닙니다:', response.data);
+      throw new Error('잘못된 데이터 형식');
+    }
+  } catch (error) {
+    console.error('여행 계획을 불러오는 중 오류 발생:', error);
+    apiError.value = true;
+    apiErrorMessage.value = '데이터를 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.';
+
+    if (error.response.status === 401) {
+        apiErrorMessage.value = '인증이 필요합니다. 다시 로그인해주세요.';
+      }
+
+  } finally {
+    isLoading.value = false;
+  }
 };
 
-// 컴포넌트 마운트 시 이벤트 리스너 등록 및 데이터 로드
-onMounted(async () => {
+// 컴포넌트 마운트 시 초기화
+onMounted(() => {
+  console.log('컴포넌트 마운트됨');
   window.addEventListener('scroll', handleScroll);
-  
-  checkLoginStatus();
-
-  // 인증 상태 확인 (로그인이 필요한 페이지)
-  const isAuthenticated = await requireAuth();
-  if (!isAuthenticated) return; // 인증되지 않았으면 requireAuth 내부에서 리다이렉트
-  
-  // 데모용 코드 (API 연동 전)
-  setTimeout(() => {
-    isLoading.value = false;
-    hasPlans.value = plans.value.length > 0;
-  }, 1000); // 로딩 상태 시뮬레이션
+  checkLoginStatus()
+  fetchPlans();
 });
 
 // 컴포넌트 언마운트 시 이벤트 리스너 제거
@@ -156,6 +194,10 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* 스타일 코드는 동일하게 유지 */
+</style>
+<style scoped>
+/* 기존 스타일 유지하고 추가 */
 .plans-page {
   padding-top: 60px;
   min-height: 100vh;
@@ -292,6 +334,38 @@ onBeforeUnmount(() => {
 .plan-date {
   font-size: 14px;
   color: #666;
+  margin-bottom: 4px;
+}
+
+.plan-location {
+  font-size: 14px;
+  color: #8e6ad9;
+  margin-bottom: 8px;
+}
+
+.plan-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.member-count {
+  color: #666;
+}
+
+.visibility-badge {
+  background-color: #a5f3c0;
+  color: #0d5030;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.visibility-badge.private {
+  background-color: #ffe0e0;
+  color: #b42424;
 }
 
 /* 새 여행 추가 카드 */

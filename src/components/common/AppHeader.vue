@@ -1,4 +1,4 @@
-<!-- src/components/common/AppHeader.vue -->
+
 <template>
   <header :class="['header', { shrink: isShrunk }]">
     <div class="logo">Travice</div>
@@ -28,8 +28,8 @@
 
 <script setup>
 import { onMounted, onBeforeUnmount, ref } from 'vue'
-import { useAuth } from '@/composables/userAuth'
 import { useRouter } from 'vue-router'
+import { useAuth } from '@/composables/userAuth'
 const router = useRouter()
 
 // Props 정의

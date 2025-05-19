@@ -217,8 +217,8 @@ const ageError = ref('');
 
 // 사용자 정보
 const userInfo = ref({
-  email: 'example@email.com',  // 실제로는 API에서 가져올 데이터
-  name: userName,              // 이름은 userAuth에서 가져옴
+  email: '',  // 실제로는 API에서 가져올 데이터
+  name: '',              // 이름은 userAuth에서 가져옴
   nickname: '',                // 닉네임은 사용자가 수정 가능
   gender: '',                  // 성별은 사용자가 선택 가능
   age: null,                   // 나이는 사용자가 입력 가능
@@ -303,8 +303,8 @@ const handleImageChange = (event) => {
   // 이미지 미리보기 생성
   const reader = new FileReader();
   reader.onload = (e) => {
-    previewImage.value = e.target.result;
-    userInfo.value.profileImage = file; // 실제 파일 저장
+    previewImage.userInfo.value = e.target.result;
+    userInfo.profileImage = file; // 실제 파일 저장
   };
   reader.readAsDataURL(file);
 };
@@ -331,41 +331,61 @@ const validateAge = () => {
   ageError.value = '';
 };
 
-// 프로필 업데이트 함수
+
+
+// 프로필 업데이트 함수 (PATCH 사용)
 const updateProfile = async () => {
   if (ageError.value) return;
   
   isLoading.value = true;
   
   try {
-    // 실제 API 호출 시에는 FormData를 사용하여 이미지와 함께 전송
-    const formData = new FormData();
-    formData.append('nickname', userInfo.value.nickname);
-    formData.append('gender', userInfo.value.gender);
-    formData.append('age', userInfo.value.age);
+    // 변경할 필드만 포함하는 객체 생성
+    const updateData = {
+      nickname: userInfo.value.nickname,
+      gender: userInfo.value.gender === 'male' ? 'M' : 'F',
+      age: userInfo.value.age
+    };
     
-    if (userInfo.value.profileImage) {
-      formData.append('profileImage', userInfo.value.profileImage);
+    console.log('프로필 업데이트 시작 (PATCH):', updateData);
+    
+    // PATCH 메서드로 데이터 전송
+    const response = await fetch('http://localhost:8080/api/v1/users/me', {
+      method: 'PATCH', // PUT 대신 PATCH 사용
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(updateData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `서버 오류: ${response.status}`);
     }
     
-    // 실제 API 호출로 대체
-    // await fetch('/api/profile', {
-    //   method: 'PUT',
-    //   body: formData
-    // });
+    // 성공 응답 처리
+    const result = await response.json();
+    console.log('프로필 업데이트 성공:', result);
     
-    // 임시 API 호출 시뮬레이션
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // 성공 메시지 표시
+    alert('프로필이 성공적으로 업데이트되었습니다.');
     
-    // 성공 메시지 표시 (실제 구현 시)
-    alert('프로필이 업데이트되었습니다.');
+    // 이미지는 별도로 처리 (필요한 경우)
+    if (userInfo.value.profileImage && userInfo.value.profileImage instanceof File) {
+      await uploadProfileImage();
+    }
+    
   } catch (error) {
     console.error('프로필 업데이트 실패:', error);
-    alert('프로필 업데이트에 실패했습니다.');
+    alert('프로필 업데이트에 실패했습니다: ' + error.message);
   } finally {
     isLoading.value = false;
   }
 };
+
+
 
 // 여행 상세 페이지로 이동
 const viewTripDetails = (tripId) => {
@@ -382,32 +402,40 @@ onMounted(async () => {
   // 임시 지연 시간
   await new Promise(resolve => setTimeout(resolve, 500));
   
-  // 실제 구현 시 API 호출
-  // try {
-  //   const response = await fetch('/api/profile');
-  //   const data = await response.json();
-  //   userInfo.value = data.userInfo;
-  //   userStats.value = data.stats;
-  // } catch (error) {
-  //   console.error('프로필 데이터 로드 실패:', error);
-  // }
+
+  try {
+    const response = await fetch('http://localhost:8080/api/v1/users/me', {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    const data = await response.json();
+
+    userInfo.value = {
+        email: data.email,
+        name: data.name,
+        nickname: data.nickname,
+        gender: data.gender === 'M' ? 'male' : 'female',
+        age: data.age,
+        profileImageUrl: data.profileImageUrl,
+    };
+
+    if(data.profileImageUrl){
+      previewImage.value = data.profileImageUrl;
+    }
+  } catch (error) {
+    console.error('프로필 데이터 로드 실패:', error);
+  }
   
-  // 임시 데이터 (실제 구현 시 제거)
-  userInfo.value = {
-    email: 'example@email.com',
-    name: userName.value,
-    nickname: userName.value, // 초기값은 이름과 동일하게 설정
-    gender: 'male',
-    age: 28, // 나이를 정확한 숫자로 변경
-    profileImage: null,
-  };
-  
-  // 샘플 프로필 이미지 설정 (실제 구현 시 서버에서 가져온 이미지 URL로 대체)
-  // previewImage.value = '/images/profile.jpg';
+
+ 
+
 });
 </script>
 
 <style scoped>
+
 .profile-page {
   min-height: 100vh;
   background-color: #fbfaff;
