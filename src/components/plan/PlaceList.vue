@@ -21,17 +21,9 @@
             <div class="transport-line"></div>
             <div class="transport-icon-container">
               <div class="transport-icon">
-                <svg v-if="element.transportFromPrevious && element.transportFromPrevious.name === '자가용'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="transport-svg">
-                  <path d="M8 7h8a2 2 0 012 2v5a2 2 0 01-2 2H8a2 2 0 01-2-2V9a2 2 0 012-2zm8-2h-8a4 4 0 00-4 4v5a4 4 0 004 4h8a4 4 0 004-4V9a4 4 0 00-4-4z" />
-                  <path d="M5 17h14M5 12h14M9 8v8M15 8v8" />
-                </svg>
-                <svg v-else-if="element.transportFromPrevious && element.transportFromPrevious.name === '도보'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="transport-svg">
-                  <path d="M13 4.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zm-.5 5v4.5a1 1 0 01-1 1H9a1 1 0 01-1-1V10l-3 3v5h2v-3.17L8.83 20H11v-4.17L12.83 20H15v-8.83L17.92 18H21l-7-7-.5-1.5z" />
-                </svg>
-                <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="transport-svg">
-                  <path d="M17 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2zm0 16H7V5h10v14z" />
-                  <path d="M12 7a1 1 0 100 2 1 1 0 000-2z" />
-                </svg>
+                <span class="transport-emoji">
+                    {{ getTransportEmoji(element.transportFromPrevious ? element.transportFromPrevious.name : '이동') }}
+                </span>
               </div>
               <div class="transport-name">{{ element.transportFromPrevious ? element.transportFromPrevious.name : '이동' }}</div>
               <div class="transport-duration">{{ calculateDuration(index) }}</div>
@@ -86,6 +78,20 @@ export default {
   emits: ['update:places', 'delete-place', 'add-place'],
   setup(props, { emit }) {
     const innerPlaces = ref([...props.places]);
+
+    const getTransportEmoji = (transportName) => {
+        switch (transportName.trim()) {
+            case '자가용': return '🚗';
+            case '택시': return '🚕';
+            case '자전거': return '🚲';
+            case '도보': return '🚶';
+            case '항공': return '✈️';
+            case '버스': return '🚌';
+            case '지하철': return '🚃';
+            case '기차': return '🚊';
+            default: return '🚗';
+        }
+    };
 
     // 부모로부터 전달받은 places가 변경되면 내부 상태 업데이트
     watch(() => props.places, (newPlaces) => {
@@ -143,7 +149,8 @@ export default {
     return {
       innerPlaces,
       emitChange,
-      calculateDuration
+      calculateDuration,
+      getTransportEmoji
     };
   }
 }
@@ -277,10 +284,9 @@ export default {
   margin-bottom: 0.25rem;
 }
 
-.transport-svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: #6b7280;
+.transport-emoji {
+  font-size: 1.25rem;
+  line-height: 1;
 }
 
 .transport-name {
