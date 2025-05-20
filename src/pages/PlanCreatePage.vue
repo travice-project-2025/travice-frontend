@@ -1,67 +1,86 @@
 <!-- pages/PlanCreatePage.vue -->
 <template>
   <div class="plan-create-page">
-    <AppHeader
-      :title="getHeaderTitle()"
-      :subtitle="getHeaderSubtitle()"
-    >
+    <AppHeader :title="getHeaderTitle()" :subtitle="getHeaderSubtitle()">
       <template #actions>
         <div class="header-actions" v-if="step === 'edit'">
-          <button 
-            @click="savePlan" 
-            class="save-button"
-            :disabled="isSaving"
-          >
-            {{ isSaving ? '저장 중...' : '여행 계획 저장' }}
+          <button @click="savePlan" class="save-button" :disabled="isSaving">
+            {{ isSaving ? "저장 중..." : "여행 계획 저장" }}
           </button>
         </div>
       </template>
     </AppHeader>
 
-    <!-- 1단계: 여행 정보 입력 -->
-    <div v-if="step === 'input'" class="step-container">
-      <TravelInfoForm
-        v-model="travelInfo"
-        @submit="getRecommendation"
-      />
-    </div>
-
     <!-- 2단계: 추천 결과 표시 -->
-    <div v-else-if="step === 'recommendation'" class="step-container">
+    <div v-if="step === 'recommendation'" class="step-container">
       <div v-if="loading" class="loading-container">
         <div class="loading-spinner"></div>
         <p>여행 계획을 추천하는 중입니다...</p>
       </div>
-      
-      <div v-else class="recommendation-result">
-        <div v-for="day in recommendationData.days" :key="day.day" class="day-plan">
+
+      <div
+        v-else-if="
+          recommendationData &&
+          recommendationData.days &&
+          recommendationData.days.length > 0
+        "
+        class="recommendation-result"
+      >
+        <div
+          v-for="day in recommendationData.days"
+          :key="day.day"
+          class="day-plan"
+        >
           <h3 class="day-title">Day {{ day.day }}</h3>
-          
-          <div v-for="(place, placeIndex) in day.places" :key="placeIndex" class="place-card">
+
+          <div
+            v-for="(place, placeIndex) in day.places || []"
+            :key="placeIndex"
+            class="place-card"
+          >
             <div class="place-header">
               <h4 class="place-name">{{ place.name }}</h4>
-              <span class="place-time">{{ place.arrival }} - {{ place.departure }}</span>
+              <span class="place-time"
+                >{{ place.arrival }} - {{ place.departure }}</span
+              >
             </div>
             <p class="place-activity">{{ place.activity }}</p>
-            
+
             <!-- 다음 장소로 이동하는 교통편 표시 (마지막 장소가 아닌 경우) -->
-            <div v-if="placeIndex < day.transports.length" class="transport-info">
-              <div class="transport-icon">{{ getTransportEmoji(day.transports[placeIndex].type) }}</div>
-              <span class="transport-type">{{ day.transports[placeIndex].type }}</span>
-              <span class="transport-duration">{{ day.transports[placeIndex].duration }}</span>
+            <div
+              v-if="
+                placeIndex < day.places.length - 1 &&
+                placeIndex < day.transports.length
+              "
+              class="transport-info"
+            >
+              <div class="transport-icon">
+                {{ getTransportEmoji(day.transports[placeIndex].type) }}
+              </div>
+              <span class="transport-type">{{
+                day.transports[placeIndex].type
+              }}</span>
+              <span class="transport-duration">{{
+                day.transports[placeIndex].duration
+              }}</span>
             </div>
           </div>
         </div>
-        
+
         <div class="action-buttons">
-          <button @click="step = 'input'" class="back-button">
-            이전으로
+          <button @click="$router.push('/plans')" class="back-button">
+            취소
           </button>
           <button @click="convertToEditablePlan" class="proceed-button">
             이 계획으로 진행하기
           </button>
-          <button @click="getRecommendation" class="regenerate-button">
-            다시 추천받기
+        </div>
+      </div>
+      <div v-else class="no-data-messgae">
+        <p>추천 데이터가 아직 준비되지 않았습니다.</p>
+        <div class="action-buttons">
+          <button @click="$router.push('/plans')" class="back-button">
+            목록으로 돌아가기
           </button>
         </div>
       </div>
@@ -98,13 +117,17 @@
       <div class="floating-save-bar">
         <div class="save-bar-content">
           <p>여행 계획을 편집 중입니다</p>
-          <button @click="savePlan" class="save-button-large" :disabled="isSaving">
-            {{ isSaving ? '저장 중...' : '여행 계획 저장하기' }}
+          <button
+            @click="savePlan"
+            class="save-button-large"
+            :disabled="isSaving"
+          >
+            {{ isSaving ? "저장 중..." : "여행 계획 저장하기" }}
           </button>
         </div>
       </div>
     </div>
-    
+
     <!-- 장소 추가 모달 (편집 단계에서 사용) -->
     <div
       v-if="showAddPlaceModal"
@@ -120,60 +143,168 @@
 </template>
 
 <script>
-import { ref, computed, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import AppHeader from '@/components/common/AppHeader.vue';
-import TravelInfoForm from '@/components/plan/TravelInfoForm.vue';
-import DayTab from '@/components/plan/DayTab.vue';
-import PlaceList from '@/components/plan/PlaceList.vue';
-import PlaceSearch from '@/components/plan/PlaceSearch.vue';
-import TripMap from '@/components/plan/TripMap.vue';
+import { ref, computed, watch, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import AppHeader from "@/components/common/AppHeader.vue";
+import DayTab from "@/components/plan/DayTab.vue";
+import PlaceList from "@/components/plan/PlaceList.vue";
+import PlaceSearch from "@/components/plan/PlaceSearch.vue";
+import TripMap from "@/components/plan/TripMap.vue";
 
 export default {
-  name: 'PlanCreatePage',
+  name: "PlanCreatePage",
   components: {
     AppHeader,
-    TravelInfoForm,
     DayTab,
     PlaceList,
     PlaceSearch,
-    TripMap
+    TripMap,
   },
   setup() {
     const router = useRouter();
-    
-    // 단계 관리 (input → recommendation → edit)
-    const step = ref('input');
+    const route = useRoute();
+
+    const step = ref("recommendation");
     const loading = ref(false);
     const isSaving = ref(false);
-    
+
     // 여행 정보 입력 데이터
     const travelInfo = ref({
       duration: 3,
       people: 2,
-      purpose: '휴식',
-      region: '제주도',
-      transports: ['자가용', '도보'],
-      concept: '힐링',
-      mbti: 'INFP'
+      purpose: "휴식",
+      region: "제주도",
+      transports: ["자가용", "도보"],
+      concept: "힐링",
+      mbti: "INFP",
     });
-    
+
     // GPT 추천 결과 데이터
     const recommendationData = ref(null);
-    
+
+    onMounted(() => {
+      // route.query.step이 있으면 해당 단계로 설정
+      if (route.query.step) {
+        step.value = route.query.step;
+      }
+
+      // 데이터를 가져오는 과정
+      let hasData = false;
+
+      // 1. 먼저 라우터 상태에서 데이터 가져오기 시도
+      try {
+        const routerState = history.state?.state || {};
+
+        if (routerState.recommendationData) {
+          // 데이터 정규화 적용
+          recommendationData.value = normalizeRecommendationData(
+            routerState.recommendationData
+          );
+          console.log("라우터에서 추천 데이터 받음:", recommendationData.value);
+          hasData = true;
+        }
+
+        if (routerState.travelInfo) {
+          travelInfo.value = routerState.travelInfo;
+          console.log("라우터에서 여행 정보 받음:", travelInfo.value);
+        }
+      } catch (err) {
+        console.error("라우터 상태 읽기 실패:", err);
+      }
+
+      // 2. 라우터 상태에 데이터가 없으면 localStorage 확인
+      if (!hasData) {
+        const storedRecommendation = localStorage.getItem("recommendationData");
+        const storedTravelInfo = localStorage.getItem("travelInfo");
+
+        if (storedRecommendation) {
+          try {
+            const parsedData = JSON.parse(storedRecommendation);
+            recommendationData.value = normalizeRecommendationData(parsedData);
+            console.log(
+              "로컬 스토리지에서 추천 데이터 로드:",
+              recommendationData.value
+            );
+            hasData = true;
+
+            // 5번 - 데이터를 읽은 후 바로 삭제 (일회성 보장)
+            localStorage.removeItem("recommendationData");
+          } catch (e) {
+            console.error("추천 데이터 파싱 오류:", e);
+          }
+        }
+
+        if (storedTravelInfo) {
+          try {
+            travelInfo.value = JSON.parse(storedTravelInfo);
+            console.log("로컬 스토리지에서 여행 정보 로드:", travelInfo.value);
+
+            // 5번 - 데이터를 읽은 후 바로 삭제 (일회성 보장)
+            localStorage.removeItem("travelInfo");
+          } catch (e) {
+            console.error("여행 정보 파싱 오류:", e);
+          }
+        }
+      }
+
+      // 추천 데이터가 있지만 단계가 초기값일 경우 recommendation 단계로 설정
+      if (recommendationData.value && step.value === "input") {
+        step.value = "recommendation";
+      }
+
+      // 4번 - 데이터 검증, 데이터가 없으면 목록 페이지로 이동
+      if (
+        (!recommendationData.value ||
+          !recommendationData.value.days ||
+          recommendationData.value.days.length === 0) &&
+        step.value === "recommendation"
+      ) {
+        console.warn("추천 데이터가 없습니다. 목록 페이지로 이동합니다.");
+        alert(
+          "여행 데이터를 불러올 수 없습니다. 여행 목록 페이지로 이동합니다."
+        );
+        router.push("/plans");
+      }
+    });
+
+    // 백엔드 응답 데이터 검증 및 정리 함수 (간소화됨)
+    const normalizeRecommendationData = (data) => {
+      if (!data || !Array.isArray(data.days)) {
+        console.warn("데이터가 유효하지 않습니다:", data);
+        return { days: [] };
+      }
+
+      // 기본 검증 및 정렬만 수행
+      const normalizedData = {
+        days: [...data.days]
+          .sort((a, b) => a.day - b.day)
+          .map((day) => {
+            // 필요한 속성이 있는지 확인하고 기본값 제공
+            return {
+              day: day.day,
+              places: Array.isArray(day.places) ? day.places : [],
+              transports: Array.isArray(day.transports) ? day.transports : [],
+            };
+          }),
+      };
+
+      console.log("정규화된 데이터:", normalizedData);
+      return normalizedData;
+    };
+
     // 편집 가능한 여행 계획 데이터 (PlanDetailPage에서 가져온 구조)
     const planData = ref({
       id: null,
-      title: '',
-      startDate: '',
-      endDate: '',
+      title: "",
+      startDate: "",
+      endDate: "",
       totalDays: 3,
-      details: []
+      details: [],
     });
-    
+
     // 현재 선택된 일자 (편집 단계에서 사용)
     const activeDay = ref(1);
-    
+
     // 현재 일자에 해당하는 장소들 (편집 단계에서 사용)
     const filteredPlaces = computed({
       get: () => {
@@ -188,75 +319,52 @@ export default {
         planData.value.details = [...otherDayPlaces, ...newPlaces];
       },
     });
-    
+
     // 장소 추가 모달 관련 상태
     const showAddPlaceModal = ref(false);
     const newPlace = ref({
-      planDetailName: '',
-      arrivalTime: '12:00',
-      departureTime: '13:00',
-      memo: '',
-      transportName: '자가용',
+      planDetailName: "",
+      arrivalTime: "12:00",
+      departureTime: "13:00",
+      memo: "",
+      transportName: "자가용",
       latitude: 33.38,
       longitude: 126.54,
     });
-    
+
     // 페이지 제목 계산
     const getHeaderTitle = () => {
-      switch(step.value) {
-        case 'input': return '새 여행 계획 만들기';
-        case 'recommendation': return '추천 여행 계획';
-        case 'edit': return planData.value.title;
-        default: return '여행 계획';
+      switch (step.value) {
+        case "input":
+          return "새 여행 계획 만들기";
+        case "recommendation":
+          return "추천 여행 계획";
+        case "edit":
+          return planData.value.title;
+        default:
+          return "여행 계획";
       }
     };
-    
+
     // 페이지 부제목 계산
     const getHeaderSubtitle = () => {
-      if (step.value === 'edit') {
-        return formatDateRange(planData.value.startDate, planData.value.endDate);
+      if (step.value === "edit") {
+        return formatDateRange(
+          planData.value.startDate,
+          planData.value.endDate
+        );
       }
-      return '';
+      return "";
     };
-    
-    // GPT 추천 요청
-    const getRecommendation = async () => {
-      loading.value = true;
-      step.value = 'recommendation';
-      
-      try {
-        const response = await fetch('/api/v1/plans/recommend', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            summary: travelInfo.value
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error('추천 요청에 실패했습니다.');
-        }
-        
-        recommendationData.value = await response.json();
-      } catch (error) {
-        console.error('추천 요청 오류:', error);
-        alert('여행 계획 추천을 가져오는 중 오류가 발생했습니다.');
-        step.value = 'input';
-      } finally {
-        loading.value = false;
-      }
-    };
-    
+
     // 추천 결과를 편집 가능한 계획으로 변환
     const convertToEditablePlan = () => {
       // 추천 데이터가 없는 경우 처리
       if (!recommendationData.value || !recommendationData.value.days) {
-        alert('추천 데이터가 없습니다.');
+        alert("추천 데이터가 없습니다.");
         return;
       }
-      
+
       // 계획 기본 정보 설정
       planData.value = {
         id: null, // 새 계획이므로 ID는 null
@@ -264,58 +372,59 @@ export default {
         startDate: calculateStartDate(),
         endDate: calculateEndDate(),
         totalDays: travelInfo.value.duration,
-        details: []
+        details: [],
       };
-      
+
       // 추천 데이터를 상세 계획으로 변환
       let detailId = 1;
-      
-      recommendationData.value.days.forEach(day => {
+
+      recommendationData.value.days.forEach((day) => {
         day.places.forEach((place, index) => {
           // 장소 정보 생성
           const placeDetail = {
             id: detailId++,
             planDetailName: place.name,
             day: day.day,
-            arrivalTime: place.arrival + ':00', // HH:MM -> HH:MM:SS 형식으로 맞춤
-            departureTime: place.departure + ':00',
+            arrivalTime: place.arrival + ":00", // HH:MM -> HH:MM:SS 형식으로 맞춤
+            departureTime: place.departure + ":00",
             memo: place.activity,
-            // 첫 번째 장소가 아닌 경우에만 이전 장소에서의 이동수단 정보 추가
-            transportFromPrevious: index > 0 && day.transports && day.transports[index-1] ? 
-              { name: day.transports[index-1].type } : 
-              { name: '시작점' },
+            // 첫 번째 장소가 아닌 경우 이전 장소에서의 이동수단 정보 추가 (인덱스 조정)
+            transportFromPrevious:
+              index > 0 && day.transports && index - 1 < day.transports.length
+                ? { name: day.transports[index - 1].type }
+                : { name: "시작점" },
             // 위도, 경도는 임의로 설정 (실제로는 장소 검색 API로부터 받아와야 함)
-            latitude: 33.38 + Math.random() * 0.3,  
-            longitude: 126.5 + Math.random() * 0.5
+            latitude: 33.38 + Math.random() * 0.3,
+            longitude: 126.5 + Math.random() * 0.5,
           };
-          
+
           planData.value.details.push(placeDetail);
         });
       });
-      
+
       // 편집 단계로 이동
-      step.value = 'edit';
+      step.value = "edit";
       activeDay.value = 1; // 첫 번째 날짜 활성화
     };
-    
+
     // 시작일 계산 (기본: 오늘로부터 1주일 후)
     const calculateStartDate = () => {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() + 7);
-      return startDate.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      return startDate.toISOString().split("T")[0]; // YYYY-MM-DD 형식
     };
-    
+
     // 종료일 계산 (시작일 + 기간 - 1)
     const calculateEndDate = () => {
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 7 + travelInfo.value.duration - 1);
-      return endDate.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+      return endDate.toISOString().split("T")[0]; // YYYY-MM-DD 형식
     };
-    
+
     // 날짜 범위 포맷팅
     const formatDateRange = (startDate, endDate) => {
       const formatDate = (dateStr) => {
-        if (!dateStr) return '';
+        if (!dateStr) return "";
         const date = new Date(dateStr);
         return `${date.getFullYear()}년 ${
           date.getMonth() + 1
@@ -324,30 +433,30 @@ export default {
 
       return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
     };
-    
+
     // 이동수단 이모지 반환
     const getTransportEmoji = (transportType) => {
       const emojiMap = {
-        '자가용': '🚗',
-        '택시': '🚕',
-        '자전거': '🚲',
-        '도보': '🚶',
-        '항공': '✈️',
-        '버스': '🚌',
-        '지하철': '🚃',
-        '기차': '🚊'
+        자가용: "🚗",
+        택시: "🚕",
+        자전거: "🚲",
+        도보: "🚶",
+        항공: "✈️",
+        버스: "🚌",
+        지하철: "🚃",
+        기차: "🚊",
       };
-      
-      return emojiMap[transportType] || '🚗';
+
+      return emojiMap[transportType] || "🚗";
     };
-    
+
     // 장소 삭제 메서드 (편집 단계에서 사용)
     const deletePlaceById = (id) => {
       planData.value.details = planData.value.details.filter(
         (detail) => detail.id !== id
       );
     };
-    
+
     // 장소 추가 메서드 (편집 단계에서 사용)
     const addNewPlace = () => {
       const newId = Math.max(...planData.value.details.map((d) => d.id), 0) + 1;
@@ -367,16 +476,16 @@ export default {
       // 모달 닫기 및 폼 초기화
       showAddPlaceModal.value = false;
       newPlace.value = {
-        planDetailName: '',
-        arrivalTime: '12:00',
-        departureTime: '13:00',
-        memo: '',
-        transportName: '자가용',
+        planDetailName: "",
+        arrivalTime: "12:00",
+        departureTime: "13:00",
+        memo: "",
+        transportName: "자가용",
         latitude: 33.38,
         longitude: 126.54,
       };
     };
-    
+
     // 검색에서 장소 선택 처리 (편집 단계에서 사용)
     const handleSelectPlace = (place) => {
       newPlace.value = {
@@ -388,45 +497,45 @@ export default {
 
       showAddPlaceModal.value = true;
     };
-    
+
     // 여행 계획 저장
     const savePlan = async () => {
       isSaving.value = true;
-      
+
       try {
         // API 메서드 결정 (신규 생성 또는 업데이트)
-        const method = planData.value.id ? 'PUT' : 'POST';
-        const url = planData.value.id 
+        const method = planData.value.id ? "PUT" : "POST";
+        const url = planData.value.id
           ? `/api/v1/plans/${planData.value.id}`
-          : '/api/v1/plans';
-        
+          : "/api/v1/plans";
+
         const response = await fetch(url, {
           method,
           headers: {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify(planData.value)
+          body: JSON.stringify(planData.value),
         });
-        
+
         if (!response.ok) {
-          throw new Error('여행 계획 저장에 실패했습니다.');
+          throw new Error("여행 계획 저장에 실패했습니다.");
         }
-        
+
         const savedPlan = await response.json();
-        
+
         // 성공 메시지
-        alert('여행 계획이 성공적으로 저장되었습니다.');
-        
+        alert("여행 계획이 성공적으로 저장되었습니다.");
+
         // 저장 후 계획 목록 페이지로 이동
-        router.push('/plans');
+        router.push("/plans");
       } catch (error) {
-        console.error('여행 계획 저장 오류:', error);
-        alert('여행 계획을 저장하는 중 오류가 발생했습니다.');
+        console.error("여행 계획 저장 오류:", error);
+        alert("여행 계획을 저장하는 중 오류가 발생했습니다.");
       } finally {
         isSaving.value = false;
       }
     };
-    
+
     return {
       step,
       loading,
@@ -440,19 +549,17 @@ export default {
       newPlace,
       getHeaderTitle,
       getHeaderSubtitle,
-      getRecommendation,
       convertToEditablePlan,
       formatDateRange,
       getTransportEmoji,
       deletePlaceById,
       addNewPlace,
       handleSelectPlace,
-      savePlan
+      savePlan,
     };
-  }
-}
+  },
+};
 </script>
-
 
 <style scoped>
 .plan-detail-page {

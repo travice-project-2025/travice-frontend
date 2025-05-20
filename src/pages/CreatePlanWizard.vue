@@ -498,25 +498,105 @@ const submitTripData = async () => {
         duration: tripDuration.value,
         people: tripData.value.peopleCount,
         purpose: tripData.value.purpose,
-        region: tripData.value.region,
-        transports: tripData.value.transportation,
-        concept: tripData.value.concept,
+        region: getRegionName(tripData.value.region),
+        transports: tripData.value.transportation.map(id => {
+          const transport = transportations.find(t => t.id === id);
+          return transport ? transport.label : "";
+        }),
+        concept: getConceptLabel(tripData.value.concept),
         mbti: tripData.value.mbti,
       },
     });
 
     console.log('GPT 응답 확인', res.data);
+
+    // gpt 응답을 여행 계획 데이터로 변환
+    const planData = convertToPlanData(res.data);
+
+    localStorage.setItem('recommendationData', JSON.stringify(res.data));
+    localStorage.setItem('travelInfo', JSON.stringify({
+      duration: tripDuration.value,
+      people: tripData.value.peopleCount,
+      purpose: getPurposeLabel(tripData.value.purpose),
+      region: getRegionName(tripData.value.region),
+      transports: tripData.value.transportation.map(id => {
+        const transport = transportations.find(t => t.id === id);
+        return transport ? transport.label : "";
+      }),
+      concept: getConceptLabel(tripData.value.concept),
+      mbti: tripData.value.mbti,
+    }));
+
+    router.push('/plan-create?step=recommendation');
+    // 상세 편집 페이지로 이동
+    // router.push({
+    //     name: 'create-plan',  // PlanCreatePage에 해당하는 라우트 이름 사용
+    // query: { step: 'recommendation' },  // 바로 추천 단계로 진입
+    // state: { 
+    //     recommendationData: res.data,  // 원본 GPT 응답 데이터
+    //     travelInfo: {  // travelInfo 구조에 맞게 변환
+    //         duration: tripDuration.value,
+    //         people: tripData.value.peopleCount,
+    //         purpose: getPurposeLabel(tripData.value.purpose),
+    //         region: getRegionName(tripData.value.region),
+    //         transports: tripData.value.transportation.map(id => {
+    //             const transport = transportations.find(t => t.id === id);
+    //             return transport ? transport.label : "";
+    //         }),
+    //         concept: getConceptLabel(tripData.value.concept),
+    //         mbti: tripData.value.mbti,
+    //     },
+    //     fromWizard: true 
+    // }
+    // });
   } catch (err) {
     console.error('추천 요청 실패', err);
+    alert('여행 계획 추천에 실패했습니다. 다시 시도해 주세요.');
   }
+};
 
-//   // 실제 구현 시 API 호출
-//   console.log("제출된 여행 데이터:", tripData.value);
-
-//   // 5초 후 결과 페이지로 이동 (데모용)
-//   setTimeout(() => {
-//     router.push("/plans"); // 결과 페이지로 이동
-//   }, 5000);
+// GPT 응답을 여행 계획 데이터로 변환하는 함수
+const convertToPlanData = (responseData) => {
+  // 기본 계획 데이터
+  const planData = {
+    title: `${getRegionName(tripData.value.region)} ${tripDuration.value}일 여행`,
+    startDate: tripData.value.startDate,
+    endDate: tripData.value.endDate,
+    totalDays: tripDuration.value,
+    details: []
+  };
+  
+  // GPT가 추천한 일정을 상세 계획으로 변환
+  let detailId = 1;
+  
+  if (responseData && responseData.days) {
+    responseData.days.forEach(day => {
+      if (day.places) {
+        day.places.forEach((place, index) => {
+          // 장소 정보 생성
+          const placeDetail = {
+            id: detailId++,
+            planDetailName: place.name,
+            day: day.day,
+            arrivalTime: place.arrival + ':00', // HH:MM -> HH:MM:SS 형식으로 맞춤
+            departureTime: place.departure + ':00',
+            memo: place.activity || '',
+            // 이전 장소에서의 이동수단 정보 추가
+            transportFromPrevious: index > 0 && day.transports && day.transports[index-1] ? 
+              { name: day.transports[index-1].type } : 
+              { name: '시작점' },
+            // 위도, 경도는 임의로 설정 (실제로는 장소 검색 API로부터 받아와야 함)
+            latitude: 33.38 + Math.random() * 0.3,  
+            longitude: 126.5 + Math.random() * 0.5
+          };
+          
+          planData.details.push(placeDetail);
+        });
+      }
+    });
+  }
+  
+  return planData;
 };
 
 // 날짜 포맷팅 함수 - 완전히 새로 작성

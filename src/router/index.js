@@ -5,18 +5,14 @@ import LoginPage from '../pages/LoginPage.vue'
 import PlansPage from '../pages/PlansPage.vue' 
 import CreatePlanWizard from '../pages/CreatePlanWizard.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
-<<<<<<< HEAD
-import Hompage from '../pages/Hompage.vue'
 import BoardPage from '../pages/BoardPage.vue'
-=======
 import PlanCreatePage from '../pages/PlanCreatePage.vue'
->>>>>>> feature/plan-detail-page
 
 const routes = [
   {
     path: '/',
     name: 'Onboarding',
-    component: PlanCreatePage
+    component: OnboardingPage
   },
   {
     path: '/login',
@@ -37,18 +33,23 @@ const routes = [
     component: CreatePlanWizard
   },
   {
+    path: '/plan-create',
+    name: 'create-plan', 
+    component: PlanCreatePage
+  },
+  {
     path: '/profile',
     name: 'Profile',
     component: ProfilePage
   },
   {
-    path: '/home',
-    name: 'testHome',
-    component: Hompage
-  },
-  {
     path: '/board',
     name: 'Board',
+    component: BoardPage
+  },
+  {
+    path: '/edit-plan/:id',
+    name: 'edit-plan',
     component: BoardPage
   },
 ]
