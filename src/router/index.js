@@ -5,14 +5,18 @@ import LoginPage from '../pages/LoginPage.vue'
 import PlansPage from '../pages/PlansPage.vue' 
 import CreatePlanWizard from '../pages/CreatePlanWizard.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
+<<<<<<< HEAD
 import Hompage from '../pages/Hompage.vue'
 import BoardPage from '../pages/BoardPage.vue'
+=======
+import PlanCreatePage from '../pages/PlanCreatePage.vue'
+>>>>>>> feature/plan-detail-page
 
 const routes = [
   {
     path: '/',
     name: 'Onboarding',
-    component: OnboardingPage
+    component: PlanCreatePage
   },
   {
     path: '/login',
