@@ -126,15 +126,15 @@
             <h3 class="stats-title">여행 통계</h3>
             <div class="stats-grid">
               <div class="stats-item">
-                <div class="stats-number">{{ userStats.tripCount }}</div>
+                <div class="stats-number">{{ userInfo.tripCount }}</div>
                 <div class="stats-label">총 여행 횟수</div>
               </div>
               <div class="stats-item">
-                <div class="stats-number">{{ userStats.companionCount }}</div>
+                <div class="stats-number">{{ userInfo.companionCount }}</div>
                 <div class="stats-label">동행 횟수</div>
               </div>
               <div class="stats-item">
-                <div class="stats-number">{{ userStats.regionCount }}</div>
+                <div class="stats-number">{{ userInfo.regionCount }}</div>
                 <div class="stats-label">방문 지역 수</div>
               </div>
             </div>
@@ -206,10 +206,8 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/common/AppHeader.vue';
-import { useAuth } from '@/composables/userAuth';
 
 const router = useRouter();
-const { userName } = useAuth();
 const isLoading = ref(false);
 const previewImage = ref(null);
 const fileInput = ref(null);
@@ -217,12 +215,15 @@ const ageError = ref('');
 
 // 사용자 정보
 const userInfo = ref({
-  email: '',  // 실제로는 API에서 가져올 데이터
-  name: '',              // 이름은 userAuth에서 가져옴
+  email: '',  
+  name: '',              
   nickname: '',                // 닉네임은 사용자가 수정 가능
   gender: '',                  // 성별은 사용자가 선택 가능
   age: null,                   // 나이는 사용자가 입력 가능
   profileImage: null,          // 프로필 이미지
+  tripCount: '',               // 총 여행 횟수
+  companionCount: '',           // 동행 횟수
+  regionCount: '',              // 방문 지역 수
 });
 
 // 아바타 텍스트 - 이름의 첫 글자
@@ -232,9 +233,6 @@ const avatarText = computed(() => {
 
 // 사용자 여행 통계 (실제로는 API에서 가져옴)
 const userStats = ref({
-  tripCount: 12,               // 총 여행 횟수
-  companionCount: 5,           // 동행 횟수
-  regionCount: 8,              // 방문 지역 수
   
   // 방문한 지역들 - 스탬프 표시용
   visitedRegions: [
@@ -396,6 +394,9 @@ const fetchUserProfile = async () => {
         gender: data.gender === 'M' ? 'male' : 'female',
         age: data.age,
         profileImageUrl: data.profileImageUrl,
+        tripCount: data.tripCount,
+        companionCount: data.companionCount,
+        regionCount: data.regionCount,
     };
 
     if(data.profileImageUrl){
