@@ -350,6 +350,7 @@ import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import AppHeader from "@/components/common/AppHeader.vue";
 import { DatePicker } from "v-calendar";
+import axios from "axios";
 
 // 라우터 설정
 const router = useRouter();
@@ -487,38 +488,59 @@ const toggleMbtiOption = (option, opposite) => {
 };
 
 // 데이터 제출 함수 (GPT에 전송)
-const submitTripData = () => {
-  // 실제 구현 시 API 호출
-  console.log("제출된 여행 데이터:", tripData.value);
+const submitTripData = async () => {
+  try {
+    console.log("전송할 여행 요약", tripData.value);
 
-  // 5초 후 결과 페이지로 이동 (데모용)
-  setTimeout(() => {
-    router.push("/plans"); // 결과 페이지로 이동
-  }, 5000);
+    // 백엔드 엔드포인트 호출
+    const res = await axios.post("/api/v1/plans/recommend", {
+      summary: {
+        duration: tripDuration.value,
+        people: tripData.value.peopleCount,
+        purpose: tripData.value.purpose,
+        region: tripData.value.region,
+        transports: tripData.value.transportation,
+        concept: tripData.value.concept,
+        mbti: tripData.value.mbti,
+      },
+    });
+
+    console.log('GPT 응답 확인', res.data);
+  } catch (err) {
+    console.error('추천 요청 실패', err);
+  }
+
+//   // 실제 구현 시 API 호출
+//   console.log("제출된 여행 데이터:", tripData.value);
+
+//   // 5초 후 결과 페이지로 이동 (데모용)
+//   setTimeout(() => {
+//     router.push("/plans"); // 결과 페이지로 이동
+//   }, 5000);
 };
 
 // 날짜 포맷팅 함수 - 완전히 새로 작성
 const formatDate = (dateInput) => {
   if (!dateInput) return "";
-  
+
   try {
     // Date 객체인 경우
     if (dateInput instanceof Date) {
       const year = dateInput.getFullYear();
-      const month = String(dateInput.getMonth() + 1).padStart(2, '0');
-      const day = String(dateInput.getDate()).padStart(2, '0');
+      const month = String(dateInput.getMonth() + 1).padStart(2, "0");
+      const day = String(dateInput.getDate()).padStart(2, "0");
       return `${year}년 ${month}월 ${day}일`;
     }
-    
+
     // 문자열인 경우
-    if (typeof dateInput === 'string') {
+    if (typeof dateInput === "string") {
       const parts = dateInput.split("-");
       if (parts.length === 3) {
         const [year, month, day] = parts;
         return `${year}년 ${month}월 ${day}일`;
       }
     }
-    
+
     // 다른 모든 경우, 그대로 반환
     return String(dateInput);
   } catch (error) {
@@ -562,6 +584,8 @@ const tripPurposes = [
   { code: "pet", label: "반려동물 동반 여행" },
   { code: "senior", label: "부모님/효도 여행" },
   { code: "team", label: "단체/워크숍/MT" },
+  { code: "stranger", label: "낯선 사람들과 여행" },
+  { code: "baby", label: "아기와 함께하는 여행" },
 ];
 
 const regions = [
@@ -580,6 +604,16 @@ const regions = [
   { code: "gwangju", name: "광주" },
   { code: "ulsan", name: "울산" },
   { code: "andong", name: "안동" },
+  { code: "yangyang", name: "양양" },
+  { code: "goseong", name: "고성" },
+  { code: "gapyeong", name: "가평" },
+  { code: "suncheon", name: "순천" },
+  { code: "namhae", name: "남해" },
+  { code: "mokpo", name: "목포" },
+  { code: "chonan", name: "천안" },
+  { code: "boseong", name: "보성" },
+  { code: "pohang", name: "포항" },
+  { code: "muju", name: "무주" },
 ];
 
 const transportations = [
@@ -634,6 +668,7 @@ const tripConcepts = [
   { code: "shopping", label: "쇼핑 중심" },
   { code: "culture", label: "역사/문화 탐방" },
   { code: "nature", label: "자연 감상 (산/숲/해변 등)" },
+  { code: "no", label: "추천 없음" },
 ];
 
 // 컴포넌트 마운트 시 초기화
