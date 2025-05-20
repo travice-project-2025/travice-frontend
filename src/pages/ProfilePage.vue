@@ -312,7 +312,6 @@ const validateAge = () => {
 };
 
 
-
 // 프로필 업데이트 함수 (PATCH 사용)
 const updateProfile = async () => {
   if (ageError.value) return;

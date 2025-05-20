@@ -8,6 +8,9 @@
     
     <div class="header-right">
       <div v-if="loggedIn" class="user-controls">
+        <!-- 게시판 버튼 추가 -->
+        <button @click="goToBoard" class="board-btn">게시판</button>
+        
         <div class="dropdown" @click.stop>
           <div class="dropdown-trigger" @click="toggleDropdown">
             <span class="user-name">{{ userNickname ? userNickname : userName }}님</span>
@@ -51,6 +54,11 @@ const navigateByLoginStatus = () => {
   } else {
     router.push('/')
   }
+}
+
+// 게시판으로 이동하는 함수 추가
+const goToBoard = () => {
+  router.push('/board')
 }
 
 // script setup 부분에 추가할 함수
@@ -141,7 +149,26 @@ onBeforeUnmount(() => {
 .user-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 16px; /* 간격 조정 */
+}
+
+/* 게시판 버튼 스타일 추가 */
+.board-btn {
+  background-color: #F0F0FF;
+  color: #555;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.board-btn:hover {
+  background-color: #E5E5FF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .dropdown {

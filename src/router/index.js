@@ -6,6 +6,7 @@ import PlansPage from '../pages/PlansPage.vue'
 import CreatePlanWizard from '../pages/CreatePlanWizard.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
 import Hompage from '../pages/Hompage.vue'
+import BoardPage from '../pages/BoardPage.vue'
 
 const routes = [
   {
@@ -40,7 +41,12 @@ const routes = [
     path: '/home',
     name: 'testHome',
     component: Hompage
-  }
+  },
+  {
+    path: '/board',
+    name: 'Board',
+    component: BoardPage
+  },
 ]
 
 const router = createRouter({
