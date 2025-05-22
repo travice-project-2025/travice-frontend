@@ -56,6 +56,27 @@ export function useAuth() {
     }
   }
 
+  const refreshToken = async () => {
+    try {
+        const response = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            console.log('토큰 갱신 성공');
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('토큰 갱신 실패:', error);
+        return false;
+    }
+  };
+
+  // 2분마다 토큰 갱신
+  setInterval(refreshToken, 120000);
+
   // 로그아웃 처리
   const logout = () => {
     Cookies.remove('JWT-TOKEN')

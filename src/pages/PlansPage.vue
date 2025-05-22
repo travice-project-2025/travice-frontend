@@ -39,7 +39,7 @@
             <img :src="plan.thumbnail || '/placeholder-image.jpg'" alt="여행 이미지">
           </div>
           <div class="plan-info">
-            <h3>{{ plan.planTitle }}</h3>
+            <h3>{{ plan.title }}</h3>
             <p class="plan-date">{{ formatDate(plan.startDate) }} - {{ formatDate(plan.endDate) }}</p>
             <p class="plan-location">{{ getCityName(plan.cityName) }}</p>
             <div class="plan-meta">
@@ -202,9 +202,22 @@ const formatDate = (dateString) => {
 const getCityName = (cityId) => {
   const cityMap = {
     1: '서울',
-    2: '부산',
-    3: '제주',
-    // 더 많은 도시 추가
+    2: '인천',
+    3: '대전',
+    4: '대구',
+    5: '광주',
+    6: '부산',
+    7: '울산',
+    8: '세종',
+    9: '경기',
+    10: '강원',
+    11: '충청북도',
+    12: '충청남도',
+    13: '경상북도',
+    14: '경상남도',
+    15: '전라북도',
+    16: '전라남도',
+    17: '제주도'
   };
   return cityMap[cityId] || '알 수 없는 지역';
 };
