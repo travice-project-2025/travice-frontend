@@ -26,62 +26,89 @@
         "
         class="recommendation-result"
       >
-        <div
-          v-for="day in recommendationData.days"
-          :key="day.day"
-          class="day-plan"
-        >
-          <h3 class="day-title">Day {{ day.day }}</h3>
+        <div class="recommendation-content">
+          <div class="recommendation-header">
+            <h2>✨ 맞춤 여행 계획이 완성되었어요!</h2>
+            <p>아래 일정을 확인하고 마음에 드시면 진행해주세요</p>
+          </div>
 
-          <div
-            v-for="(place, placeIndex) in day.places || []"
-            :key="placeIndex"
-            class="place-card"
-          >
-            <div class="place-header">
-              <h4 class="place-name">{{ place.name }}</h4>
-              <span class="place-time"
-                >{{ place.arrival }} - {{ place.departure }}</span
-              >
-            </div>
-            <p class="place-activity">{{ place.activity }}</p>
-
-            <!-- 다음 장소로 이동하는 교통편 표시 (마지막 장소가 아닌 경우) -->
+          <div class="days-container">
             <div
-              v-if="
-                placeIndex < day.places.length - 1 &&
-                placeIndex < day.transports.length
-              "
-              class="transport-info"
+              v-for="day in recommendationData.days"
+              :key="day.day"
+              class="day-plan"
             >
-              <div class="transport-icon">
-                {{ getTransportEmoji(day.transports[placeIndex].type) }}
+              <h3 class="day-title">
+                <span class="day-number">Day {{ day.day }}</span>
+              </h3>
+
+              <div class="places-list">
+                <template
+                  v-for="(place, placeIndex) in day.places || []"
+                  :key="placeIndex"
+                >
+                  <div class="place-card">
+                    <div class="place-info">
+                      <span class="place-time">
+                        {{ place.arrival }} - {{ place.departure }}
+                      </span>
+                      <div class="place-details">
+                        <h4 class="place-name">{{ place.name }}</h4>
+                        <p class="place-activity">{{ place.activity }}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="
+                      placeIndex < day.places.length - 1 &&
+                      placeIndex < day.transports.length
+                    "
+                    class="transport-info"
+                  >
+                    <div class="transport-content">
+                      <div class="transport-icon">
+                        {{ getTransportEmoji(day.transports[placeIndex].type) }}
+                      </div>
+                      <span class="transport-type">{{
+                        day.transports[placeIndex].type
+                      }}</span>
+                      <span class="transport-duration">{{
+                        day.transports[placeIndex].duration
+                      }}</span>
+                    </div>
+                    <div class="transport-arrow">⬇</div>
+                  </div>
+                </template>
               </div>
-              <span class="transport-type">{{
-                day.transports[placeIndex].type
-              }}</span>
-              <span class="transport-duration">{{
-                day.transports[placeIndex].duration
-              }}</span>
+            </div>
+          </div>
+
+          <div class="action-buttons-container">
+            <div class="action-buttons">
+              <button @click="$router.push('/plans')" class="back-button">
+                <span>❌</span>
+                다시 만들기
+              </button>
+              <button @click="convertToEditablePlan" class="proceed-button">
+                <span>✅</span>
+                이 계획으로 진행하기
+              </button>
             </div>
           </div>
         </div>
-
-        <div class="action-buttons">
-          <button @click="$router.push('/plans')" class="back-button">
-            취소
-          </button>
-          <button @click="convertToEditablePlan" class="proceed-button">
-            이 계획으로 진행하기
-          </button>
-        </div>
       </div>
-      <div v-else class="no-data-messgae">
-        <p>추천 데이터가 아직 준비되지 않았습니다.</p>
-        <div class="action-buttons">
-          <button @click="$router.push('/plans')" class="back-button">
-            목록으로 돌아가기
-          </button>
+
+      <div v-else class="no-data-container">
+        <div class="no-data-content">
+          <div class="no-data-icon">😅</div>
+          <h3>추천 데이터가 아직 준비되지 않았습니다</h3>
+          <p>잠시 후 다시 시도해주세요</p>
+          <div class="action-buttons">
+            <button @click="$router.push('/plans')" class="back-button">
+              목록으로 돌아가기
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -464,11 +491,11 @@ export default {
       // 계획 기본 정보 설정
       planData.value = {
         id: null, // 새 계획이므로 ID는 null
-        title: `${travelInfo.value.region} ${
-          travelInfo.value.duration
-        }일 여행 (${formatDateForTitle(startDate)}~${formatDateForTitle(
-          endDate
-        )})`,
+        title: `${
+          travelInfo.value.region
+        } ${actualTotalDays}일 여행 (${formatDateForTitle(
+          startDate
+        )}~${formatDateForTitle(endDate)})`,
         startDate: startDate, // 미리 계산한 값 사용
         endDate: endDate, // 미리 계산한 값 사용
         totalDays: actualTotalDays,
@@ -631,7 +658,7 @@ export default {
         return travelInfo.value.endDate;
       }
       const startDate = new Date();
-      startDate.setDate(startDate.getDate() + 7); 
+      startDate.setDate(startDate.getDate() + 7);
 
       const endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + travelInfo.value.duration - 1);
@@ -916,6 +943,393 @@ export default {
 </script>
 
 <style scoped>
+/* 로딩 컨테이너 중앙 정렬 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #a78bda;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 추천 결과 메인 컨테이너 */
+.recommendation-result {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.recommendation-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* 헤더 스타일 */
+.recommendation-header {
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #a78bda 0%, #8e6ad9 100%);
+  color: white;
+}
+
+.recommendation-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.recommendation-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.days-container {
+  padding: 2rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* 각 날짜 계획 스타일 */
+.day-plan {
+  margin-bottom: 2rem;
+}
+
+.day-plan:last-child {
+  margin-bottom: 0;
+}
+
+.day-title {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.day-number {
+  display: inline-block;
+  background: linear-gradient(135deg, #a78bda 0%, #8e6ad9 100%);
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+/* 장소 리스트 */
+.places-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* 장소 카드 스타일 */
+.place-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+
+.place-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.place-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.place-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.place-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.place-time {
+  align-self: flex-start;
+  background: #a78bda;
+  color: white;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.place-details {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.place-name {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  font-family: "Marines", "Pretendard", sans-serif;
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+/* 활동 내용 스타일 */
+.place-activity {
+  margin: 0;
+  color: #4a5568;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  flex: 1;
+}
+
+/* 교통편 정보 스타일 */
+.transport-info {
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.transport-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #edf2f7;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #4a5568;
+}
+
+.transport-info::before,
+.transport-info::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(to bottom, #e2e8f0, #a0aec0);
+}
+
+.transport-info::before {
+  top: -20px;
+}
+
+.transport-info::after {
+  bottom: -20px;
+}
+
+.transport-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: white;
+  padding: 0.75rem 1.25rem;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 1;
+}
+
+.transport-icon {
+  font-size: 1.2rem;
+}
+
+.transport-type {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.transport-duration {
+  color: #718096;
+  font-weight: 500;
+}
+
+.transport-arrow {
+  font-size: 1.2rem;
+  color: #a0aec0;
+  font-weight: bold;
+}
+
+/* 액션 버튼 컨테이너 */
+.action-buttons-container {
+  padding: 2rem;
+  background: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* 버튼 스타일 */
+.back-button,
+.proceed-button {
+  flex: 1;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: "Pretendard", sans-serif;
+}
+
+.back-button {
+  background: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+}
+
+.back-button:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+.proceed-button {
+  background: linear-gradient(135deg, #a78bda 0%, #8e6ad9 100%);
+  color: white;
+}
+
+.proceed-button:hover {
+  background: linear-gradient(135deg, #9979d5 0%, #7c5dd0 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(167, 139, 218, 0.3);
+}
+
+/* 데이터 없음 스타일 */
+.no-data-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.no-data-content {
+  text-align: center;
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+}
+
+.no-data-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.no-data-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.no-data-content p {
+  margin: 0 0 2rem 0;
+  color: #718096;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+  .step-container {
+    padding: 1rem;
+  }
+
+  .recommendation-header {
+    padding: 1.5rem;
+  }
+
+  .recommendation-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .days-container {
+    padding: 1.5rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .place-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .place-time {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .recommendation-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .days-container {
+    padding: 1rem;
+  }
+
+  .place-card {
+    padding: 1rem;
+  }
+
+  .action-buttons-container {
+    padding: 1.5rem;
+  }
+}
+
 .plan-detail-page {
   display: flex;
   flex-direction: column;
