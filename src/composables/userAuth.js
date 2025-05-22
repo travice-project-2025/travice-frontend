@@ -15,14 +15,14 @@ export function useAuth() {
     loggedIn.value = hasToken
     
     if (hasToken) {
-      const userDate = await fetchUserName()
-      if(!userDate){
+      const userData = await fetchUserName()
+      if(!userData){
         hasToken = false
         loggedIn.value = false
       }
     } else {
       userName.value = ''
-      userNickname .value= ''
+      userNickname.value = ''  // .value 추가
     }
     
     return hasToken
@@ -38,20 +38,23 @@ export function useAuth() {
       if (response.ok) {
         const userData = await response.json()
         userName.value = userData.name
-        userNickname.value = userData.nickname;
+        userNickname.value = userData.nickname
+
+        console.log(userName.value, userNickname.value)  // .value 추가
+
         return userData
       } else {
         // 인증 실패 처리
         loggedIn.value = false
         userName.value = ''
-        userNickname = ''
+        userNickname.value = ''  // .value 추가
         return null
       }
     } catch (error) {
       console.error('사용자 정보 요청 오류:', error)
       loggedIn.value = false
       userName.value = ''
-      userNickname = ''
+      userNickname.value = ''  // .value 추가
       return null
     }
   }

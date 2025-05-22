@@ -16,7 +16,7 @@
             <select id="gender-filter" v-model="filters.gender" class="filter-select">
               <option value="">전체</option>
               <option value="M">남성</option>
-              <option value="F">여성</option>
+              <option value="W">여성</option>
             </select>
           </div>
           
@@ -33,14 +33,25 @@
           </div>
           
           <div class="filter-group">
-            <label for="destination-filter">여행지</label>
-            <select id="destination-filter" v-model="filters.destination" class="filter-select">
+          <label for="destination-filter">여행지</label>
+          <select id="destination-filter" v-model="filters.destination" class="filter-select">
+            <option value="">전체</option>
+            <option value="capital">수도권 (서울, 인천, 경기)</option>
+            <option value="gangwon">강원도</option>
+            <option value="chungcheong">충청권 (대전, 세종, 충청)</option>
+            <option value="gyeongsang">경상권 (대구, 부산, 울산, 경상)</option>
+            <option value="jeolla">전라권 (광주, 전라)</option>
+            <option value="jeju">제주도</option>
+          </select>
+          </div>
+          
+          <div class="filter-group">
+            <label for="status-filter">모집 상태</label>
+            <select id="status-filter" v-model="filters.boardType" class="filter-select">
               <option value="">전체</option>
-              <option value="domestic">국내</option>
-              <option value="asia">아시아</option>
-              <option value="europe">유럽</option>
-              <option value="america">미주</option>
-              <option value="oceania">오세아니아</option>
+              <option value="OPEN">모집중</option>
+              <option value="MATCHED">매칭중</option>
+              <option value="CLOSED">마감됨</option>
             </select>
           </div>
           
@@ -78,13 +89,18 @@
         </div>
         
         <div v-else class="posts-list">
-          <div v-for="post in filteredPosts" :key="post.id" class="post-card" @click="viewPostDetail(post.id)">
+          <div v-for="post in currentPagePosts" :key="post.id" class="post-card" @click="viewPostDetail(post.id)">
             <div class="post-header">
               <div class="post-meta">
                 <span class="post-date">{{ formatDate(post.createdAt) }}</span>
                 <span class="post-views">조회 {{ post.views }}</span>
               </div>
-              <h3 class="post-title">{{ post.title }}</h3>
+              <div class="post-title-wrapper">
+                <h3 class="post-title">{{ post.title }}</h3>
+                <span class="board-type-badge" :class="getBoardTypeClass(post.boardType)">
+                  {{ getBoardTypeText(post.boardType) }}
+                </span>
+              </div>
             </div>
             
             <div class="post-content">
@@ -99,6 +115,17 @@
                   <div class="info-item">
                     <span class="info-label">여행 기간</span>
                     <span class="info-value">{{ post.travelStartDate }} ~ {{ post.travelEndDate }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">모집 인원</span>
+                    <span class="info-value">{{ post.memberCount }}명</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">선호 조건</span>
+                    <span class="info-value">
+                      {{ post.preferenceMinAge }}~{{ post.preferenceMaxAge }}세
+                      <span v-if="post.preferenceGender"> / {{ getGenderText(post.preferenceGender) }}</span>
+                    </span>
                   </div>
                 </div>
                 
@@ -183,6 +210,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
@@ -207,15 +235,16 @@ const filters = ref({
   gender: '',
   ageRange: '',
   destination: '',
-  dateRange: ''
+  dateRange: '',
+  boardType: ''
 });
 
 // API 응답 데이터를 내부 게시글 형식으로 변환하는 함수
 const transformApiData = (apiData) => {
   return {
-    id: apiData.id || Math.floor(Math.random() * 1000), // ID가 없으면 임의 생성
+    id: apiData.id,
     title: apiData.title,
-    content: apiData.content,
+    content: apiData.detail,
     author: apiData.writer,
     authorGender: apiData.gender,
     authorAge: apiData.age,
@@ -223,18 +252,26 @@ const transformApiData = (apiData) => {
     travelStartDate: apiData.startDate,
     travelEndDate: apiData.endDate,
     createdAt: apiData.createdAt || new Date().toISOString(),
-    views: apiData.views || 0,
+    views: apiData.viewCount || 0,
     interestCount: apiData.interestCount || 0,
     commentCount: apiData.commentCount || 0,
-    isInterested: apiData.isInterested || false
+    isInterested: apiData.isInterested || false,
+    memberCount: apiData.memberCount || 1,
+    preferenceGender: apiData.preferenceGender,
+    preferenceMinAge: apiData.preferenceMinAge,
+    preferenceMaxAge: apiData.preferenceMaxAge,
+    boardType: apiData.boardType || 'OPEN',
+    isDeleted: apiData.isDeleted
   };
 };
 
 // 게시글 데이터 가져오기
 const fetchBoardData = async () => {
+  
+
   isLoading.value = true;
   try {
-    const response = await fetch('http://localhost:8080/api/v1/boards/info', {
+    const response = await fetch('http://localhost:8080/api/v1/boards', {
       credentials: 'include',
       headers: {
         'Accept': 'application/json'
@@ -261,7 +298,9 @@ const fetchBoardData = async () => {
 
 // 필터링된 게시글
 const filteredPosts = computed(() => {
-  let result = [...posts.value];
+  
+
+let result = posts.value.filter(post => post.isDeleted === false || post.isDeleted === 'false');
   
   // 성별 필터
   if (filters.value.gender) {
@@ -285,23 +324,28 @@ const filteredPosts = computed(() => {
     );
   }
   
-  // 여행지 필터
+// 여행지 필터
   if (filters.value.destination) {
-    // 실제 구현 시 API 필터링 사용
-    // 임시 로직
-    const destinationMap = {
-      'domestic': ['제주도', '부산', '속초', '서울', '인천', '대구', '광주', '울산', '세종', '대전', '경주', '전주', '강릉'],
-      'asia': ['일본', '베트남', '태국', '대만', '중국', '홍콩', '싱가포르', '인도네시아', '필리핀', '말레이시아'],
-      'europe': ['유럽', '프랑스', '이탈리아', '스페인', '영국', '독일', '스위스', '네덜란드', '그리스', '오스트리아'],
-      'america': ['미국', '캐나다', '멕시코', '브라질', '아르헨티나', '칠레', '페루'],
-      'oceania': ['호주', '뉴질랜드', '피지', '괌']
-    };
+  // 국내 지역을 권역별로 분류한 여행지 맵
+  const destinationMap = {
+    'capital': ['서울', '인천', '경기도'], // 수도권
+    'gangwon': ['강원도'], // 강원권
+    'chungcheong': ['대전', '세종', '충청북도', '충청남도'], // 충청권
+    'gyeongsang': ['대구', '부산', '울산', '경상북도', '경상남도'], // 경상권
+    'jeolla': ['광주', '전라북도', '전라남도'], // 전라권
+    'jeju': ['제주도'] // 제주
+  };
     
-    const destinationList = destinationMap[filters.value.destination];
+  // 선택한 지역의 여행지 목록 가져오기
+  const destinationList = destinationMap[filters.value.destination];
+  
+  // 일치하는 여행지 필터링
+  if (destinationList) {
     result = result.filter(post => 
       destinationList.some(dest => post.destination.includes(dest))
     );
   }
+}
   
   // 여행 예정일 필터
   if (filters.value.dateRange) {
@@ -322,6 +366,11 @@ const filteredPosts = computed(() => {
       const travelDate = new Date(post.travelStartDate).getTime();
       return futureFilter ? travelDate > targetDate : travelDate <= targetDate;
     });
+  }
+  
+  // 모집 상태 필터
+  if (filters.value.boardType) {
+    result = result.filter(post => post.boardType === filters.value.boardType);
   }
   
   return result;
@@ -366,7 +415,27 @@ const formatDate = (dateString) => {
 
 // 성별 텍스트 변환
 const getGenderText = (gender) => {
-  return gender === 'M' ? '남성' : '여성';
+  return gender === 'M' ? '남성' : gender === 'W' ? '여성' : '무관';
+};
+
+// 게시글 상태 텍스트 변환
+const getBoardTypeText = (boardType) => {
+  switch (boardType) {
+    case 'OPEN': return '모집중';
+    case 'MATCHED': return '매칭중';
+    case 'CLOSED': return '마감됨';
+    default: return '모집중';
+  }
+};
+
+// 게시글 상태에 따른 CSS 클래스
+const getBoardTypeClass = (boardType) => {
+  switch (boardType) {
+    case 'OPEN': return 'type-open';
+    case 'MATCHED': return 'type-matched';
+    case 'CLOSED': return 'type-closed';
+    default: return 'type-open';
+  }
 };
 
 // 사용자 아바타 이니셜 생성
@@ -394,7 +463,8 @@ const resetFilters = () => {
     gender: '',
     ageRange: '',
     destination: '',
-    dateRange: ''
+    dateRange: '',
+    boardType: ''
   };
   currentPage.value = 1;
 };
@@ -427,12 +497,12 @@ const toggleInterest = async (post) => {
 
 // 게시글 상세 보기
 const viewPostDetail = (postId) => {
-  router.push(`/partner-post/${postId}`);
+  router.push(`/board/${postId}`);
 };
 
 // 게시글 작성 페이지로 이동
 const goToWritePost = () => {
-  router.push('/write-partner-post');
+  router.push('/createboard');
 };
 
 // 스크롤 이벤트 핸들러
@@ -458,7 +528,82 @@ onBeforeUnmount(() => {
 });
 </script>
 
+
 <style scoped>
+
+.post-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.post-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #333;
+}
+
+.board-type-badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.type-open {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.type-matched {
+  background-color: #2196F3;
+  color: white;
+}
+
+.type-closed {
+  background-color: #9E9E9E;
+  color: white;
+}
+.post-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.post-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #333;
+}
+
+.board-type-badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.type-open {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.type-matched {
+  background-color: #2196F3;
+  color: white;
+}
+
+.type-closed {
+  background-color: #9E9E9E;
+  color: white;
+}
+
 .partner-board-page {
   padding-top: 60px;
   min-height: 100vh;
