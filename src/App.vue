@@ -12,10 +12,11 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute } from 'vue-router';
 import AppHeader from './components/common/AppHeader.vue';
+import { useAuth } from '@/composables/userAuth'
 
 const route = useRoute();
 const isHeaderShrunk = ref(false);
-
+const { checkLoginStatus } = useAuth()
 const handleScroll = () => {
   if (window.scrollY > 20) {
     isHeaderShrunk.value = true;
@@ -27,6 +28,9 @@ const handleScroll = () => {
 onMounted(() => {
   console.log("웹이 마운트되었습니다.");
   window.addEventListener('scroll', handleScroll);
+   if (route.path !== '/login') {
+    checkLoginStatus()
+  }
 });
 
 onBeforeUnmount(() => {

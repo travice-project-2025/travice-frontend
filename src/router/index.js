@@ -10,12 +10,13 @@ import BoardPage from '../pages/BoardPage.vue'
 import PlanCreatePage from '../pages/PlanCreatePage.vue'
 import CreateBoard from '../pages/CreateBoard.vue'
 import BoardDetail from '../pages/BoardDetail.vue'
+import Search from '../pages/Search.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Onboarding',
-    component: OnboardingPage
+    component: Hompage
   },
   {
     path: '/login',
@@ -59,6 +60,12 @@ const routes = [
     path: '/board/:id',
     name: 'BoardDetail',
     component: BoardDetail,
+    props: true
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: Search,
     props: true
   },
 ]

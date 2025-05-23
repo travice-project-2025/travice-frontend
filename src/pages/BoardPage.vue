@@ -4,7 +4,7 @@
     <main class="container main-content">
       <!-- 게시판 타이틀 영역 -->
       <div class="board-header">
-        <h1 class="board-title">여행 파트너 찾기</h1>
+        <h1 class="board-title">여행 <span class="highlight">파트너</span> 찾기</h1>
         <p class="board-description">함께 여행할 동행을 찾아보세요</p>
       </div>
       
@@ -251,7 +251,7 @@ const transformApiData = (apiData) => {
     destination: apiData.location,
     travelStartDate: apiData.startDate,
     travelEndDate: apiData.endDate,
-    createdAt: apiData.createdAt || new Date().toISOString(),
+    createdAt: apiData.CreatedAt || apiData.createdAt || new Date().toISOString(),
     views: apiData.viewCount || 0,
     interestCount: apiData.interestCount || 0,
     commentCount: apiData.commentCount || 0,
@@ -447,7 +447,7 @@ const getAvatarInitial = (name) => {
 // 사용자 아바타 색상 생성
 const getAvatarColor = (name) => {
   if (!name) return '#cccccc';
-  const colors = ['#F2D06B', '#95BCE5', '#A5C893', '#F28585', '#8C7AE6'];
+  const colors = ['#8e6ad9', '#a78bfa', '#A5C893', '#F28585', '#F2D06B'];
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[hash % colors.length];
 };
@@ -567,42 +567,6 @@ onBeforeUnmount(() => {
   background-color: #9E9E9E;
   color: white;
 }
-.post-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.post-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin: 0;
-  color: #333;
-}
-
-.board-type-badge {
-  font-size: 12px;
-  font-weight: 500;
-  padding: 3px 8px;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-
-.type-open {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.type-matched {
-  background-color: #2196F3;
-  color: white;
-}
-
-.type-closed {
-  background-color: #9E9E9E;
-  color: white;
-}
 
 .partner-board-page {
   padding-top: 60px;
@@ -611,7 +575,7 @@ onBeforeUnmount(() => {
 }
 
 .main-content {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 30px 20px;
 }
@@ -623,10 +587,14 @@ onBeforeUnmount(() => {
 }
 
 .board-title {
-  font-size: 28px;
+  font-size: 36px;
   font-weight: 700;
   margin-bottom: 8px;
   color: #333;
+}
+
+.highlight {
+  color: #8e6ad9;
 }
 
 .board-description {
@@ -672,23 +640,32 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   font-size: 14px;
   background-color: #f9f9f9;
+  transition: border-color 0.2s;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #8e6ad9;
+  box-shadow: 0 0 0 2px rgba(142, 106, 217, 0.1);
 }
 
 .filter-apply-btn {
   align-self: flex-end;
-  padding: 10px 20px;
-  background-color: #4a6ee0;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.3);
 }
 
 .filter-apply-btn:hover {
-  background-color: #3a5ecc;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(142, 106, 217, 0.4);
 }
 
 /* 게시글 영역 */
@@ -711,7 +688,7 @@ onBeforeUnmount(() => {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #4a6ee0;
+  border-top: 4px solid #8e6ad9;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
@@ -734,6 +711,12 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.reset-filter-btn:hover {
+  background-color: rgba(142, 106, 217, 0.1);
+  color: #8e6ad9;
 }
 
 .posts-list {
@@ -753,7 +736,7 @@ onBeforeUnmount(() => {
 
 .post-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(142, 106, 217, 0.15);
 }
 
 .post-header {
@@ -878,6 +861,11 @@ onBeforeUnmount(() => {
 
 .interest-btn {
   cursor: pointer;
+  transition: color 0.2s;
+}
+
+.interest-btn:hover {
+  color: #8e6ad9;
 }
 
 .interest-btn.active {
@@ -901,6 +889,12 @@ onBeforeUnmount(() => {
   color: #666;
   font-size: 14px;
   cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: #8e6ad9;
+  color: #8e6ad9;
 }
 
 .page-btn:disabled {
@@ -927,10 +921,15 @@ onBeforeUnmount(() => {
   transition: all 0.2s;
 }
 
+.page-number:hover {
+  border-color: #8e6ad9;
+  color: #8e6ad9;
+}
+
 .page-number.active {
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   color: white;
-  border-color: #4a6ee0;
+  border-color: #8e6ad9;
 }
 
 /* 게시글 작성 버튼 */
@@ -941,15 +940,15 @@ onBeforeUnmount(() => {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   color: white;
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(74, 110, 224, 0.3);
+  box-shadow: 0 6px 20px rgba(142, 106, 217, 0.4);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
   overflow: hidden;
 }
 
@@ -964,6 +963,8 @@ onBeforeUnmount(() => {
 .write-post-btn:hover {
   width: 140px;
   border-radius: 30px;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(142, 106, 217, 0.5);
 }
 
 .write-post-btn:hover svg {

@@ -1,5 +1,8 @@
 <template>
   <div class="onboarding-container">
+    <!-- 배경 오버레이 -->
+    <div class="background-overlay"></div>
+    
     <!-- 헤더 영역 -->
     <header class="header">
       <div class="logo-container">
@@ -32,7 +35,7 @@
           </div>
           <div class="feature-item">
             <div class="feature-icon">✓</div>
-            <div class="feature-text">최적의 이동 경로 제안</div>
+            <div class="feature-text">맞춤형 여행 동행 매칭</div>
           </div>
         </div>
         <div class="cta-buttons">
@@ -65,8 +68,8 @@
                     <img src="../assets/images/carrier_img.png" alt="실시간 정보 화면">
                   </div>
                   <div class="carousel-text">
-                    <h3>실시간 여행 정보</h3>
-                    <p>항공편 변경, 날씨 업데이트, 현지 소식을 실시간으로 확인하세요</p>
+                    <h3>간편한 일정 관리</h3>
+                    <p>Travice와 함께 간편하게 일정을 관리하세요요</p>
                   </div>
                 </div>
                 
@@ -76,8 +79,8 @@
                     <img src="../assets/images/tree_img.png" alt="여행 추억 화면">
                   </div>
                   <div class="carousel-text">
-                    <h3>추억 공유 서비스</h3>
-                    <p>소중한 여행 순간을 기록하고 친구들과 쉽게 공유할 수 있습니다</p>
+                    <h3>함께 하는 여행</h3>
+                    <p>함께 여행 갈 동행을 구해 여행을 떠나보세요</p>
                   </div>
                 </div>
               </div>
@@ -137,8 +140,27 @@
 .onboarding-container {
   font-family: "Marines", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", sans-serif;
   color: #333;
-  background-color: #FAFAFA;
+  background: url("../assets/images/board.jpg");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   min-height: 100vh;
+  width: 100%;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 배경 오버레이 - 흐릿한 효과 */
+.background-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 0;
 }
 
 .header {
@@ -146,8 +168,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 40px;
-  background-color: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
   position: fixed;
   top: 0;
   left: 0;
@@ -190,22 +213,24 @@
 
 .main-content {
   display: flex;
-  max-width: 1200px;
-  margin: 100px auto 60px;
-  padding: 0 20px;
-  min-height: calc(100vh - 180px);
+  max-width: 1400px;
+  margin: 120px auto 80px;
+  padding: 0 40px;
+  min-height: calc(100vh - 200px);
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .intro-section {
-  flex: 1;
-  padding-right: 40px;
+  flex: 1.2;
+  padding-right: 60px;
 }
 
 .main-title {
-  font-size: 42px;
+  font-size: 52px;
   font-weight: 800;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   line-height: 1.2;
   color: #2c3e50;
 }
@@ -215,79 +240,83 @@
 }
 
 .subtitle {
-  font-size: 18px;
+  font-size: 22px;
   color: #5d6778;
-  margin-bottom: 40px;
-  line-height: 1.5;
+  margin-bottom: 50px;
+  line-height: 1.6;
 }
 
 .feature-list {
-  margin-bottom: 40px;
+  margin-bottom: 50px;
 }
 
 .feature-item {
   display: flex;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .feature-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   background-color: #8e6ad9;
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px;
-  font-size: 14px;
+  margin-right: 16px;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .feature-text {
-  font-size: 16px;
+  font-size: 18px;
   color: #4a4a4a;
+  font-weight: 500;
 }
 
 .cta-buttons {
   display: flex;
-  gap: 16px;
-  margin-top: 32px;
+  gap: 20px;
+  margin-top: 40px;
 }
 
 .btn-start {
-  background-color: #8e6ad9;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   color: white;
   border: none;
-  padding: 14px 32px;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 18px 40px;
+  border-radius: 12px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 4px 8px rgba(142, 106, 217, 0.3);
+  box-shadow: 0 6px 20px rgba(142, 106, 217, 0.3);
 }
 
 .btn-start:hover {
-  background-color: #7c59c5;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(142, 106, 217, 0.4);
+  background: linear-gradient(135deg, #7c59c5, #9333ea);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(142, 106, 217, 0.4);
 }
 
 .btn-demo {
-  background-color: transparent;
+  background-color: rgba(255, 255, 255, 0.9);
   color: #8e6ad9;
   border: 2px solid #8e6ad9;
-  padding: 14px 32px;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 18px 40px;
+  border-radius: 12px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  backdrop-filter: blur(10px);
 }
 
 .btn-demo:hover {
   background-color: rgba(142, 106, 217, 0.1);
+  transform: translateY(-2px);
 }
 
 .visual-section {
@@ -298,20 +327,21 @@
 }
 
 .device-mockup {
-  width: 360px;
-  height: 640px;
-  background-color: white;
-  border-radius: 30px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  padding: 15px;
+  width: 420px;
+  height: 750px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 35px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+  padding: 20px;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 .mockup-content {
   width: 100%;
   height: 100%;
-  border-radius: 20px;
+  border-radius: 25px;
   overflow: hidden;
   position: relative;
 }
@@ -319,203 +349,10 @@
 .mockup-screen {
   width: 100%;
   height: 100%;
-  background-color: #f5f5f7;
+  background: #f5f5f7;
   display: flex;
   flex-direction: column;
 }
-
-.carousel-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 20px;
-  text-align: center;
-}
-
-.carousel-image {
-  width: 100%;
-  max-width: 250px;
-  margin-bottom: 30px;
-}
-
-.carousel-image img {
-  width: 100%;
-  height: auto;
-}
-
-.carousel-text h3 {
-  font-size: 22px;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: #333;
-}
-
-.carousel-text p {
-  font-size: 16px;
-  color: #666;
-  line-height: 1.5;
-}
-
-.carousel-dots {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #d0d0d0;
-}
-
-.dot.active {
-  background-color: #8e6ad9;
-}
-
-.features-section {
-  background-color: white;
-  padding: 80px 0;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
-  display: flex;
-  justify-content: space-between;
-  gap: 30px;
-}
-
-.feature-card {
-  flex: 1;
-  background-color: #f8f9fa;
-  border-radius: 16px;
-  padding: 30px;
-  text-align: center;
-  transition: all 0.3s;
-}
-
-.feature-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
-
-.feature-icon-large {
-  font-size: 36px;
-  margin-bottom: 20px;
-}
-
-.feature-card h3 {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #333;
-}
-
-.feature-card p {
-  font-size: 15px;
-  color: #666;
-  line-height: 1.5;
-}
-
-.footer {
-  background-color: #f5f5f7;
-  padding: 40px 0;
-}
-
-.footer .container {
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-.footer-logo {
-  font-size: 24px;
-  font-weight: 700;
-  color: #8e6ad9;
-}
-
-.footer-links {
-  display: flex;
-  gap: 20px;
-}
-
-.footer-links a {
-  font-size: 14px;
-  color: #666;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.footer-links a:hover {
-  color: #8e6ad9;
-}
-
-.copyright {
-  font-size: 14px;
-  color: #999;
-  margin-top: 10px;
-}
-
-/* 반응형 스타일 */
-@media (max-width: 992px) {
-  .main-content {
-    flex-direction: column;
-    margin-top: 80px;
-  }
-  
-  .intro-section {
-    padding-right: 0;
-    margin-bottom: 60px;
-    text-align: center;
-  }
-  
-  .feature-item {
-    justify-content: center;
-  }
-  
-  .container {
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-title {
-    font-size: 32px;
-  }
-  
-  .subtitle {
-    font-size: 16px;
-  }
-  
-  .device-mockup {
-    width: 300px;
-    height: 540px;
-  }
-}
-
-@media (max-width: 576px) {
-  .header {
-    padding: 15px 20px;
-  }
-  
-  .cta-buttons {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .device-mockup {
-    width: 280px;
-    height: 500px;
-  }
-}
-
 
 .carousel-container {
   position: relative;
@@ -530,7 +367,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  padding: 20px;
+  padding: 30px;
   text-align: center;
   position: absolute;
   width: 100%;
@@ -545,35 +382,241 @@
   z-index: 1;
 }
 
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #d0d0d0;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+.carousel-image {
+  width: 100%;
+  max-width: 280px;
+  margin-bottom: 40px;
 }
 
-.dot.active {
-  background-color: #8e6ad9;
-  width: 10px;
-  height: 10px;
+.carousel-image img {
+  width: 100%;
+  height: auto;
+}
+
+.carousel-text h3 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.carousel-text p {
+  font-size: 18px;
+  color: #666;
+  line-height: 1.6;
 }
 
 .carousel-dots {
   position: absolute;
-  bottom: 20px;
+  bottom: 25px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 8px;
+  gap: 10px;
   z-index: 10;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #d0d0d0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dot.active {
+  background-color: #8e6ad9;
+  width: 12px;
+  height: 12px;
+}
+
+.features-section {
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 100px 0;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.feature-card {
+  flex: 1;
+  background-color: rgba(248, 249, 250, 0.8);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.feature-icon-large {
+  font-size: 48px;
+  margin-bottom: 25px;
+}
+
+.feature-card h3 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.feature-card p {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.footer {
+  background-color: rgba(245, 245, 247, 0.95);
+  padding: 50px 0;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
+}
+
+.footer .container {
+  flex-direction: column;
+  align-items: center;
+  gap: 25px;
+}
+
+.footer-logo {
+  font-size: 28px;
+  font-weight: 700;
+  color: #8e6ad9;
+}
+
+.footer-links {
+  display: flex;
+  gap: 30px;
+}
+
+.footer-links a {
+  font-size: 16px;
+  color: #666;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover {
+  color: #8e6ad9;
+}
+
+.copyright {
+  font-size: 14px;
+  color: #999;
+  margin-top: 15px;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 1200px) {
+  .main-content {
+    max-width: 1200px;
+    padding: 0 30px;
+  }
+  
+  .main-title {
+    font-size: 46px;
+  }
+  
+  .device-mockup {
+    width: 380px;
+    height: 680px;
+  }
+}
+
+@media (max-width: 992px) {
+  .main-content {
+    flex-direction: column;
+    margin-top: 100px;
+  }
+  
+  .intro-section {
+    padding-right: 0;
+    margin-bottom: 80px;
+    text-align: center;
+  }
+  
+  .feature-item {
+    justify-content: center;
+  }
+  
+  .container {
+    flex-direction: column;
+  }
+  
+  .main-title {
+    font-size: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-title {
+    font-size: 36px;
+  }
+  
+  .subtitle {
+    font-size: 18px;
+  }
+  
+  .device-mockup {
+    width: 320px;
+    height: 580px;
+  }
+  
+  .main-content {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 576px) {
+  .header {
+    padding: 15px 20px;
+  }
+  
+  .cta-buttons {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .device-mockup {
+    width: 300px;
+    height: 540px;
+  }
+  
+  .main-title {
+    font-size: 32px;
+  }
+  
+  .subtitle {
+    font-size: 16px;
+  }
 }
 </style>
 
-
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useAuth } from '../composables/userAuth'; // 이 줄 추가
+
+// useAuth 사용
+const { checkLoginStatus } = useAuth();
+
 
 // 캐러셀 상태 관리
 const activeIndex = ref(0);
@@ -608,6 +651,7 @@ const resetAutoSlideTimer = () => {
 
 // 컴포넌트 마운트 시 자동 슬라이드 시작
 onMounted(() => {
+  checkLoginStatus(false);
   startAutoSlideTimer();
 });
 

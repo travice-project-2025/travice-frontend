@@ -162,7 +162,7 @@ const goToProfile = () => {
 onMounted(() => {
   console.log('컴포넌트 마운트됨');
   window.addEventListener('scroll', handleScroll);
-  checkLoginStatus();
+  checkLoginStatus(true);
   fetchPlans();
   fetchUserInfo(); // 사용자 정보 가져오기 추가
 });

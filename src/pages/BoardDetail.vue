@@ -2,8 +2,25 @@
 <template>
   <div class="post-detail-page">
     <AppHeader :is-shrunk="isScrolled" />
+    
     <main class="main-content">
+      <!-- 상단 내비게이션 -->
+            <div class="navigation-bar">
+              <button @click="goBack" class="back-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>게시판으로 돌아가기</span>
+              </button>
+              <div class="post-meta">
+                <span class="post-date">{{ formatDate(post.createdAt) }}</span>
+                <span class="dot-divider">•</span>
+                <span class="post-views">조회 {{ post.views }}</span>
+              </div>
+            </div>
       <div class="content-wrapper">
+        
         <div class="sidebar">
           <!-- 작성자 정보 -->
           <div class="author-card">
@@ -68,6 +85,8 @@
               </button>
             </div>
           </div>
+
+          
           
           <!-- 여행 정보 카드 -->
           <div class="travel-info-card">
@@ -76,8 +95,8 @@
               <div class="info-item">
                 <div class="info-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 6V12L16 14" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 6V12L16 14" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </div>
                 <div class="info-content">
@@ -89,8 +108,8 @@
               <div class="info-item">
                 <div class="info-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </div>
                 <div class="info-content">
@@ -102,10 +121,10 @@
               <div class="info-item">
                 <div class="info-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </div>
                 <div class="info-content">
@@ -117,8 +136,8 @@
               <div class="info-item">
                 <div class="info-icon">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 1V23" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="#4A6EE0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 1V23" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17 5H9.5C8.57174 5 7.6815 5.36875 7.02513 6.02513C6.36875 6.6815 6 7.57174 6 8.5C6 9.42826 6.36875 10.3185 7.02513 10.9749C7.6815 11.6313 8.57174 12 9.5 12H14.5C15.4283 12 16.3185 12.3687 16.9749 13.0251C17.6313 13.6815 18 14.5717 18 15.5C18 16.4283 17.6313 17.3185 16.9749 17.9749C16.3185 18.6313 15.4283 19 14.5 19H6" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </div>
                 <div class="info-content">
@@ -129,47 +148,30 @@
             </div>
           </div>
         </div>
-      
+
         <div class="main-column">
-          <!-- 상단 내비게이션 -->
-          <div class="navigation-bar">
-            <button @click="goBack" class="back-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>게시판으로 돌아가기</span>
-            </button>
-            <div class="post-meta">
-              <span class="post-date">{{ formatDate(post.createdAt) }}</span>
-              <span class="dot-divider">•</span>
-              <span class="post-views">조회 {{ post.views }}</span>
-            </div>
-          </div>
-          
           <!-- 게시글 컨테이너 -->
           <div class="post-container">
-          <!-- 게시글 헤더 -->
-          <div class="post-header">
+            
+            
             <div class="post-title-wrapper">
-              <h1 class="post-title">{{ post.title }}</h1>
-              <span class="board-type-badge" :class="getBoardTypeClass(post.boardType)">
-                {{ getBoardTypeText(post.boardType) }}
-              </span>
+              <div class="title-and-badge">
+                <h1 class="post-title">{{ post.title }}</h1>
+                <span class="board-type-badge" :class="getBoardTypeClass(post.boardType)">
+                  {{ getBoardTypeText(post.boardType) }}
+                </span>
+              </div>
+              <div v-if="isAuthor" class="post-actions">
+                <button class="delete-post-btn" @click="confirmDeletePost">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  게시글 삭제하기
+                </button>
+              </div>
             </div>
-            
-            <!-- 게시글 작성자만 삭제 버튼이 보이게 함 -->
-            <div v-if="isAuthor" class="post-actions">
-              <button class="delete-post-btn" @click="confirmDeletePost">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                게시글 삭제하기
-              </button>
-            </div>
-          </div>
-            
+                          
             <!-- 게시글 내용 -->
             <div class="post-content">
               <div class="content-text">
@@ -188,7 +190,7 @@
             <!-- 댓글 작성 -->
             <div class="comment-form">
               <div class="form-avatar" :style="{ backgroundColor: getAvatarColor(userName) }">
-                {{ getAvatarInitial(userName) }}
+                {{ getAvatarInitial(userNickname) }}
               </div>
               <div class="form-input-area">
                 <textarea 
@@ -437,7 +439,7 @@ const getAvatarInitial = (name) => {
 // 사용자 아바타 색상 생성
 const getAvatarColor = (name) => {
   if (!name) return '#cccccc';
-  const colors = ['#F2D06B', '#95BCE5', '#A5C893', '#F28585', '#8C7AE6'];
+  const colors = ['#8e6ad9', '#a78bfa', '#A5C893', '#F28585', '#F2D06B'];
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   return colors[hash % colors.length];
 };
@@ -486,7 +488,7 @@ const toggleApply = () => {
   }
 };
 
-// 게시글 상태 변경 (작성자용)
+// 게시글 상태 변경 (작성자용) - 수정된 부분
 const togglePostStatus = async () => {
   // 이미 마감된 상태라면 아무 동작 없음
   if (post.value.boardType === 'CLOSED') {
@@ -498,18 +500,25 @@ const togglePostStatus = async () => {
     try {
       const postId = route.params.id;
       
-      // API 호출 (실제 API 연동 시 구현)
-      // const response = await fetch(`http://localhost:8080/api/v1/boards/${postId}/status`, {
-      //   method: 'PUT',
-      //   credentials: 'include',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Accept': 'application/json'
-      //   },
-      //   body: JSON.stringify({ status: 'CLOSED' })
-      // });
+      // 실제 API 호출
+      const response = await fetch(`http://localhost:8080/api/v1/boards/updateType/${postId}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('JWT-TOKEN')}`
+        }
+      });
       
-      // 성공 시 UI 업데이트 (임시 처리)
+      if (!response.ok) {
+        throw new Error(`게시글 상태 변경 실패: ${response.status}`);
+      }
+      
+      // 응답 확인
+      const responseData = await response.json();
+      console.log('게시글 상태 변경 성공:', responseData);
+      
+      // 성공 시 UI 업데이트
       post.value.boardType = 'CLOSED';
       
       // 알림 메시지
@@ -842,7 +851,7 @@ onBeforeUnmount(() => {
 
 .author-card, .travel-info-card {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 24px;
   margin-bottom: 20px;
@@ -886,14 +895,20 @@ onBeforeUnmount(() => {
   font-weight: 500;
 }
 
+.title-and-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .badge.gender {
-  background-color: #E6F0FF;
-  color: #4a6ee0;
+  background-color: rgba(142, 106, 217, 0.1);
+  color: #8e6ad9;
 }
 
 .badge.age {
-  background-color: #F0F0FF;
-  color: #6c5ce7;
+  background-color: rgba(167, 139, 250, 0.1);
+  color: #a78bfa;
 }
 
 .author-stats {
@@ -933,12 +948,12 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 8px;
   padding: 12px 0;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  border: 1px solid #ddd;
+  transition: all 0.3s;
+  border: 2px solid #ddd;
 }
 
 .interest-btn {
@@ -953,25 +968,32 @@ onBeforeUnmount(() => {
 }
 
 .apply-btn {
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   color: white;
-  border-color: #4a6ee0;
+  border-color: #8e6ad9;
 }
 
 .apply-btn.applied {
-  background-color: #2ECC71;
+  background: linear-gradient(135deg, #2ECC71, #27AE60);
   border-color: #2ECC71;
 }
 
 .apply-btn.close-btn {
-  background-color: #e74c3c;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
   border-color: #e74c3c;
+  color: #ffffff;
 }
 
 .apply-btn.closed {
   background-color: #bdc3c7;
   border-color: #bdc3c7;
+  color: #ffffff;
   cursor: not-allowed;
+}
+
+.apply-btn:hover:not(.closed) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.3);
 }
 
 .count-badge {
@@ -1005,8 +1027,8 @@ onBeforeUnmount(() => {
 .info-icon {
   width: 36px;
   height: 36px;
-  background-color: #f0f0ff;
-  border-radius: 6px;
+  background-color: rgba(142, 106, 217, 0.1);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1034,7 +1056,11 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-left: 350px;
+  margin-right: 27px;
   margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
 }
 
 .back-btn {
@@ -1043,20 +1069,21 @@ onBeforeUnmount(() => {
   gap: 6px;
   background: none;
   border: none;
-  color: #666;
+  color: #000000;
   font-size: 14px;
   cursor: pointer;
   padding: 6px 0;
   transition: color 0.2s;
+  font-size: 1em;
 }
 
 .back-btn:hover {
-  color: #4a6ee0;
+  color: #8e6ad9;
 }
 
 .post-meta {
   font-size: 14px;
-  color: #888;
+  color: #000000;
 }
 
 .dot-divider {
@@ -1066,7 +1093,7 @@ onBeforeUnmount(() => {
 /* 게시글 컨테이너 */
 .post-container {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 30px;
   margin-bottom: 20px;
@@ -1101,7 +1128,7 @@ onBeforeUnmount(() => {
 /* 댓글 섹션 */
 .comments-section {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   padding: 30px;
 }
@@ -1116,7 +1143,7 @@ onBeforeUnmount(() => {
 
 .comment-count {
   font-size: 16px;
-  color: #4a6ee0;
+  color: #8e6ad9;
   margin-left: 6px;
 }
 
@@ -1159,24 +1186,25 @@ onBeforeUnmount(() => {
 
 .comment-input:focus {
   outline: none;
-  border-color: #4a6ee0;
+  border-color: #8e6ad9;
 }
 
 .submit-comment-btn {
   align-self: flex-end;
-  padding: 8px 16px;
-  background-color: #4a6ee0;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   color: white;
   border: none;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s;
 }
 
 .submit-comment-btn:hover {
-  background-color: #3a5ecc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.3);
 }
 
 .submit-comment-btn:disabled {
@@ -1242,8 +1270,8 @@ onBeforeUnmount(() => {
 
 .author-badge {
   font-size: 11px;
-  background-color: #F0F0FF;
-  color: #4a6ee0;
+  background-color: rgba(142, 106, 217, 0.1);
+  color: #8e6ad9;
   padding: 2px 6px;
   border-radius: 10px;
 }
@@ -1330,8 +1358,8 @@ onBeforeUnmount(() => {
 }
 
 .edit-comment-btn:hover {
-  background-color: rgba(52, 152, 219, 0.1);
-  color: #3498db;
+  background-color: rgba(142, 106, 217, 0.1);
+  color: #8e6ad9;
 }
 
 .edit-comment-btn:active {
@@ -1349,7 +1377,7 @@ onBeforeUnmount(() => {
   left: 50%;
   width: 0;
   height: 1px;
-  background-color: #3498db;
+  background-color: #8e6ad9;
   transition: width 0.2s, left 0.2s;
 }
 
@@ -1379,7 +1407,7 @@ onBeforeUnmount(() => {
 
 .comment-edit-input:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: #8e6ad9;
   background-color: white;
 }
 
@@ -1409,13 +1437,14 @@ onBeforeUnmount(() => {
 }
 
 .edit-submit-btn {
-  background-color: #3498db;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   color: white;
-  border: 1px solid #3498db;
+  border: 1px solid #8e6ad9;
 }
 
 .edit-submit-btn:hover {
-  background-color: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(142, 106, 217, 0.3);
 }
 
 .edit-submit-btn:disabled {
@@ -1473,6 +1502,7 @@ onBeforeUnmount(() => {
 .post-title-wrapper {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin-bottom: 16px;
 }
@@ -1499,15 +1529,10 @@ onBeforeUnmount(() => {
   background-color: #9E9E9E;
   color: white;
 }
-.post-title-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
 
 .post-actions {
-  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .delete-post-btn {
