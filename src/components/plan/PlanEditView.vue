@@ -13,7 +13,7 @@
       <!-- 오른쪽: 일정 영역 -->
       <div class="itinerary-section">
         <div class="itinerary-header">
-          <DayTab v-model="activeDay" :total-days="planData.totalDays" />
+          <DayTab v-model="activeDay" :total-days="calculateTotalDays" />
         </div>
 
         <div class="itinerary-body">
@@ -84,12 +84,30 @@ const newPlace = ref({
   address: ''
 })
 
+// 총 일수 계산
+const calculateTotalDays = computed(() => {
+  if (!props.planData?.startDate || !props.planData?.endDate) return 1
+  
+  const start = new Date(props.planData.startDate)
+  const end = new Date(props.planData.endDate)
+  const diffTime = Math.abs(end - start)
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  
+  return diffDays + 1 // 당일 포함
+})
+
 // 현재 일자에 해당하는 장소들
 const filteredPlaces = computed({
   get: () => {
+    if (!props.planData?.details) return []
+    
     return props.planData.details
       .filter(detail => detail.day === activeDay.value)
-      .sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime))
+      .sort((a, b) => {
+        const timeA = normalizeTime(a.arrivalTime)
+        const timeB = normalizeTime(b.arrivalTime)
+        return timeA.localeCompare(timeB)
+      })
   },
   set: (newPlaces) => {
     const otherDayPlaces = props.planData.details.filter(
@@ -102,6 +120,17 @@ const filteredPlaces = computed({
     emit('update:planData', updatedPlanData)
   }
 })
+
+// 시간 정규화 함수
+const normalizeTime = (time) => {
+  if (!time) return '00:00'
+  const timeStr = time.toString()
+  if (timeStr.includes(':')) {
+    return timeStr.substring(0, 5) // "HH:mm" 형식
+  }
+  // "HHmm" 형식인 경우
+  return `${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}`
+}
 
 // 장소 삭제
 const deletePlaceById = (id) => {
@@ -125,7 +154,8 @@ const addNewPlace = () => {
     arrivalTime: newPlace.value.arrivalTime,
     departureTime: newPlace.value.departureTime,
     memo: newPlace.value.memo,
-    transportFromPrevious: { name: newPlace.value.transportName },
+    transportFromPrevious: newPlace.value.transportName ? 
+      { name: newPlace.value.transportName } : null,
     latitude: newPlace.value.latitude,
     longitude: newPlace.value.longitude,
     address: newPlace.value.address || ''
@@ -161,11 +191,17 @@ const handleSelectPlace = (place) => {
 
   const dayPlaces = props.planData.details
     .filter(detail => detail.day === activeDay.value)
-    .sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime))
+    .sort((a, b) => {
+      const timeA = normalizeTime(a.arrivalTime)
+      const timeB = normalizeTime(b.arrivalTime)
+      return timeA.localeCompare(timeB)
+    })
 
   if (dayPlaces.length > 0) {
     const lastPlace = dayPlaces[dayPlaces.length - 1]
-    const [hours, minutes] = lastPlace.departureTime.substring(0, 5).split(':')
+    const normalizedTime = normalizeTime(lastPlace.departureTime)
+    const [hours, minutes] = normalizedTime.split(':')
+    
     let arrivalHour = parseInt(hours)
     let arrivalMinute = parseInt(minutes) + 30
 
@@ -211,6 +247,7 @@ const handleSelectPlace = (place) => {
 </script>
 
 <style scoped>
+/* 기존 스타일 유지 */
 .plan-edit-view {
   display: flex;
   flex-direction: column;
@@ -244,7 +281,6 @@ const handleSelectPlace = (place) => {
   border-bottom: 1px solid #e5e7eb;
 }
 
-/* TripMap 컴포넌트가 남은 공간을 차지하도록 */
 :deep(.trip-map-container) {
   flex: 1;
 }
@@ -270,7 +306,6 @@ const handleSelectPlace = (place) => {
   max-height: calc(100vh - 15rem);
 }
 
-/* 하단 저장 바 */
 .floating-save-bar {
   position: sticky;
   bottom: 0;
@@ -326,7 +361,6 @@ const handleSelectPlace = (place) => {
   box-shadow: none;
 }
 
-/* 반응형 디자인 */
 @media (max-width: 1024px) {
   .plan-content {
     flex-direction: column;
@@ -358,53 +392,5 @@ const handleSelectPlace = (place) => {
     width: 100%;
     max-width: 300px;
   }
-}
-
-@media (max-width: 768px) {
-  .plan-content {
-    padding: 0.25rem;
-    gap: 0.5rem;
-  }
-
-  .map-section {
-    height: 300px;
-  }
-
-  .itinerary-section {
-    max-height: 400px;
-  }
-
-  .itinerary-body {
-    padding: 0.75rem;
-    max-height: 300px;
-  }
-
-  .save-bar-content {
-    padding: 0.75rem;
-  }
-
-  .save-button-large {
-    padding: 0.625rem 1.5rem;
-    font-size: 0.875rem;
-  }
-}
-
-/* 스크롤바 스타일링 */
-.itinerary-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.itinerary-body::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.itinerary-body::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-.itinerary-body::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
 }
 </style>

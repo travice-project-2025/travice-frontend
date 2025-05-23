@@ -1,24 +1,42 @@
-<!-- pages/PlanDetailPage.vue -->
 <template>
   <div class="plan-detail-page">
-    <AppHeader :title="pageTitle" :subtitle="pageSubtitle">
-      <template #actions>
+    <!-- 헤더 영역 -->
+    <div class="page-header">
+      <div class="header-content">
+        <button @click="goBack" class="back-button">
+          <span class="back-icon">←</span>
+          목록으로
+        </button>
+        
+        <div class="header-info">
+          <div class="title-container">
+            <h1 class="page-title">{{ pageTitle }}</h1>
+            <span v-if="isEditMode && !isLoading" class="edit-indicator">편집중</span>
+          </div>
+          <p class="page-subtitle">{{ pageSubtitle }}</p>
+          <!-- 모드 설명을 헤더 정보 안으로 이동 -->
+          <div class="mode-description" v-if="!isLoading">
+            {{
+              isEditMode
+                ? "일정을 자유롭게 수정할 수 있습니다"
+                : "여행 계획을 확인하고 있습니다"
+            }}
+          </div>
+        </div>
+        
         <div class="header-actions">
-          <button @click="goBack" class="back-button">
-            <span class="back-icon">←</span>
-            목록으로
-          </button>
-          <button @click="toggleEditMode" class="edit-button" :disabled="isLoading">
-            <span class="edit-icon">{{ isEditMode ? '👁️' : '✏️' }}</span>
-            {{ isEditMode ? "보기 모드" : "편집 모드" }}
-          </button>
-          <button v-if="isEditMode" @click="savePlan" class="save-button" :disabled="isSaving">
-            <span class="save-icon">💾</span>
-            {{ isSaving ? "저장 중..." : "저장" }}
+          <!-- 통합된 모드 전환 버튼 -->
+          <button
+            @click="toggleEditMode"
+            class="mode-toggle-button"
+            :class="{ 'edit-mode': isEditMode, 'view-mode': !isEditMode }"
+            :disabled="isLoading"
+          >
+            <span class="mode-text">{{ isEditMode ? "보기 모드" : "편집하기" }}</span>
           </button>
         </div>
-      </template>
-    </AppHeader>
+      </div>
+    </div>
 
     <!-- 로딩 상태 -->
     <div v-if="isLoading" class="loading-container">
@@ -50,27 +68,26 @@
 
     <!-- 메인 콘텐츠 -->
     <div v-else class="main-content">
-      <!-- 모드 안내 -->
-      <div class="mode-indicator" v-if="!isLoading">
-        <div class="mode-badge" :class="{ 'edit-mode': isEditMode, 'view-mode': !isEditMode }">
-          <span class="mode-icon">{{ isEditMode ? '✏️' : '👁️' }}</span>
-          <span class="mode-text">{{ isEditMode ? '편집 모드' : '보기 모드' }}</span>
-        </div>
-        <div class="mode-description">
-          {{ isEditMode ? '일정을 자유롭게 수정할 수 있습니다' : '여행 계획을 확인하고 있습니다' }}
+      <!-- 데이터가 없을 때 -->
+      <div v-if="!planData || !planData.title" class="no-data-container">
+        <div class="no-data-content">
+          <div class="no-data-icon">📋</div>
+          <h3>여행 계획 데이터가 없습니다</h3>
+          <p>데이터를 불러오는 중 문제가 발생했습니다.</p>
+          <button @click="retry" class="retry-button">다시 시도</button>
         </div>
       </div>
 
       <!-- 보기 모드 -->
-      <PlanViewMode 
-        v-if="!isEditMode"
-        :plan-data="planData"
+      <PlanViewMode
+        v-else-if="!isEditMode && planData"
+        :plan-data="normalizedPlanData"
       />
 
       <!-- 편집 모드 -->
       <PlanEditView
-        v-else
-        v-model:plan-data="planData"
+        v-else-if="isEditMode && planData"
+        v-model:plan-data="normalizedPlanData"
         :is-saving="isSaving"
         :show-save-bar="false"
         @save="savePlan"
@@ -83,15 +100,21 @@
             <span class="info-icon">💡</span>
             <div class="info-text">
               <div class="info-title">편집 팁</div>
-              <div class="info-description">지도에서 장소를 검색하여 추가하거나, 드래그로 순서를 변경할 수 있습니다</div>
+              <div class="info-description">
+                지도에서 장소를 검색하여 추가하거나, 드래그로 순서를 변경할 수
+                있습니다
+              </div>
             </div>
           </div>
           <div class="edit-actions">
             <button @click="cancelEdit" class="cancel-button">
-              <span class="cancel-icon">✖️</span>
               취소
             </button>
-            <button @click="savePlan" class="save-button-large" :disabled="isSaving">
+            <button
+              @click="savePlan"
+              class="save-button-large"
+              :disabled="isSaving"
+            >
               <span class="save-icon">💾</span>
               {{ isSaving ? "저장 중..." : "변경사항 저장" }}
             </button>
@@ -104,182 +127,325 @@
     <Transition name="toast">
       <div v-if="showSuccessToast" class="success-toast">
         <span class="toast-icon">✅</span>
-        <span class="toast-message">여행 계획이 성공적으로 저장되었습니다!</span>
+        <span class="toast-message"
+          >여행 계획이 성공적으로 저장되었습니다!</span
+        >
       </div>
     </Transition>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuth } from '@/composables/userAuth'
-import AppHeader from '@/components/common/AppHeader.vue'
-import PlanEditView from '@/components/plan/PlanEditView.vue'
-import PlanViewMode from '@/components/plan/PlanViewMode.vue'
-import { usePlanDetail } from '@/composables/usePlanDetail'
-import { usePlanSave } from '@/composables/usePlanSave'
+import { ref, computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAuth } from "@/composables/userAuth";
+import PlanEditView from "@/components/plan/PlanEditView.vue";
+import PlanViewMode from "@/components/plan/PlanViewMode.vue";
+import { usePlanDetail } from "@/composables/usePlanDetail";
+import { usePlanSave } from "@/composables/usePlanSave";
 
-const route = useRoute()
-const router = useRouter()
-const { checkLoginStatus } = useAuth()
+const route = useRoute();
+const router = useRouter();
+const { checkLoginStatus } = useAuth();
 
 // 상태 관리
-const isEditMode = ref(false)
-const isSaving = ref(false)
-const isLoading = ref(true)
-const hasError = ref(false)
-const errorMessage = ref('')
-const showSuccessToast = ref(false)
-const originalPlanData = ref(null) // 편집 취소용
+const isEditMode = ref(false);
+const isSaving = ref(false);
+const isLoading = ref(true);
+const hasError = ref(false);
+const errorMessage = ref("");
+const showSuccessToast = ref(false);
+const originalPlanData = ref(null); // 편집 취소용
 
 // Composables
-const { planData, loadPlanDetail } = usePlanDetail()
-const { updatePlan } = usePlanSave()
+const { planData, loadPlanDetail } = usePlanDetail();
+const { updatePlan } = usePlanSave();
 
 // 컴퓨티드
 const pageTitle = computed(() => {
-  if (isLoading.value) return '여행 계획 로딩 중...'
-  if (hasError.value) return '오류 발생'
-  return planData.value.title || '여행 계획'
-})
+  if (isLoading.value) return "여행 계획 로딩 중...";
+  if (hasError.value) return "오류 발생";
+  return planData.value.title || "여행 계획";
+});
 
 const pageSubtitle = computed(() => {
-  if (isLoading.value || hasError.value) return ''
-  return formatDateRange(planData.value.startDate, planData.value.endDate)
-})
+  if (isLoading.value || hasError.value) return "";
+  return formatDateRange(planData.value.startDate, planData.value.endDate);
+});
 
 // 라이프사이클
 onMounted(async () => {
-  await checkLoginStatus()
-  await loadPlan()
-})
+  await checkLoginStatus();
+  await loadPlan();
+});
 
 // 메서드들
 const loadPlan = async () => {
-  const planId = route.params.planId
-  
+  const planId = route.params.planId;
+
   if (!planId) {
-    hasError.value = true
-    errorMessage.value = '잘못된 계획 ID입니다.'
-    isLoading.value = false
-    return
+    hasError.value = true;
+    errorMessage.value = "잘못된 계획 ID입니다.";
+    isLoading.value = false;
+    return;
   }
-  
+
   try {
-    isLoading.value = true
-    hasError.value = false
-    errorMessage.value = ''
-    
-    await loadPlanDetail(planId)
-    
+    isLoading.value = true;
+    hasError.value = false;
+    errorMessage.value = "";
+
+    await loadPlanDetail(planId);
+
     // 원본 데이터 백업 (편집 취소용)
-    originalPlanData.value = JSON.parse(JSON.stringify(planData.value))
-    
-    console.log('계획 로드 완료:', planData.value)
+    originalPlanData.value = JSON.parse(JSON.stringify(planData.value));
+
+    console.log("계획 로드 완료:", planData.value);
   } catch (error) {
-    console.error('계획 로드 오류:', error)
-    hasError.value = true
-    errorMessage.value = error.message || '여행 계획을 불러올 수 없습니다.'
+    console.error("계획 로드 오류:", error);
+    hasError.value = true;
+    errorMessage.value = error.message || "여행 계획을 불러올 수 없습니다.";
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const retry = async () => {
-  await loadPlan()
-}
+  await loadPlan();
+};
 
 const goBack = () => {
   if (isEditMode.value && hasChanges()) {
-    const confirmed = confirm('저장하지 않은 변경사항이 있습니다. 정말 나가시겠습니까?')
-    if (!confirmed) return
+    const confirmed = confirm(
+      "저장하지 않은 변경사항이 있습니다. 정말 나가시겠습니까?"
+    );
+    if (!confirmed) return;
   }
-  router.push('/plans')
-}
+  router.push("/plans");
+};
+
+const normalizedPlanData = computed(() => {
+  if (!planData.value) return null;
+
+  const calculateTotalDays = () => {
+    if (!planData.value.startDate || !planData.value.endDate) return 1;
+
+    const start = new Date(planData.value.startDate);
+    const end = new Date(planData.value.endDate);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays + 1; // 당일 포함
+  };
+
+  return {
+    ...planData.value,
+    // details 배열이 없으면 빈 배열로 초기화
+    details: planData.value.details || [],
+    // 필수 필드들 기본값 설정
+    title: planData.value.title || "여행 계획",
+    startDate: planData.value.startDate,
+    endDate: planData.value.endDate,
+    memberCount: planData.value.memberCount || 1,
+    isPublic: planData.value.isPublic || false,
+    region: planData.value.region || "",
+    totalDays: calculateTotalDays()
+  };
+});
 
 const toggleEditMode = () => {
-  if (isEditMode.value && hasChanges()) {
-    const confirmed = confirm('저장하지 않은 변경사항이 있습니다. 편집을 취소하시겠습니까?')
-    if (!confirmed) return
-    
-    // 원본 데이터로 복원
-    planData.value = JSON.parse(JSON.stringify(originalPlanData.value))
+  console.log("=== toggleEditMode 시작 ===");
+  console.log("현재 isEditMode:", isEditMode.value);
+  console.log("현재 planData:", planData.value);
+  console.log("3. normalizedPlanData:", normalizedPlanData.value);
+
+  if (!planData.value) {
+    console.error("planData가 없습니다.");
+    alert("여행 계획 데이터를 먼저 로드해주세요.");
+    return;
   }
-  
-  isEditMode.value = !isEditMode.value
-  
+
+  if (!planData.value.details) {
+    console.warn("planData에 details가 없습니다. 빈 배열로 초기화합니다.");
+    planData.value.details = [];
+  }
+
+  if (isEditMode.value && hasChanges()) {
+    const confirmed = confirm(
+      "저장하지 않은 변경사항이 있습니다. 편집을 취소하시겠습니까?"
+    );
+    if (!confirmed) {
+      console.log("5. 사용자가 취소했습니다.");
+      return;
+    }
+
+    // 원본 데이터로 복원
+    planData.value = JSON.parse(JSON.stringify(originalPlanData.value));
+    console.log("6. 원본 데이터로 복원했습니다.");
+  }
+
+  const previousMode = isEditMode.value;
+  isEditMode.value = !isEditMode.value;
+  console.log(`7. 모드 전환: ${previousMode} → ${isEditMode.value}`);
+
   // 편집 모드 진입 시 원본 백업
   if (isEditMode.value) {
-    originalPlanData.value = JSON.parse(JSON.stringify(planData.value))
+    console.log("8. 편집 모드로 진입합니다.");
+
+    originalPlanData.value = JSON.parse(JSON.stringify(planData.value));
+
+    const startDate = planData.value.startDate;
+    const endDate = planData.value.endDate;
+
+    if (!planData.value.startDate || !planData.value.endDate) {
+      console.error("시작일 또는 종료일이 없습니다.");
+      alert("여행 계획의 날짜 정보가 올바르지 않습니다.");
+      isEditMode.value = false;
+      return;
+    }
+
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      console.error("날짜 형식이 올바르지 않습니다:", { startDate, endDate });
+      alert("여행 계획의 날짜 형식이 올바르지 않습니다.");
+      isEditMode.value = false;
+      return;
+    }
+
+    console.log("편집 모드 진입 완료");
   }
-}
+};
 
 const cancelEdit = () => {
   if (hasChanges()) {
-    const confirmed = confirm('저장하지 않은 변경사항이 있습니다. 정말 취소하시겠습니까?')
-    if (!confirmed) return
+    const confirmed = confirm(
+      "저장하지 않은 변경사항이 있습니다. 정말 취소하시겠습니까?"
+    );
+    if (!confirmed) return;
   }
-  
+
   // 원본 데이터로 복원
-  planData.value = JSON.parse(JSON.stringify(originalPlanData.value))
-  isEditMode.value = false
-}
+  planData.value = JSON.parse(JSON.stringify(originalPlanData.value));
+  isEditMode.value = false;
+};
 
 const savePlan = async () => {
-  isSaving.value = true
-  
+  isSaving.value = true;
+
   try {
-    await updatePlan(planData.value)
-    
+    await updatePlan(planData.value);
+
     // 성공 시 원본 데이터 업데이트
-    originalPlanData.value = JSON.parse(JSON.stringify(planData.value))
-    
+    originalPlanData.value = JSON.parse(JSON.stringify(planData.value));
+
     // 성공 토스트 표시
-    showSuccessToast.value = true
+    showSuccessToast.value = true;
     setTimeout(() => {
-      showSuccessToast.value = false
-    }, 3000)
-    
+      showSuccessToast.value = false;
+    }, 3000);
+
     // 보기 모드로 전환
-    isEditMode.value = false
-    
+    isEditMode.value = false;
   } catch (error) {
-    console.error('저장 오류:', error)
-    alert(`여행 계획을 저장하는 중 오류가 발생했습니다: ${error.message}`)
+    console.error("저장 오류:", error);
+    alert(`여행 계획을 저장하는 중 오류가 발생했습니다: ${error.message}`);
   } finally {
-    isSaving.value = false
+    isSaving.value = false;
   }
-}
+};
 
 // 변경사항 감지
 const hasChanges = () => {
-  if (!originalPlanData.value) return false
-  return JSON.stringify(planData.value) !== JSON.stringify(originalPlanData.value)
-}
+  if (!originalPlanData.value) return false;
+  return (
+    JSON.stringify(planData.value) !== JSON.stringify(originalPlanData.value)
+  );
+};
 
 const formatDateRange = (startDate, endDate) => {
   const formatDate = (dateStr) => {
-    if (!dateStr) return ''
-    const date = new Date(dateStr)
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`
-  }
-  return `${formatDate(startDate)} ~ ${formatDate(endDate)}`
-}
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return `${date.getFullYear()}년 ${
+      date.getMonth() + 1
+    }월 ${date.getDate()}일`;
+  };
+  return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
+};
 
 // 페이지 이탈 시 확인
-window.addEventListener('beforeunload', (e) => {
+window.addEventListener("beforeunload", (e) => {
   if (isEditMode.value && hasChanges()) {
-    e.preventDefault()
-    e.returnValue = ''
+    e.preventDefault();
+    e.returnValue = "";
   }
-})
+});
 </script>
 
 <style scoped>
 .plan-detail-page {
   min-height: 100vh;
   background-color: #f9fafb;
+}
+
+.page-header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-content {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-info {
+  flex: 1;
+  margin: 0 1rem;
+}
+
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.edit-indicator {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  background-color: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.page-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.mode-description {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
 }
 
 /* 헤더 액션 */
@@ -289,9 +455,7 @@ window.addEventListener('beforeunload', (e) => {
   align-items: center;
 }
 
-.back-button,
-.edit-button,
-.save-button {
+.back-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -302,10 +466,7 @@ window.addEventListener('beforeunload', (e) => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Marines', 'Pretendard', sans-serif;
-}
-
-.back-button {
+  font-family: "Marines", "Pretendard", sans-serif;
   background-color: #f3f4f6;
   color: #4b5563;
 }
@@ -315,34 +476,38 @@ window.addEventListener('beforeunload', (e) => {
   transform: translateY(-1px);
 }
 
-.edit-button {
-  background-color: #3b82f6;
-  color: white;
+/* 모드 전환 버튼 */
+.mode-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
-.edit-button:hover:not(:disabled) {
-  background-color: #2563eb;
+.mode-toggle-button.view-mode {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.mode-toggle-button.edit-mode {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.mode-toggle-button:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
-.edit-button:disabled {
+.mode-toggle-button:disabled {
   background-color: #d1d5db;
-  cursor: not-allowed;
-}
-
-.save-button {
-  background-color: #10b981;
-  color: white;
-}
-
-.save-button:hover:not(:disabled) {
-  background-color: #059669;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
-}
-
-.save-button:disabled {
-  background-color: #d1d5db;
+  color: #9ca3af;
   cursor: not-allowed;
   transform: none;
 }
@@ -375,14 +540,18 @@ window.addEventListener('beforeunload', (e) => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-content h3 {
   margin: 0 0 0.5rem 0;
   color: #2d3748;
-  font-family: 'Marines', 'Pretendard', sans-serif;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .loading-content p {
@@ -416,7 +585,7 @@ window.addEventListener('beforeunload', (e) => {
 .error-content h3 {
   margin: 0 0 0.5rem 0;
   color: #2d3748;
-  font-family: 'Marines', 'Pretendard', sans-serif;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .error-message {
@@ -443,7 +612,7 @@ window.addEventListener('beforeunload', (e) => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Marines', 'Pretendard', sans-serif;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .retry-button {
@@ -471,40 +640,25 @@ window.addEventListener('beforeunload', (e) => {
   position: relative;
 }
 
-/* 모드 인디케이터 */
-.mode-indicator {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 1rem 1rem 0;
+.no-data-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
 }
 
-.mode-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
+.no-data-content {
+  text-align: center;
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
-.mode-badge.view-mode {
-  background-color: #dbeafe;
-  color: #1e40af;
-}
-
-.mode-badge.edit-mode {
-  background-color: #fef3c7;
-  color: #d97706;
-}
-
-.mode-description {
-  font-size: 0.75rem;
-  color: #6b7280;
+.no-data-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
 }
 
 /* 편집 모드 푸터 */
@@ -573,7 +727,7 @@ window.addEventListener('beforeunload', (e) => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Marines', 'Pretendard', sans-serif;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .cancel-button {
@@ -642,20 +796,39 @@ window.addEventListener('beforeunload', (e) => {
 
 /* 반응형 */
 @media (max-width: 768px) {
-  .header-actions {
+  .header-content {
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.75rem;
+  }
+
+  .back-button {
+    order: -1;
+    width: 100%;
+  }
+
+  .header-info {
+    order: 0;
+    margin: 0;
+  }
+
+  .header-actions {
+    order: 1;
+    margin-left: auto;
+  }
+
+  .title-container {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .edit-indicator {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
   }
 
   .header-actions button {
     font-size: 0.75rem;
     padding: 0.5rem 0.75rem;
-  }
-
-  .mode-indicator {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
   }
 
   .footer-content {
