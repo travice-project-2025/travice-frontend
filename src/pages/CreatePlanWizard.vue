@@ -1,4 +1,4 @@
-<!-- CreatePlanWizard.vue 템플릿 부분 -->
+<!-- CreatePlanWizard.vue 수정된 것 -->
 <template>
   <div class="wizard-container">
     <AppHeader :is-shrunk="true" />
