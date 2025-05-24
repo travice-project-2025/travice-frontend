@@ -81,13 +81,13 @@
       <!-- 보기 모드 -->
       <PlanViewMode
         v-else-if="!isEditMode && planData"
-        :plan-data="normalizedPlanData"
+        :plan-data="planData"
       />
 
       <!-- 편집 모드 -->
       <PlanEditView
-        v-else-if="isEditMode && planData"
-        v-model:plan-data="normalizedPlanData"
+        v-else-if="isEditMode && editablePlanData"
+        v-model:plan-data="editablePlanData"
         :is-saving="isSaving"
         :show-save-bar="false"
         @save="savePlan"
@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "@/composables/userAuth";
 import PlanEditView from "@/components/plan/PlanEditView.vue";
@@ -156,6 +156,7 @@ const hasError = ref(false);
 const errorMessage = ref("");
 const showSuccessToast = ref(false);
 const originalPlanData = ref(null); // 편집 취소용
+const editablePlanData = ref(null); // 편집용 데이터
 
 // Composables
 const { planData, loadPlanDetail } = usePlanDetail();
@@ -165,12 +166,12 @@ const { updatePlan } = usePlanSave();
 const pageTitle = computed(() => {
   if (isLoading.value) return "여행 계획 로딩 중...";
   if (hasError.value) return "오류 발생";
-  return planData.value.title || "여행 계획";
+  return planData.value?.title || "여행 계획";
 });
 
 const pageSubtitle = computed(() => {
   if (isLoading.value || hasError.value) return "";
-  return formatDateRange(planData.value.startDate, planData.value.endDate);
+  return formatDateRange(planData.value?.startDate, planData.value?.endDate);
 });
 
 // 라이프사이클
@@ -178,6 +179,13 @@ onMounted(async () => {
   await checkLoginStatus();
   await loadPlan();
 });
+
+// planData 변경 감지하여 editablePlanData 업데이트
+watch(planData, (newValue) => {
+  if (newValue && !isEditMode.value) {
+    editablePlanData.value = JSON.parse(JSON.stringify(newValue));
+  }
+}, { deep: true });
 
 // 메서드들
 const loadPlan = async () => {
@@ -197,9 +205,9 @@ const loadPlan = async () => {
 
     await loadPlanDetail(planId);
 
-    // 원본 데이터 백업 (편집 취소용)
-    originalPlanData.value = JSON.parse(JSON.stringify(planData.value));
-
+    // 편집용 데이터 복사
+    editablePlanData.value = JSON.parse(JSON.stringify(planData.value));
+    
     console.log("계획 로드 완료:", planData.value);
   } catch (error) {
     console.error("계획 로드 오류:", error);
@@ -224,40 +232,11 @@ const goBack = () => {
   router.push("/plans");
 };
 
-const normalizedPlanData = computed(() => {
-  if (!planData.value) return null;
-
-  const calculateTotalDays = () => {
-    if (!planData.value.startDate || !planData.value.endDate) return 1;
-
-    const start = new Date(planData.value.startDate);
-    const end = new Date(planData.value.endDate);
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays + 1; // 당일 포함
-  };
-
-  return {
-    ...planData.value,
-    // details 배열이 없으면 빈 배열로 초기화
-    details: planData.value.details || [],
-    // 필수 필드들 기본값 설정
-    title: planData.value.title || "여행 계획",
-    startDate: planData.value.startDate,
-    endDate: planData.value.endDate,
-    memberCount: planData.value.memberCount || 1,
-    isPublic: planData.value.isPublic || false,
-    region: planData.value.region || "",
-    totalDays: calculateTotalDays()
-  };
-});
-
 const toggleEditMode = () => {
   console.log("=== toggleEditMode 시작 ===");
   console.log("현재 isEditMode:", isEditMode.value);
   console.log("현재 planData:", planData.value);
-  console.log("3. normalizedPlanData:", normalizedPlanData.value);
+  console.log("현재 editablePlanData:", editablePlanData.value);
 
   if (!planData.value) {
     console.error("planData가 없습니다.");
@@ -265,39 +244,45 @@ const toggleEditMode = () => {
     return;
   }
 
-  if (!planData.value.details) {
-    console.warn("planData에 details가 없습니다. 빈 배열로 초기화합니다.");
-    planData.value.details = [];
-  }
-
   if (isEditMode.value && hasChanges()) {
     const confirmed = confirm(
       "저장하지 않은 변경사항이 있습니다. 편집을 취소하시겠습니까?"
     );
     if (!confirmed) {
-      console.log("5. 사용자가 취소했습니다.");
+      console.log("사용자가 취소했습니다.");
       return;
     }
 
     // 원본 데이터로 복원
-    planData.value = JSON.parse(JSON.stringify(originalPlanData.value));
-    console.log("6. 원본 데이터로 복원했습니다.");
+    editablePlanData.value = JSON.parse(JSON.stringify(originalPlanData.value));
+    console.log("원본 데이터로 복원했습니다.");
   }
 
   const previousMode = isEditMode.value;
   isEditMode.value = !isEditMode.value;
-  console.log(`7. 모드 전환: ${previousMode} → ${isEditMode.value}`);
+  console.log(`모드 전환: ${previousMode} → ${isEditMode.value}`);
 
   // 편집 모드 진입 시 원본 백업
   if (isEditMode.value) {
-    console.log("8. 편집 모드로 진입합니다.");
-
+    console.log("편집 모드로 진입합니다.");
+    
+    // 원본 데이터 백업
     originalPlanData.value = JSON.parse(JSON.stringify(planData.value));
+    
+    // editablePlanData가 없으면 생성
+    if (!editablePlanData.value) {
+      editablePlanData.value = JSON.parse(JSON.stringify(planData.value));
+    }
+    
+    // details 배열 확인 및 초기화
+    if (!editablePlanData.value.details) {
+      editablePlanData.value.details = [];
+    }
 
-    const startDate = planData.value.startDate;
-    const endDate = planData.value.endDate;
+    const startDate = editablePlanData.value.startDate;
+    const endDate = editablePlanData.value.endDate;
 
-    if (!planData.value.startDate || !planData.value.endDate) {
+    if (!startDate || !endDate) {
       console.error("시작일 또는 종료일이 없습니다.");
       alert("여행 계획의 날짜 정보가 올바르지 않습니다.");
       isEditMode.value = false;
@@ -327,7 +312,7 @@ const cancelEdit = () => {
   }
 
   // 원본 데이터로 복원
-  planData.value = JSON.parse(JSON.stringify(originalPlanData.value));
+  editablePlanData.value = JSON.parse(JSON.stringify(originalPlanData.value));
   isEditMode.value = false;
 };
 
@@ -335,10 +320,12 @@ const savePlan = async () => {
   isSaving.value = true;
 
   try {
-    await updatePlan(planData.value);
+    // editablePlanData를 서버에 저장
+    await updatePlan(editablePlanData.value);
 
-    // 성공 시 원본 데이터 업데이트
-    originalPlanData.value = JSON.parse(JSON.stringify(planData.value));
+    // 성공 시 planData와 originalPlanData 업데이트
+    planData.value = JSON.parse(JSON.stringify(editablePlanData.value));
+    originalPlanData.value = JSON.parse(JSON.stringify(editablePlanData.value));
 
     // 성공 토스트 표시
     showSuccessToast.value = true;
@@ -358,9 +345,9 @@ const savePlan = async () => {
 
 // 변경사항 감지
 const hasChanges = () => {
-  if (!originalPlanData.value) return false;
+  if (!originalPlanData.value || !editablePlanData.value) return false;
   return (
-    JSON.stringify(planData.value) !== JSON.stringify(originalPlanData.value)
+    JSON.stringify(editablePlanData.value) !== JSON.stringify(originalPlanData.value)
   );
 };
 

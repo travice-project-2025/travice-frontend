@@ -105,7 +105,9 @@ export function usePlanSave() {
       isPublic: planData.isPublic || false,
       thumbnail: planData.thumbnail || null,
       region: planData.region || '',
-      details: (planData.details || []).map(detail => ({
+      details: (planData.details || []).map((detail) => ({
+        // 새로운 detail의 경우 id를 제거하거나 null로 설정
+        id: detail.id > 1000 ? null : detail.id, // 임시 ID는 null로
         planDetailName: detail.planDetailName,
         day: detail.day,
         arrivalTime: detail.arrivalTime,
@@ -224,16 +226,17 @@ export function usePlanSave() {
       }
       
       if (status === 400) {
-        const message = errorData.message || '잘못된 요청입니다.'
+        const message = errorData.error || errorData.message || '잘못된 요청입니다.'
         throw new Error(message)
       }
       
       if (status === 500) {
-        throw new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
+        const message = errorData.error || '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+        throw new Error(message)
       }
       
       // 기타 오류
-      const message = errorData.message || `${operation}에 실패했습니다.`
+      const message = errorData.error || errorData.message || `${operation}에 실패했습니다.`
       throw new Error(`${message} (${status})`)
     } catch (jsonError) {
       // JSON 파싱 실패 시

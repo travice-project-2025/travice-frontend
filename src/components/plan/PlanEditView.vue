@@ -7,7 +7,7 @@
         <div class="map-search-container">
           <PlaceSearch @select-place="handleSelectPlace" />
         </div>
-        <TripMap :places="filteredPlaces" />
+        <TripMap :places="currentDayPlaces" />
       </div>
 
       <!-- 오른쪽: 일정 영역 -->
@@ -18,7 +18,8 @@
 
         <div class="itinerary-body">
           <PlaceList
-            v-model:places="filteredPlaces"
+            :places="currentDayPlaces"
+            @update:places="updateCurrentDayPlaces"
             @delete-place="deletePlaceById"
             @add-place="showAddPlaceModal = true"
           />
@@ -47,7 +48,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import DayTab from '@/components/plan/DayTab.vue'
 import PlaceList from '@/components/plan/PlaceList.vue'
 import PlaceSearch from '@/components/plan/PlaceSearch.vue'
@@ -71,12 +72,13 @@ const props = defineProps({
 
 const emit = defineEmits(['save', 'update:planData'])
 
+// 상태 관리
 const activeDay = ref(1)
 const showAddPlaceModal = ref(false)
 const newPlace = ref({
   planDetailName: '',
-  arrivalTime: '12:00',
-  departureTime: '13:00',
+  arrivalTime: '12:00:00',
+  departureTime: '13:00:00',
   memo: '',
   transportName: '자가용',
   latitude: 33.38,
@@ -84,12 +86,20 @@ const newPlace = ref({
   address: ''
 })
 
+// 로컬 데이터 복사본
+const localPlanData = ref(JSON.parse(JSON.stringify(props.planData)))
+
+// props.planData 변경 감지
+watch(() => props.planData, (newValue) => {
+  localPlanData.value = JSON.parse(JSON.stringify(newValue))
+}, { deep: true })
+
 // 총 일수 계산
 const calculateTotalDays = computed(() => {
-  if (!props.planData?.startDate || !props.planData?.endDate) return 1
+  if (!localPlanData.value?.startDate || !localPlanData.value?.endDate) return 1
   
-  const start = new Date(props.planData.startDate)
-  const end = new Date(props.planData.endDate)
+  const start = new Date(localPlanData.value.startDate)
+  const end = new Date(localPlanData.value.endDate)
   const diffTime = Math.abs(end - start)
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   
@@ -97,45 +107,61 @@ const calculateTotalDays = computed(() => {
 })
 
 // 현재 일자에 해당하는 장소들
-const filteredPlaces = computed({
-  get: () => {
-    if (!props.planData?.details) return []
-    
-    return props.planData.details
-      .filter(detail => detail.day === activeDay.value)
-      .sort((a, b) => {
-        const timeA = normalizeTime(a.arrivalTime)
-        const timeB = normalizeTime(b.arrivalTime)
-        return timeA.localeCompare(timeB)
-      })
-  },
-  set: (newPlaces) => {
-    const otherDayPlaces = props.planData.details.filter(
-      detail => detail.day !== activeDay.value
-    )
-    const updatedPlanData = {
-      ...props.planData,
-      details: [...otherDayPlaces, ...newPlaces]
-    }
-    emit('update:planData', updatedPlanData)
-  }
+const currentDayPlaces = computed(() => {
+  if (!localPlanData.value?.details) return []
+  
+  return localPlanData.value.details
+    .filter(detail => detail.day === activeDay.value)
+    .sort((a, b) => {
+      const timeA = normalizeTime(a.arrivalTime)
+      const timeB = normalizeTime(b.arrivalTime)
+      return timeA.localeCompare(timeB)
+    })
 })
 
 // 시간 정규화 함수
 const normalizeTime = (time) => {
-  if (!time) return '00:00'
+  if (!time) return '00:00:00'
   const timeStr = time.toString()
-  if (timeStr.includes(':')) {
-    return timeStr.substring(0, 5) // "HH:mm" 형식
+  
+  // 이미 HH:MM:SS 형식인 경우
+  if (timeStr.match(/^\d{2}:\d{2}:\d{2}$/)) {
+    return timeStr
   }
-  // "HHmm" 형식인 경우
-  return `${timeStr.substring(0, 2)}:${timeStr.substring(2, 4)}`
+  
+  // HH:MM 형식인 경우
+  if (timeStr.match(/^\d{2}:\d{2}$/)) {
+    return timeStr + ':00'
+  }
+  
+  // 다른 형식이면 기본값
+  return '00:00:00'
+}
+
+// 현재 일자의 장소들 업데이트
+const updateCurrentDayPlaces = (newPlaces) => {
+  // 다른 날의 장소들 보존
+  const otherDayPlaces = localPlanData.value.details.filter(
+    detail => detail.day !== activeDay.value
+  )
+  
+  // 새로운 장소들과 합치기
+  localPlanData.value.details = [...otherDayPlaces, ...newPlaces]
+  
+  // 부모 컴포넌트에 변경사항 전달
+  emitUpdate()
 }
 
 // 장소 삭제
 const deletePlaceById = (id) => {
-  const updatedDetails = props.planData.details.filter(detail => detail.id !== id)
-  emit('update:planData', { ...props.planData, details: updatedDetails })
+  console.log('장소 삭제:', id)
+  
+  localPlanData.value.details = localPlanData.value.details.filter(
+    detail => detail.id !== id
+  )
+  
+  // 부모 컴포넌트에 변경사항 전달
+  emitUpdate()
 }
 
 // 새 장소 추가
@@ -145,36 +171,50 @@ const addNewPlace = () => {
     return
   }
 
-  const newId = Math.max(...props.planData.details.map(d => d.id || 0), 0) + 1
+  // 새 ID 생성 - 1000 이상의 임시 ID 사용
+  const existingIds = localPlanData.value.details.map(d => d.id || 0)
+  const maxId = Math.max(...existingIds, 0)
+  const newId = maxId >= 1000 ? maxId + 1 : 1001
   
   const placeDetail = {
-    id: newId,
+    id: newId, // 임시 ID
     planDetailName: newPlace.value.planDetailName,
     day: activeDay.value,
-    arrivalTime: newPlace.value.arrivalTime,
-    departureTime: newPlace.value.departureTime,
-    memo: newPlace.value.memo,
-    transportFromPrevious: newPlace.value.transportName ? 
-      { name: newPlace.value.transportName } : null,
-    latitude: newPlace.value.latitude,
-    longitude: newPlace.value.longitude,
-    address: newPlace.value.address || ''
+    arrivalTime: normalizeTime(newPlace.value.arrivalTime),
+    departureTime: normalizeTime(newPlace.value.departureTime),
+    memo: newPlace.value.memo || '',
+    transportFromPrevious: { 
+      name: newPlace.value.transportName || '자가용' 
+    },
+    latitude: parseFloat(newPlace.value.latitude) || 33.38,
+    longitude: parseFloat(newPlace.value.longitude) || 126.54,
+    address: place.address || place.road_address_name || place.address_name || ''
   }
 
-  const updatedDetails = [...props.planData.details, placeDetail]
-  emit('update:planData', { ...props.planData, details: updatedDetails })
+  console.log('새 장소 추가:', placeDetail)
+  
+  // 로컬 데이터에 추가
+  localPlanData.value.details.push(placeDetail)
+  
+  // 부모 컴포넌트에 변경사항 전달
+  emitUpdate()
 
   // 모달 닫기 및 폼 초기화
   showAddPlaceModal.value = false
   resetNewPlace()
 }
 
+// 부모 컴포넌트에 변경사항 전달
+const emitUpdate = () => {
+  emit('update:planData', JSON.parse(JSON.stringify(localPlanData.value)))
+}
+
 // 새 장소 폼 초기화
 const resetNewPlace = () => {
   newPlace.value = {
     planDetailName: '',
-    arrivalTime: '12:00',
-    departureTime: '13:00',
+    arrivalTime: '12:00:00',
+    departureTime: '13:00:00',
     memo: '',
     transportName: '자가용',
     latitude: 33.38,
@@ -186,21 +226,15 @@ const resetNewPlace = () => {
 // 장소 검색에서 선택했을 때
 const handleSelectPlace = (place) => {
   // 마지막 장소의 출발 시간을 기본 도착 시간으로 설정
-  let defaultArrivalTime = '10:00'
-  let defaultDepartureTime = '11:00'
+  let defaultArrivalTime = '10:00:00'
+  let defaultDepartureTime = '11:00:00'
 
-  const dayPlaces = props.planData.details
-    .filter(detail => detail.day === activeDay.value)
-    .sort((a, b) => {
-      const timeA = normalizeTime(a.arrivalTime)
-      const timeB = normalizeTime(b.arrivalTime)
-      return timeA.localeCompare(timeB)
-    })
+  const dayPlaces = currentDayPlaces.value
 
   if (dayPlaces.length > 0) {
     const lastPlace = dayPlaces[dayPlaces.length - 1]
-    const normalizedTime = normalizeTime(lastPlace.departureTime)
-    const [hours, minutes] = normalizedTime.split(':')
+    const lastDepartureTime = normalizeTime(lastPlace.departureTime)
+    const [hours, minutes] = lastDepartureTime.split(':')
     
     let arrivalHour = parseInt(hours)
     let arrivalMinute = parseInt(minutes) + 30
@@ -210,36 +244,32 @@ const handleSelectPlace = (place) => {
       arrivalMinute -= 60
     }
     if (arrivalHour >= 24) {
-      arrivalHour -= 24
+      arrivalHour = 0
     }
 
-    defaultArrivalTime = `${arrivalHour.toString().padStart(2, '0')}:${arrivalMinute.toString().padStart(2, '0')}`
+    defaultArrivalTime = `${arrivalHour.toString().padStart(2, '0')}:${arrivalMinute.toString().padStart(2, '0')}:00`
 
     // 도착 후 1시간 체류 가정
-    let departureHour = arrivalHour
-    let departureMinute = arrivalMinute + 60
+    let departureHour = arrivalHour + 1
+    let departureMinute = arrivalMinute
 
-    if (departureMinute >= 60) {
-      departureHour += 1
-      departureMinute -= 60
-    }
     if (departureHour >= 24) {
-      departureHour -= 24
+      departureHour = 0
     }
 
-    defaultDepartureTime = `${departureHour.toString().padStart(2, '0')}:${departureMinute.toString().padStart(2, '0')}`
+    defaultDepartureTime = `${departureHour.toString().padStart(2, '0')}:${departureMinute.toString().padStart(2, '0')}:00`
   }
 
   // 새 장소 정보 설정
   newPlace.value = {
-    planDetailName: place.planDetailName,
+    planDetailName: place.planDetailName || place.place_name || place.name,
     arrivalTime: defaultArrivalTime,
     departureTime: defaultDepartureTime,
     memo: '',
     transportName: dayPlaces.length > 0 ? '자가용' : '시작점',
-    latitude: place.latitude,
-    longitude: place.longitude,
-    address: place.address || ''
+    latitude: place.latitude || place.y,
+    longitude: place.longitude || place.x,
+    address: place.address || place.road_address_name || place.address_name || ''
   }
 
   showAddPlaceModal.value = true
