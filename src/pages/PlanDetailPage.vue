@@ -67,22 +67,68 @@
     </div>
 
     <!-- 메인 콘텐츠 -->
-    <div v-else class="main-content">
-      <!-- 데이터가 없을 때 -->
-      <div v-if="!planData || !planData.title" class="no-data-container">
-        <div class="no-data-content">
-          <div class="no-data-icon">📋</div>
-          <h3>여행 계획 데이터가 없습니다</h3>
-          <p>데이터를 불러오는 중 문제가 발생했습니다.</p>
-          <button @click="retry" class="retry-button">다시 시도</button>
+  <div v-else class="main-content">
+    <!-- 데이터가 없을 때 -->
+    <div v-if="!planData || !planData.title" class="no-data-container">
+      <!-- 기존 코드... -->
+    </div>
+
+    <!-- 지도 미리보기 섹션 추가 -->
+    <div v-if="planData && planData.details && planData.details.length > 0" class="map-preview-section">
+      <div class="map-container">
+        <div class="map-header">
+          <h3 class="map-title">📍 여행 경로</h3>
+          <div class="map-controls-header">
+            <div class="route-type-selector">
+              <button 
+                @click="selectedRouteType = 'car'"
+                :class="['route-type-btn', { active: selectedRouteType === 'car' }]"
+                title="자동차"
+              >
+                🚗 자동차
+              </button>
+              <button 
+                @click="selectedRouteType = 'walk'"
+                :class="['route-type-btn', { active: selectedRouteType === 'walk' }]"
+                title="도보"
+              >
+                🚶 도보
+              </button>
+              <button 
+                @click="selectedRouteType = 'transit'"
+                :class="['route-type-btn', { active: selectedRouteType === 'transit' }]"
+                title="대중교통"
+              >
+                🚌 대중교통
+              </button>
+            </div>
+            <button 
+              @click="showRealRoutes = !showRealRoutes"
+              :class="['toggle-route-btn', { active: showRealRoutes }]"
+            >
+              {{ showRealRoutes ? '실제 경로' : '직선 경로' }}
+            </button>
+          </div>
+        </div>
+        <div class="map-wrapper">
+          <TripMap 
+            :places="planData.details.filter(detail => detail.latitude && detail.longitude)" 
+            :show-real-routes="showRealRoutes"
+            :route-type="selectedRouteType"
+          />
         </div>
       </div>
+    </div>
 
-      <!-- 보기 모드 -->
-      <PlanViewMode
-        v-else-if="!isEditMode && planData"
-        :plan-data="planData"
-      />
+    <!-- 기존 PlanViewMode, PlanEditView 컴포넌트들 -->
+    <PlanViewMode v-if="!isEditMode && planData" :plan-data="planData" />
+    <PlanEditView 
+    v-else-if="isEditMode && editablePlanData"
+    v-model:plan-data="editablePlanData"
+    :is-saving="isSaving"
+    :show-save-bar="false"
+    @save="savePlan"
+  />
 
       <!-- 편집 모드 -->
       <PlanEditView
@@ -143,10 +189,14 @@ import PlanEditView from "@/components/plan/PlanEditView.vue";
 import PlanViewMode from "@/components/plan/PlanViewMode.vue";
 import { usePlanDetail } from "@/composables/usePlanDetail";
 import { usePlanSave } from "@/composables/usePlanSave";
+import TripMap from '@/components/plan/TripMap.vue'
+
 
 const route = useRoute();
 const router = useRouter();
 const { checkLoginStatus } = useAuth();
+const showRealRoutes = ref(true) // 실제 경로 표시 여부
+const selectedRouteType = ref('car') // 선택된 경로 타입
 
 // 상태 관리
 const isEditMode = ref(false);
@@ -159,7 +209,7 @@ const originalPlanData = ref(null); // 편집 취소용
 const editablePlanData = ref(null); // 편집용 데이터
 
 // Composables
-const { planData, loadPlanDetail } = usePlanDetail();
+const { planData, loadPlanDetail , loadSamplePlanDetail} = usePlanDetail();
 const { updatePlan } = usePlanSave();
 
 // 컴퓨티드
@@ -203,7 +253,8 @@ const loadPlan = async () => {
     hasError.value = false;
     errorMessage.value = "";
 
-    await loadPlanDetail(planId);
+    // await loadPlanDetail(planId);
+    await loadSamplePlanDetail(planId);
 
     // 편집용 데이터 복사
     editablePlanData.value = JSON.parse(JSON.stringify(planData.value));
@@ -853,6 +904,127 @@ window.addEventListener("beforeunload", (e) => {
     right: 10px;
     left: 10px;
     top: 80px;
+  }
+
+  
+}
+
+/* 지도 미리보기 섹션 */
+.map-preview-section {
+  max-width: 1600px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.map-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.map-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.map-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.map-controls-header {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.route-type-selector {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 4px;
+  gap: 2px;
+}
+
+.route-type-btn {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: #6b7280;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.route-type-btn.active {
+  background: white;
+  color: #8e6ad9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.route-type-btn:hover:not(.active) {
+  color: #4b5563;
+}
+
+.toggle-route-btn {
+  padding: 8px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  color: #6b7280;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.toggle-route-btn.active {
+  border-color: #8e6ad9;
+  color: #8e6ad9;
+  background: rgba(142, 106, 217, 0.05);
+}
+
+.toggle-route-btn:hover {
+  border-color: #8e6ad9;
+}
+
+.map-wrapper {
+  height: 500px;
+  position: relative;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .map-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .map-controls-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .route-type-selector {
+    justify-content: space-between;
+  }
+  
+  .map-wrapper {
+    height: 400px;
   }
 }
 </style>

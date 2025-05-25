@@ -1,50 +1,54 @@
-<!-- components/plan/TripMap.vue -->
 <template>
   <div class="trip-map-container">
     <div ref="mapContainer" id="trip-map" class="trip-map"></div>
+    
+    <!-- 지도 로딩 -->
     <div v-if="!mapLoaded" class="map-loading">
       <div class="loading-spinner"></div>
       <p>지도를 불러오는 중...</p>
     </div>
+    
+    <!-- 경로 로딩 -->
+    <div v-if="isLoadingRoutes" class="route-loading">
+      <div class="loading-spinner small"></div>
+      <p>실제 경로를 계산하는 중...</p>
+    </div>
+    
     <div class="map-controls">
+      <!-- 기존 컨트롤들 -->
       <button @click="resetMapBounds" class="map-control-button" title="모든 장소 보기">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="control-icon"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-          />
-        </svg>
+        <!-- 기존 SVG -->
       </button>
       <button @click="togglePolyline" class="map-control-button" title="경로 표시/숨기기">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="control-icon"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M13 7l5 5-5 5M6 12h12"
-          />
-        </svg>
+        <!-- 기존 SVG -->
       </button>
+      
+      <!-- 경로 타입 선택 버튼들 추가 -->
+      <div class="route-type-controls">
+        <button 
+          @click="changeRouteType('car')" 
+          class="route-type-button"
+          :class="{ active: routeType === 'car' }"
+          title="자동차"
+        >🚗</button>
+        <button 
+          @click="changeRouteType('walk')" 
+          class="route-type-button"
+          :class="{ active: routeType === 'walk' }"  
+          title="도보"
+        >🚶</button>
+        <button 
+          @click="changeRouteType('transit')" 
+          class="route-type-button"
+          :class="{ active: routeType === 'transit' }"
+          title="대중교통"
+        >🚌</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
-// components/plan/TripMap.vue의 <script> 부분 수정
 import { ref, onMounted, watch, nextTick } from "vue";
 
 export default {
@@ -54,93 +58,349 @@ export default {
       type: Array,
       required: true,
     },
+    showRealRoutes: {
+      type: Boolean,
+      default: true, // 실제 경로 표시 여부
+    },
+    routeType: {
+      type: String,
+      default: 'car', // 'car', 'walk', 'transit'
+    }
   },
   setup(props) {
     const mapContainer = ref(null);
     const mapLoaded = ref(false);
     const showPolyline = ref(true);
+    const isLoadingRoutes = ref(false); // 경로 로딩 상태
 
     let map = null;
     let markers = [];
     let overlays = [];
     let polyline = null;
+    let routePolylines = []; // T map 경로용 폴리라인들
 
-    // 지도 초기화
-    const initMap = async () => {
-      if (!window.kakao || !window.kakao.maps) {
-        console.log("카카오맵 API 로딩 중...");
+    // T map API 설정
+    const TMAP_API_KEY = 'qsI32FHZYl6EcWCdt3Pa26bLC74LlTQO1tcYMS00'; // 실제 API 키로 교체
+    const TMAP_BASE_URL = 'https://apis.openapi.sk.com/tmap';
 
-        try {
-          // 카카오맵 API 동적 로드
-          await new Promise((resolve, reject) => {
-            const script = document.createElement("script");
-            script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=68e8b97d381d75363cc6b9be98056de8&libraries=services&autoload=false`;
-            script.onload = () => {
-              // API 로드 후 초기화
-              window.kakao.maps.load(() => {
-                console.log("카카오맵 API 로드 완료");
-                createMap();
-                resolve();
-              });
-            };
-            script.onerror = (e) => {
-              console.error("카카오맵 API 로드 실패", e);
-              reject(new Error("카카오맵 API 로드 실패"));
-            };
-            document.head.appendChild(script);
+    // ... (기존 initMap, createMap, createCustomMarker 함수들 유지)
+
+// TripMap.vue의 script 부분에 추가할 함수들
+
+// 지도 초기화
+const initMap = async () => {
+  if (!window.kakao || !window.kakao.maps) {
+    console.log("카카오맵 API 로딩 중...");
+
+    try {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=68e8b97d381d75363cc6b9be98056de8&libraries=services&autoload=false`;
+        script.onload = () => {
+          window.kakao.maps.load(() => {
+            console.log("카카오맵 API 로드 완료");
+            createMap();
+            resolve();
           });
-        } catch (error) {
-          console.error("카카오맵 API 로드 오류:", error);
-          mapContainer.value.innerHTML =
-            '<div class="map-placeholder">카카오맵 API를 불러오는 중 오류가 발생했습니다</div>';
-          return;
-        }
-      } else {
-        createMap();
-      }
-    };
-
-    // 지도 생성 함수
-    const createMap = () => {
-      try {
-        const mapOptions = {
-          center: new window.kakao.maps.LatLng(33.4, 126.5), // 제주도 중심 좌표
-          level: 9,
         };
+        script.onerror = (e) => {
+          console.error("카카오맵 API 로드 실패", e);
+          reject(new Error("카카오맵 API 로드 실패"));
+        };
+        document.head.appendChild(script);
+      });
+    } catch (error) {
+      console.error("카카오맵 API 로드 오류:", error);
+      mapContainer.value.innerHTML =
+        '<div class="map-placeholder">카카오맵 API를 불러오는 중 오류가 발생했습니다</div>';
+      return;
+    }
+  } else {
+    createMap();
+  }
+};
 
-        map = new window.kakao.maps.Map(mapContainer.value, mapOptions);
-        mapLoaded.value = true;
+// 지도 생성 함수
+const createMap = () => {
+  try {
+    const mapOptions = {
+      center: new window.kakao.maps.LatLng(33.4, 126.5),
+      level: 9,
+    };
 
-        // 지도 로드 후 마커 업데이트
-        updateMapMarkers();
+    map = new window.kakao.maps.Map(mapContainer.value, mapOptions);
+    mapLoaded.value = true;
+    updateMapMarkers();
+  } catch (error) {
+    console.error("지도 초기화 오류:", error);
+    mapContainer.value.innerHTML =
+      '<div class="map-placeholder">지도를 불러오는 중 오류가 발생했습니다</div>';
+  }
+};
+
+// 커스텀 마커 HTML 생성
+const createCustomMarker = (number, isActive = false) => {
+  return `
+    <div class="custom-marker ${isActive ? 'active' : ''}">
+      <div class="marker-pin">
+        <div class="marker-number">${number}</div>
+        <div class="marker-point"></div>
+      </div>
+    </div>
+  `;
+};
+
+// 모든 인포윈도우 닫기
+const closeAllInfoWindows = () => {
+  // 기존에 열린 인포윈도우들을 추적하여 닫을 수 있도록 개선 필요
+};
+
+// 지도 경계 초기화
+const resetMapBounds = () => {
+  if (!map || props.places.length === 0) return;
+
+  const bounds = new window.kakao.maps.LatLngBounds();
+  props.places.forEach(place => {
+    if (place.latitude && place.longitude) {
+      bounds.extend(new window.kakao.maps.LatLng(place.latitude, place.longitude));
+    }
+  });
+
+  map.setBounds(bounds);
+  
+  if (props.places.length === 1) {
+    map.setLevel(3);
+  }
+};
+
+// 경로 표시/숨기기 토글
+const togglePolyline = () => {
+  showPolyline.value = !showPolyline.value;
+  updateMapMarkers();
+};
+
+// 시간 포맷팅
+const formatTime = (timeStr) => {
+  if (!timeStr) return "";
+  return timeStr.substring(0, 5);
+};
+
+
+    // T map 경로 탐색 함수들
+    const getCarRoute = async (startLat, startLon, endLat, endLon) => {
+      try {
+        const response = await fetch(`${TMAP_BASE_URL}/routes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'appKey': TMAP_API_KEY
+          },
+          body: JSON.stringify({
+            startX: startLon,
+            startY: startLat,
+            endX: endLon,
+            endY: endLat,
+            reqCoordType: 'WGS84GEO',
+            resCoordType: 'WGS84GEO',
+            searchOption: '0', // 0:최적, 1:최단거리, 2:고속도로우선
+            trafficInfo: 'Y' // 실시간 교통정보 반영
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`T map API 오류: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.features;
       } catch (error) {
-        console.error("지도 초기화 오류:", error);
-        mapContainer.value.innerHTML =
-          '<div class="map-placeholder">지도를 불러오는 중 오류가 발생했습니다</div>';
+        console.error('자동차 경로 탐색 오류:', error);
+        return null;
       }
     };
 
-    // 커스텀 마커 HTML 생성
-    const createCustomMarker = (number, isActive = false) => {
-      return `
-        <div class="custom-marker ${isActive ? 'active' : ''}">
-          <div class="marker-pin">
-            <div class="marker-number">${number}</div>
-            <div class="marker-point"></div>
-          </div>
-        </div>
-      `;
+    const getWalkRoute = async (startLat, startLon, endLat, endLon) => {
+      try {
+        const response = await fetch(`${TMAP_BASE_URL}/routes/pedestrian`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'appKey': TMAP_API_KEY
+          },
+          body: JSON.stringify({
+            startX: startLon,
+            startY: startLat,
+            endX: endLon,
+            endY: endLat,
+            reqCoordType: 'WGS84GEO',
+            resCoordType: 'WGS84GEO',
+            startName: '출발지',
+            endName: '도착지'
+          })
+        });
+
+        const data = await response.json();
+        return data.features;
+      } catch (error) {
+        console.error('보행자 경로 탐색 오류:', error);
+        return null;
+      }
     };
 
-    // 지도 마커 및 경로 업데이트 (이전 코드와 동일)
-    const updateMapMarkers = () => {
+    const getTransitRoute = async (startLat, startLon, endLat, endLon) => {
+      try {
+        const response = await fetch(`${TMAP_BASE_URL}/routes/transit`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'appKey': TMAP_API_KEY
+          },
+          body: JSON.stringify({
+            startX: startLon,
+            startY: startLat,
+            endX: endLon,
+            endY: endLat,
+            reqCoordType: 'WGS84GEO',
+            resCoordType: 'WGS84GEO',
+            searchType: '0', // 0:최적, 1:최소환승, 2:최소도보
+            lang: 'ko'
+          })
+        });
+
+        const data = await response.json();
+        return data.features;
+      } catch (error) {
+        console.error('대중교통 경로 탐색 오류:', error);
+        return null;
+      }
+    };
+
+    // 경로 데이터를 카카오맵 좌표로 변환
+    const convertRouteToKakaoCoords = (routeFeatures) => {
+      const coords = [];
+      
+      if (!routeFeatures) return coords;
+
+      routeFeatures.forEach(feature => {
+        if (feature.geometry && feature.geometry.type === 'LineString') {
+          feature.geometry.coordinates.forEach(coord => {
+            // T map: [경도, 위도], 카카오맵: LatLng(위도, 경도)
+            coords.push(new window.kakao.maps.LatLng(coord[1], coord[0]));
+          });
+        }
+      });
+
+      return coords;
+    };
+
+    // 경로 타입별 스타일 설정
+    const getRouteStyle = (routeType) => {
+      const styles = {
+        car: {
+          strokeColor: '#FF6B6B',
+          strokeWeight: 5,
+          strokeOpacity: 0.8
+        },
+        walk: {
+          strokeColor: '#4ECDC4',
+          strokeWeight: 3,
+          strokeOpacity: 0.7,
+          strokeStyle: 'shortdot'
+        },
+        transit: {
+          strokeColor: '#45B7D1',
+          strokeWeight: 4,
+          strokeOpacity: 0.8,
+          strokeStyle: 'shortdash'
+        }
+      };
+
+      return styles[routeType] || styles.car;
+    };
+
+    // 실제 경로로 폴리라인 그리기
+    const drawRealRoutes = async () => {
+      if (!props.showRealRoutes || !props.places || props.places.length < 2) {
+        return;
+      }
+
+      isLoadingRoutes.value = true;
+
+      // 기존 경로 폴리라인 제거
+      routePolylines.forEach(polyline => polyline.setMap(null));
+      routePolylines = [];
+
+      try {
+        // 연속된 장소들 사이의 경로 탐색
+        for (let i = 0; i < props.places.length - 1; i++) {
+          const start = props.places[i];
+          const end = props.places[i + 1];
+
+          if (!start.latitude || !start.longitude || !end.latitude || !end.longitude) {
+            continue;
+          }
+
+          let routeFeatures = null;
+
+          // 경로 타입에 따라 다른 API 호출
+          switch (props.routeType) {
+            case 'car':
+              routeFeatures = await getCarRoute(
+                start.latitude, start.longitude,
+                end.latitude, end.longitude
+              );
+              break;
+            case 'walk':
+              routeFeatures = await getWalkRoute(
+                start.latitude, start.longitude,
+                end.latitude, end.longitude
+              );
+              break;
+            case 'transit':
+              routeFeatures = await getTransitRoute(
+                start.latitude, start.longitude,
+                end.latitude, end.longitude
+              );
+              break;
+          }
+
+          if (routeFeatures) {
+            const routeCoords = convertRouteToKakaoCoords(routeFeatures);
+            
+            if (routeCoords.length > 0) {
+              const style = getRouteStyle(props.routeType);
+              
+              const routePolyline = new window.kakao.maps.Polyline({
+                path: routeCoords,
+                ...style
+              });
+
+              routePolyline.setMap(map);
+              routePolylines.push(routePolyline);
+            }
+          }
+
+          // API 호출 간격 조절 (rate limiting 방지)
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      } catch (error) {
+        console.error('경로 그리기 오류:', error);
+      } finally {
+        isLoadingRoutes.value = false;
+      }
+    };
+
+    // 수정된 updateMapMarkers 함수
+    const updateMapMarkers = async () => {
       if (!map || !mapLoaded.value) return;
 
       // 기존 마커 및 경로 제거
       markers.forEach((marker) => marker.setMap(null));
       overlays.forEach((overlay) => overlay.setMap(null));
+      routePolylines.forEach((polyline) => polyline.setMap(null));
       markers = [];
       overlays = [];
+      routePolylines = [];
 
       if (polyline) {
         polyline.setMap(null);
@@ -153,10 +413,7 @@ export default {
       // 지도 경계 설정용 객체
       const bounds = new window.kakao.maps.LatLngBounds();
 
-      // 경로 좌표 배열
-      const linePath = [];
-
-      // 마커 생성 및 추가
+      // 마커 생성 (기존 코드와 동일)
       props.places.forEach((place, index) => {
         if (!place.latitude || !place.longitude) return;
 
@@ -176,7 +433,7 @@ export default {
         customOverlay.setMap(map);
         overlays.push(customOverlay);
 
-        // 인포윈도우 생성
+        // 인포윈도우 생성 (기존 코드와 동일)
         const infoContent = `
           <div class="map-info-window">
             <div class="info-header">
@@ -199,102 +456,86 @@ export default {
           removable: true,
         });
 
-        const markerElement = customOverlay.getContent();
-        markerElement.addEventListener('click', () => {
-          // 다른 인포윈도우 모두 닫기
-          closeAllInfoWindows();
+        // DOM 요소에 안전하게 이벤트 추가
+        setTimeout(() => {
+          const markerElement = customOverlay.getContent();
           
-          // 현재 인포윈도우 열기
-          infoWindow.open(map, {
-            getPosition: () => position
-          });
-          
-          // 지도 중심을 해당 위치로 이동
-          map.setCenter(position);
-        });
+          if (markerElement && markerElement.nodeType === Node.ELEMENT_NODE) {
+            markerElement.addEventListener('click', () => {
+              closeAllInfoWindows();
+              infoWindow.open(map, {
+                getPosition: () => position
+              });
+              map.setCenter(position);
+            });
 
-        // 마커 호버 효과
-        markerElement.addEventListener('mouseenter', () => {
-          markerElement.querySelector('.custom-marker').classList.add('hover');
-        });
+            markerElement.addEventListener('mouseenter', () => {
+              const marker = markerElement.querySelector('.custom-marker');
+              if (marker) marker.classList.add('hover');
+            });
 
-        markerElement.addEventListener('mouseleave', () => {
-          markerElement.querySelector('.custom-marker').classList.remove('hover');
-        });
+            markerElement.addEventListener('mouseleave', () => {
+              const marker = markerElement.querySelector('.custom-marker');
+              if (marker) marker.classList.remove('hover');
+            });
+          }
+        }, 100);
 
-        linePath.push(position);
         bounds.extend(position);
       });
 
-      // 경로 그리기
-      if (linePath.length > 1 && showPolyline.value) {
-        polyline = new window.kakao.maps.Polyline({
-          path: linePath,
-          strokeWeight: 3,
-          strokeColor: "#8e6ad9",
-          strokeOpacity: 0.8,
-          strokeStyle: "solid",
-        });
+      // 실제 경로 그리기 또는 직선 경로 그리기
+      if (props.showRealRoutes && showPolyline.value) {
+        await drawRealRoutes();
+      } else if (showPolyline.value) {
+        // 기존 직선 경로 그리기
+        const linePath = props.places
+          .filter(place => place.latitude && place.longitude)
+          .map(place => new window.kakao.maps.LatLng(place.latitude, place.longitude));
 
-        polyline.setMap(map);
+        if (linePath.length > 1) {
+          polyline = new window.kakao.maps.Polyline({
+            path: linePath,
+            strokeWeight: 3,
+            strokeColor: "#8e6ad9",
+            strokeOpacity: 0.8,
+            strokeStyle: "solid",
+          });
+
+          polyline.setMap(map);
+        }
       }
 
-      // 모든 마커가 보이도록 지도 경계 재설정
-      if (linePath.length > 0) {
+      // 지도 경계 설정
+      if (props.places.length > 0) {
         map.setBounds(bounds);
         
-        // 마커가 1개인 경우 적절한 줌 레벨 설정
-        if (linePath.length === 1) {
+        if (props.places.length === 1) {
           map.setLevel(3);
         }
       }
     };
 
-    // 모든 인포윈도우 닫기
-    const closeAllInfoWindows = () => {
-      // 기존에 열린 인포윈도우들을 추적하여 닫을 수 있도록 개선 필요
-    };
-
-    // 지도 경계 초기화 (모든 마커가 보이도록)
-    const resetMapBounds = () => {
-      if (!map || props.places.length === 0) return;
-
-      const bounds = new window.kakao.maps.LatLngBounds();
-      props.places.forEach(place => {
-        if (place.latitude && place.longitude) {
-          bounds.extend(new window.kakao.maps.LatLng(place.latitude, place.longitude));
-        }
-      });
-
-      map.setBounds(bounds);
-      
-      if (props.places.length === 1) {
-        map.setLevel(3);
+    // 경로 타입 전환 함수
+    const changeRouteType = async (newType) => {
+      if (props.routeType !== newType) {
+        // 부모 컴포넌트에서 prop을 변경해야 함
+        // 또는 emit으로 이벤트 전달
+        await updateMapMarkers();
       }
     };
 
-    // 경로 표시/숨기기 토글
-    const togglePolyline = () => {
-      showPolyline.value = !showPolyline.value;
-      updateMapMarkers();
-    };
+    // ... (기존 함수들 유지: closeAllInfoWindows, resetMapBounds, togglePolyline, formatTime)
 
-    // 시간 포맷팅 (HH:MM:SS -> HH:MM)
-    const formatTime = (timeStr) => {
-      if (!timeStr) return "";
-      return timeStr.substring(0, 5);
-    };
-
-    // places prop 변경 시 지도 마커 업데이트
+    // places prop 또는 관련 설정 변경 시 지도 업데이트
     watch(
-      () => props.places,
+      [() => props.places, () => props.showRealRoutes, () => props.routeType],
       () => {
         updateMapMarkers();
       },
       { deep: true }
     );
 
-    // 컴포넌트 마운트 시 지도 초기화
     onMounted(() => {
       initMap();
     });
@@ -302,12 +543,16 @@ export default {
     return {
       mapContainer,
       mapLoaded,
+      isLoadingRoutes,
       resetMapBounds,
       togglePolyline,
+      changeRouteType,
     };
   },
 };
 </script>
+
+
 
 <style scoped>
 .trip-map-container {

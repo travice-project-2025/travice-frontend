@@ -19,6 +19,113 @@ export function usePlanDetail() {
     details: []
   })
 
+  const generateSamplePlanData = (planId) => {
+  const sampleData = {
+    id: planId || 1,
+    title: '제주도 3박 4일 여행',
+    startDate: '2024-03-15',
+    endDate: '2024-03-18',
+    memberCount: 2,
+    isPublic: true,
+    thumbnail: null,
+    region: '제주도',
+    details: [
+      {
+        id: 1,
+        planDetailName: '제주공항',
+        day: 1,
+        arrivalTime: '10:00:00',
+        departureTime: '11:00:00',
+        memo: '제주도 도착! 렌터카 픽업',
+        transportFromPrevious: { name: '시작점' },
+        latitude: 33.5066,
+        longitude: 126.4929,
+        address: '제주특별자치도 제주시 공항로 2'
+      },
+      {
+        id: 2,
+        planDetailName: '성산일출봉',
+        day: 1,
+        arrivalTime: '14:00:00',
+        departureTime: '16:00:00',
+        memo: '유네스코 세계자연유산으로 지정된 아름다운 봉우리',
+        transportFromPrevious: { name: '자가용' },
+        latitude: 33.4582,
+        longitude: 126.9422,
+        address: '제주특별자치도 서귀포시 성산읍 성산리'
+      },
+      {
+        id: 3,
+        planDetailName: '우도',
+        day: 2,
+        arrivalTime: '09:00:00',
+        departureTime: '14:00:00',
+        memo: '배를 타고 가는 작은 섬, 땅콩아이스크림 필수!',
+        transportFromPrevious: { name: '버스' },
+        latitude: 33.5009,
+        longitude: 126.9547,
+        address: '제주특별자치도 제주시 우도면'
+      },
+      {
+        id: 4,
+        planDetailName: '한라산 국립공원',
+        day: 2,
+        arrivalTime: '16:00:00',
+        departureTime: '18:00:00',
+        memo: '제주도의 상징, 한라산 둘레길 산책',
+        transportFromPrevious: { name: '자가용' },
+        latitude: 33.3617,
+        longitude: 126.5292,
+        address: '제주특별자치도 서귀포시 토평동'
+      },
+      {
+        id: 5,
+        planDetailName: '중문 관광단지',
+        day: 3,
+        arrivalTime: '10:00:00',
+        departureTime: '15:00:00',
+        memo: '쇼핑과 카페 투어, 중문해수욕장 산책',
+        transportFromPrevious: { name: '자가용' },
+        latitude: 33.2394,
+        longitude: 126.4135,
+        address: '제주특별자치도 서귀포시 중문동'
+      },
+      {
+        id: 6,
+        planDetailName: '제주공항',
+        day: 4,
+        arrivalTime: '16:00:00',
+        departureTime: '18:00:00',
+        memo: '아쉬운 제주도 출발, 다음에 또 와야지!',
+        transportFromPrevious: { name: '자가용' },
+        latitude: 33.5066,
+        longitude: 126.4929,
+        address: '제주특별자치도 제주시 공항로 2'
+      }
+    ]
+  }
+
+  return sampleData
+}
+
+const loadSamplePlanDetail = async (planId) => {
+  console.log(`샘플 계획 데이터 로드: ${planId}`)
+  
+  // 실제 API 호출을 시뮬레이션하기 위해 약간의 지연 추가
+  await new Promise(resolve => setTimeout(resolve, 500))
+  
+  try {
+    const sampleData = generateSamplePlanData(planId)
+    planData.value = normalizePlanData(sampleData)
+    
+    console.log('샘플 계획 데이터 로드 완료:', planData.value)
+    return planData.value
+  } catch (error) {
+    console.error('샘플 데이터 로드 오류:', error)
+    throw error
+  }
+}
+
   // 계획 상세 정보 로드
   const loadPlanDetail = async (planId) => {
     // 인증 확인
@@ -279,8 +386,11 @@ export function usePlanDetail() {
   return {
     planData,
     loadPlanDetail,
+    loadSamplePlanDetail,
     resetPlanData,
     getPlacesByDay,
     validatePlan
   }
+
+  
 }
