@@ -17,6 +17,7 @@
     "v-calendar": "^3.1.2",
     "vue": "^3.5.13",
     "vue-router": "^4.5.1",
+    "vue-kakao-maps": "^0.2.11",
     "vue-slider-component": "^3.2.24",
     "vuedraggable": "^4.1.0"
   },

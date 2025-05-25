@@ -108,12 +108,20 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 60px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* 중앙 정렬 */
   align-items: center;
-  padding: 0 20px;
   z-index: 100;
   background-color: #F9FAFC;
   transition: box-shadow 0.3s ease;
+}
+
+.header-container {
+  max-width: 1400px;
+  width: 100%;
+  padding: 0 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .header.shrink {

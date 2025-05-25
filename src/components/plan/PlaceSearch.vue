@@ -1,179 +1,149 @@
-<!-- components/plan/PlaceSearch.vue -->
 <template>
   <div class="place-search">
-    <div class="search-input-container">
-      <input 
-        type="text" 
-        v-model="searchQuery"
-        placeholder="장소 검색하기 (예: 카페, 식당, 관광지)" 
+    <div class="search-container">
+      <input
+        type="text"
+        v-model="searchKeyword"
+        @keyup.enter="searchPlace"
+        placeholder="장소명을 입력하여 검색하세요"
         class="search-input"
-        @input="onSearchInput"
       />
-      <button class="search-button" @click="search">
-        <svg xmlns="http://www.w3.org/2000/svg" class="search-icon" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-        </svg>
-      </button>
+      <button @click="searchPlace" class="search-button">검색</button>
+    </div>
+    
+    <div v-if="isSearching" class="search-loading">
+      <div class="loading-spinner"></div>
+      <span>검색 중...</span>
     </div>
     
     <div v-if="searchResults.length > 0" class="search-results">
-      <div 
-        v-for="(result, index) in searchResults" 
+      <div
+        v-for="(result, index) in searchResults"
         :key="index"
-        class="search-result-item"
         @click="selectPlace(result)"
+        class="search-result-item"
       >
-        <div class="result-name">{{ result.name }}</div>
-        <div class="result-address">{{ result.address }}</div>
+        <div class="place-name">{{ result.place_name }}</div>
+        <div class="place-address">{{ result.address_name }}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
 export default {
   name: 'PlaceSearch',
   emits: ['select-place'],
   setup(props, { emit }) {
-    const searchQuery = ref('');
+    const searchKeyword = ref('');
     const searchResults = ref([]);
-    const searchTimeout = ref(null);
-
-    // 검색어 입력 시 디바운스 처리
-    const onSearchInput = () => {
-      clearTimeout(searchTimeout.value);
-      if (searchQuery.value.trim() === '') {
-        searchResults.value = [];
+    const isSearching = ref(false);
+    
+    // 장소 검색 함수
+    const searchPlace = () => {
+      const keyword = searchKeyword.value.trim();
+      if (!keyword) return;
+      
+      if (!window.kakao || !window.kakao.maps || !window.kakao.maps.services) {
+        console.error('카카오맵 API가 로드되지 않았습니다.');
+        alert('지도 API를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
         return;
       }
-
-      searchTimeout.value = setTimeout(() => {
-        search();
-      }, 300);
-    };
-
-    // 검색 실행 (API 호출)
-    const search = () => {
-      if (searchQuery.value.trim() === '') {
-        searchResults.value = [];
-        return;
-      }
-
-      // 실제 구현에서는 백엔드 API 호출
-      // 예시 데이터로 대체
-      const mockResults = [
-        {
-          id: 1,
-          name: `${searchQuery.value} 관광지`,
-          address: '제주시 관광로 123',
-          latitude: 33.4805,
-          longitude: 126.5478
-        },
-        {
-          id: 2,
-          name: `${searchQuery.value} 카페`,
-          address: '서귀포시 카페로 456',
-          latitude: 33.2458,
-          longitude: 126.5628
-        },
-        {
-          id: 3,
-          name: `${searchQuery.value} 맛집`,
-          address: '제주시 맛집길 789',
-          latitude: 33.5066,
-          longitude: 126.4935
+      
+      isSearching.value = true;
+      
+      // 카카오 로컬 API 검색 서비스 초기화
+      const places = new window.kakao.maps.services.Places();
+      
+      // 키워드로 장소 검색
+      places.keywordSearch(keyword, (result, status) => {
+        isSearching.value = false;
+        
+        if (status === window.kakao.maps.services.Status.OK) {
+          console.log('검색 결과:', result);
+          searchResults.value = result;
+        } else {
+          console.error('검색 실패:', status);
+          searchResults.value = [];
+          alert('검색 결과가 없습니다.');
         }
-      ];
-
-      searchResults.value = mockResults;
+      });
     };
-
-    // 장소 선택 이벤트
+    
+    // 장소 선택 함수
     const selectPlace = (place) => {
+      // 선택한 장소 정보를 부모 컴포넌트로 전달
       emit('select-place', {
-        planDetailName: place.name,
-        latitude: place.latitude,
-        longitude: place.longitude,
-        address: place.address
+        planDetailName: place.place_name,
+        latitude: parseFloat(place.y),
+        longitude: parseFloat(place.x),
+        address: place.address_name
       });
       
-      // 선택 후 검색 결과 초기화
-      searchQuery.value = '';
+      // 검색 결과 초기화
       searchResults.value = [];
+      searchKeyword.value = '';
     };
-
-    // 컴포넌트 정리 시 타이머 정리
-    watch(() => searchQuery.value, (newVal) => {
-      if (newVal === '') {
-        searchResults.value = [];
-      }
-    });
-
+    
     return {
-      searchQuery,
+      searchKeyword,
       searchResults,
-      onSearchInput,
-      search,
+      isSearching,
+      searchPlace,
       selectPlace
     };
   }
-}
+};
 </script>
 
 <style scoped>
 .place-search {
   position: relative;
-  margin-bottom: 1rem;
   width: 100%;
 }
 
-.search-input-container {
-  position: relative;
+.search-container {
   display: flex;
-  align-items: center;
+  gap: 0.5rem;
 }
 
 .search-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  padding-right: 2.5rem;
+  flex: 1;
+  padding: 0.75rem;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 0.875rem;
-  background-color: white;
-  transition: all 0.2s ease;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #8e6ad9;
-  box-shadow: 0 0 0 3px rgba(142, 106, 217, 0.1);
 }
 
 .search-button {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
+  padding: 0.75rem 1.5rem;
+  background-color: #a78bda;
+  color: white;
   border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  color: #9ca3af;
-  padding: 0.5rem;
+}
+
+.search-loading {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+  color: #6b7280;
 }
 
-.search-button:hover {
-  color: #8e6ad9;
-}
-
-.search-icon {
-  width: 1.25rem;
-  height: 1.25rem;
+.loading-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #a78bda;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 .search-results {
@@ -182,38 +152,36 @@ export default {
   left: 0;
   right: 0;
   z-index: 10;
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-top: 0.25rem;
   max-height: 300px;
   overflow-y: auto;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-top: 0.5rem;
 }
 
 .search-result-item {
   padding: 0.75rem 1rem;
   cursor: pointer;
-  transition: background-color 0.2s ease;
   border-bottom: 1px solid #f3f4f6;
 }
 
 .search-result-item:hover {
-  background-color: #f9f7ff;
+  background-color: #f9fafb;
 }
 
-.search-result-item:last-child {
-  border-bottom: none;
-}
-
-.result-name {
+.place-name {
   font-weight: 500;
-  color: #1f2937;
   margin-bottom: 0.25rem;
 }
 
-.result-address {
+.place-address {
   font-size: 0.75rem;
   color: #6b7280;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

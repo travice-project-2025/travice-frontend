@@ -5,18 +5,17 @@ import LoginPage from '../pages/LoginPage.vue'
 import PlansPage from '../pages/PlansPage.vue' 
 import CreatePlanWizard from '../pages/CreatePlanWizard.vue'
 import ProfilePage from '../pages/ProfilePage.vue'
-import Hompage from '../pages/Hompage.vue'
 import BoardPage from '../pages/BoardPage.vue'
 import PlanCreatePage from '../pages/PlanCreatePage.vue'
 import CreateBoard from '../pages/CreateBoard.vue'
 import BoardDetail from '../pages/BoardDetail.vue'
-import Search from '../pages/Search.vue'
+import PlanDetailPage from '../pages/PlanDetailPage.vue'
 
 const routes = [
   {
-    path: '/',
-    name: 'Onboarding',
-    component: Hompage
+    path: "/",
+    name: "onBoarding",
+    component: OnboardingPage
   },
   {
     path: '/login',
@@ -37,14 +36,14 @@ const routes = [
     component: CreatePlanWizard
   },
   {
+    path: '/plan-create',
+    name: 'PlanCreate', 
+    component: PlanCreatePage
+  },
+  {
     path: '/profile',
     name: 'Profile',
     component: ProfilePage
-  },
-  {
-    path: '/home',
-    name: 'testHome',
-    component: Hompage
   },
   {
     path: '/board',
@@ -62,12 +61,17 @@ const routes = [
     component: BoardDetail,
     props: true
   },
-  {
-    path: '/search',
-    name: 'Search',
-    component: Search,
-    props: true
+  { path: '/edit-plan/:id',
+    name: 'edit-plan',
+    component: BoardPage
   },
+  {
+    path: '/plans/:planId',
+    name: 'PlanDetail', 
+    component: PlanDetailPage,
+    props: true
+  }
+
 ]
 
 const router = createRouter({

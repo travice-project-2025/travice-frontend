@@ -390,26 +390,28 @@ const totalPages = computed(() => {
 
 // 날짜 포맷팅 함수
 const formatDate = (dateString) => {
-  if (!dateString) return '날짜 정보 없음';
+  if (!dateString) return '';
   
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '날짜 형식 오류';
-    
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays <= 1) {
-      return '오늘';
-    } else if (diffDays < 7) {
-      return `${diffDays}일 전`;
-    } else {
-      return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
-    }
-  } catch (error) {
-    console.error('날짜 변환 오류:', error);
-    return '날짜 형식 오류';
+  const inputDate = new Date(dateString);
+  const today = new Date();
+  
+  // 시간을 00:00:00으로 설정하여 날짜만 비교
+  const inputDateOnly = new Date(inputDate.getFullYear(), inputDate.getMonth(), inputDate.getDate());
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  // 날짜 차이 계산 (일 단위)
+  const diffTime = todayOnly.getTime() - inputDateOnly.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    return '오늘';
+  } else if (diffDays === 1) {
+    return '어제';
+  } else if (diffDays > 1 && diffDays <= 30) {
+    return `${diffDays}일 전`;
+  } else {
+    // 30일 이상 지난 경우 날짜 형식으로 표시
+    return `${inputDate.getFullYear()}.${String(inputDate.getMonth() + 1).padStart(2, '0')}.${String(inputDate.getDate()).padStart(2, '0')}`;
   }
 };
 

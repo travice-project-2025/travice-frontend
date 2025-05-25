@@ -3,24 +3,87 @@
   <div class="post-detail-page">
     <AppHeader :is-shrunk="isScrolled" />
     
-    <main class="main-content">
-      <!-- 상단 내비게이션 -->
-            <div class="navigation-bar">
-              <button @click="goBack" class="back-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span>게시판으로 돌아가기</span>
-              </button>
-              <div class="post-meta">
-                <span class="post-date">{{ formatDate(post.createdAt) }}</span>
-                <span class="dot-divider">•</span>
-                <span class="post-views">조회 {{ post.views }}</span>
+    <!-- 채팅 패널 오버레이 -->
+    <div v-if="isChatOpen" class="chat-overlay" @click="closeChatPanel">
+      <div class="chat-panel" @click.stop>
+        <div class="chat-header">
+          <div class="chat-user-info">
+            <div class="chat-avatar" :style="{ backgroundColor: getAvatarColor(chatPartner.name) }">
+              {{ getAvatarInitial(chatPartner.name) }}
+            </div>
+            <div class="chat-user-details">
+              <span class="chat-user-name">{{ chatPartner.name }}</span>
+              <div class="chat-user-badges">
+                <span class="badge gender">{{ getGenderText(chatPartner.gender) }}</span>
+                <span class="badge age">{{ chatPartner.age }}세</span>
               </div>
             </div>
-      <div class="content-wrapper">
+          </div>
+          <button class="chat-close-btn" @click="closeChatPanel">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
         
+        <div class="chat-messages">
+          <div v-if="chatMessages.length === 0" class="no-messages">
+            <p>대화를 시작해보세요!</p>
+          </div>
+          
+          <div v-else v-for="message in chatMessages" :key="message.id" 
+               class="chat-message" 
+               :class="{ 'my-message': message.sender === userNickname, 'other-message': message.sender !== userNickname }">
+            <div class="message-content">
+              <div class="message-text">{{ message.content }}</div>
+              <div class="message-time">{{ formatDate(message.createdAt) }}</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="chat-input-area">
+          <div class="chat-form">
+            <textarea 
+              v-model="newChatMessage" 
+              placeholder="메시지를 입력하세요..."
+              rows="2"
+              class="chat-input"
+              @keydown.enter.prevent="sendChatMessage"
+            ></textarea>
+            <button 
+              class="send-chat-btn"
+              :disabled="!newChatMessage.trim()"
+              @click="sendChatMessage"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <main class="main-content">
+      <!-- 상단 내비게이션 -->
+      <div class="navigation-bar">
+        <button @click="goBack" class="back-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 12H5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 19L5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>게시판으로 돌아가기</span>
+        </button>
+        <div class="post-meta">
+          <span class="post-date">{{ formatDate(post.createdAt) }}</span>
+          <span class="dot-divider">•</span>
+          <span class="post-views">조회 {{ post.views }}</span>
+        </div>
+      </div>
+      
+      <div class="content-wrapper">
         <div class="sidebar">
           <!-- 작성자 정보 -->
           <div class="author-card">
@@ -85,8 +148,6 @@
               </button>
             </div>
           </div>
-
-          
           
           <!-- 여행 정보 카드 -->
           <div class="travel-info-card">
@@ -145,6 +206,32 @@
                   <div class="info-value">{{ formatCost(post.estimatedCost) }}</div>
                 </div>
               </div>
+
+              <div class="info-item">
+                <div class="info-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="#8e6ad9" stroke-width="2"/>
+                    <path d="M12 14C16.4183 14 20 17.5817 20 22H4C4 17.5817 7.58172 14 12 14Z" stroke="#8e6ad9" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="info-content">
+                  <div class="info-label">선호 연령</div>
+                  <div class="info-value">{{ post.preferenceMinAge }}세 ~ {{ post.preferenceMaxAge }}세</div>
+                </div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="#8e6ad9" stroke-width="2"/>
+                    <path d="M21 21V19C21 16.7909 19.2091 15 17 15H7C4.79086 15 3 16.7909 3 19V21" stroke="#8e6ad9" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="info-content">
+                  <div class="info-label">선호 성별</div>
+                  <div class="info-value">{{ getGenderText(post.preferenceGender) }}</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -152,16 +239,26 @@
         <div class="main-column">
           <!-- 게시글 컨테이너 -->
           <div class="post-container">
-            
-            
             <div class="post-title-wrapper">
               <div class="title-and-badge">
-                <h1 class="post-title">{{ post.title }}</h1>
+                <!-- 일반 모드: 제목 표시 -->
+                <h1 v-if="!isEditingPost" class="post-title">{{ post.title }}</h1>
+                <!-- 편집 모드: 제목 입력 -->
+                <input v-else v-model="editPostData.title" class="post-title-edit" placeholder="제목을 입력하세요">
+                
                 <span class="board-type-badge" :class="getBoardTypeClass(post.boardType)">
                   {{ getBoardTypeText(post.boardType) }}
                 </span>
               </div>
-              <div v-if="isAuthor" class="post-actions">
+              
+              <div v-if="isAuthor && !isEditingPost" class="post-actions">
+                <button class="edit-post-btn" @click="editPost">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18.5 2.50023C18.8978 2.1024 19.4374 1.87891 20 1.87891C20.5626 1.87891 21.1022 2.1024 21.5 2.50023C21.8978 2.89805 22.1213 3.43762 22.1213 4.00023C22.1213 4.56284 21.8978 5.1024 21.5 5.50023L12 15.0002L8 16.0002L9 12.0002L18.5 2.50023Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  게시글 수정하기
+                </button>
                 <button class="delete-post-btn" @click="confirmDeletePost">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -171,9 +268,81 @@
                 </button>
               </div>
             </div>
-                          
-            <!-- 게시글 내용 -->
-            <div class="post-content">
+
+            <!-- 편집 모드일 때만 표시되는 수정 폼 -->
+            <div v-if="isEditingPost" class="post-edit-form">
+              <div class="edit-form-group">
+                <label class="edit-label">모집 인원</label>
+                <div class="member-count-edit">
+                  <button type="button" @click="editPostData.memberCount = Math.max(1, editPostData.memberCount - 1)" class="count-btn">-</button>
+                  <span class="count-value">{{ editPostData.memberCount }}명</span>
+                  <button type="button" @click="editPostData.memberCount++" class="count-btn">+</button>
+                </div>
+              </div>
+
+              <div class="edit-form-group">
+                <label class="edit-label">예상 비용</label>
+                <div class="cost-edit-wrapper">
+                  <input v-model="formattedEditCost" class="cost-edit-input" placeholder="예상 비용">
+                  <span class="cost-unit">원</span>
+                </div>
+              </div>
+
+              <div class="edit-form-group">
+                <label class="edit-label">선호 연령</label>
+                <div class="age-edit-wrapper">
+                  <input v-model.number="editPostData.preferenceMinAge" type="number" min="15" max="70" class="age-edit-input">
+                  <span>세 ~</span>
+                  <input v-model.number="editPostData.preferenceMaxAge" type="number" min="15" max="70" class="age-edit-input">
+                  <span>세</span>
+                </div>
+              </div>
+
+              <div class="edit-form-group">
+                <label class="edit-label">선호 성별</label>
+                <div class="gender-preference-edit">
+                  <button 
+                    type="button"
+                    class="gender-btn" 
+                    :class="{ active: editPostData.preferenceGender === 'M' }"
+                    @click="editPostData.preferenceGender = 'M'"
+                  >
+                    남성
+                  </button>
+                  <button 
+                    type="button"
+                    class="gender-btn" 
+                    :class="{ active: editPostData.preferenceGender === 'W' }"
+                    @click="editPostData.preferenceGender = 'W'"
+                  >
+                    여성
+                  </button>
+                  <button 
+                    type="button"
+                    class="gender-btn" 
+                    :class="{ active: editPostData.preferenceGender === 'ANY' }"
+                    @click="editPostData.preferenceGender = 'ANY'"
+                  >
+                    무관
+                  </button>
+                </div>
+              </div>
+
+              <div class="edit-form-group">
+                <label class="edit-label">상세 내용</label>
+                <textarea v-model="editPostData.content" class="content-edit-textarea" rows="6" placeholder="상세 내용을 입력하세요"></textarea>
+              </div>
+
+              <div class="post-edit-actions">
+                <button class="edit-cancel-btn" @click="cancelEditPost">취소</button>
+                <button class="edit-submit-btn" @click="submitEditPost" :disabled="!editPostData.title.trim() || !editPostData.content.trim()">
+                  수정 완료
+                </button>
+              </div>
+            </div>
+
+            <!-- 일반 모드: 게시글 내용 표시 -->
+            <div v-if="!isEditingPost" class="post-content">
               <div class="content-text">
                 {{ post.content }}
               </div>
@@ -223,6 +392,10 @@
                   <div class="comment-author-info">
                     <div class="author-name-row">
                       <span class="comment-author-name">{{ comment.author }}</span>
+                      <div class="comment-author-badges">
+                        <span class="badge gender">{{ getGenderText(comment.gender) }}</span>
+                        <span class="badge age">{{ comment.age }}세</span>
+                      </div>
                       <div v-if="comment.isAuthor" class="author-badge">작성자</div>
                     </div>
                     <div class="comment-meta">
@@ -258,6 +431,18 @@
                 
                 <!-- 댓글 액션 버튼들 (수정 모드가 아닐 때만 표시) -->
                 <div v-if="editingCommentId !== comment.id" class="comment-actions">
+                  <!-- 채팅 버튼 (내가 쓴 댓글이 아닌 경우에만 표시) -->
+                  <button 
+                    v-if="comment.author !== userNickname"
+                    class="chat-comment-btn"
+                    @click="openChatPanel(comment)"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    채팅
+                  </button>
+                  
                   <!-- 수정 버튼 -->
                   <button 
                     v-if="comment.author === userNickname"
@@ -293,9 +478,8 @@
   </div>
 </template>
 
-
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppHeader from '@/components/common/AppHeader.vue';
 import { useAuth } from '@/composables/userAuth';
@@ -307,16 +491,38 @@ const { userName, userNickname, requireAuth } = useAuth();
 const router = useRouter();
 const route = useRoute();
 
-// 상태 정의
+// 기존 상태 정의
 const isScrolled = ref(false);
 const isLoading = ref(true);
 const isApplied = ref(false);
-const isAuthor = ref(false); // 사용자가 게시글 작성자인지 여부
+const isAuthor = ref(false);
 const newComment = ref('');
 
 // 편집 모드 상태 관리를 위한 변수들
-const editingCommentId = ref(null); // 현재 편집 중인 댓글 ID
-const editContent = ref(''); // 편집 중인 내용
+const editingCommentId = ref(null);
+const editContent = ref('');
+
+const isEditingPost = ref(false);
+const editPostData = ref({
+  title: '',
+  memberCount: 1,
+  cost: 0,
+  preferenceMinAge: 20,
+  preferenceMaxAge: 35,
+  preferenceGender: 'ANY', 
+  content: ''
+});
+
+// 채팅 기능 관련 상태 변수들
+const isChatOpen = ref(false);
+const chatPartner = ref({
+  name: '',
+  gender: '',
+  age: 0,
+  id: null
+});
+const chatMessages = ref([]);
+const newChatMessage = ref('');
 
 // 게시글 데이터
 const post = ref({
@@ -338,11 +544,138 @@ const post = ref({
   interestCount: 0,
   commentCount: 0,
   isInterested: false,
-  boardType: 'OPEN'
+  boardType: 'OPEN',
+  preferenceMinAge: 20,
+  preferenceMaxAge: 35,
+  preferenceGender: 'ANY'
 });
 
 // 댓글 데이터
 const comments = ref([]);
+
+// 채팅 패널 열기
+const openChatPanel = async (comment) => {
+  try {
+    // 채팅 상대방 정보 설정
+    chatPartner.value = {
+      name: comment.author,
+      gender: comment.gender,
+      age: comment.age,
+      id: comment.id // 또는 comment.authorId 등 실제 사용자 ID
+    };
+    
+    // 채팅 패널 열기
+    isChatOpen.value = true;
+    
+    // 해당 사용자와의 채팅 메시지 목록 가져오기
+    await fetchChatMessages(comment.author);
+    
+  } catch (error) {
+    console.error('채팅 패널 열기 실패:', error);
+    alert('채팅을 열 수 없습니다.');
+  }
+};
+
+// 채팅 패널 닫기
+const closeChatPanel = () => {
+  isChatOpen.value = false;
+  chatPartner.value = {
+    name: '',
+    gender: '',
+    age: 0,
+    id: null
+  };
+  chatMessages.value = [];
+  newChatMessage.value = '';
+};
+
+// 채팅 메시지 목록 가져오기
+const fetchChatMessages = async (partnerName) => {
+  try {
+    // API 호출 - 실제 구현 시 적절한 엔드포인트로 변경
+    const response = await fetch(`http://localhost:8080/api/v1/chat/messages?partner=${partnerName}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': localStorage.getItem('JWT-TOKEN')
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`채팅 메시지 로드 실패: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // 메시지 데이터 포맷팅
+    chatMessages.value = data.map(message => ({
+      id: message.id,
+      sender: message.sender,
+      content: message.content,
+      createdAt: message.createdAt
+    }));
+    
+  } catch (error) {
+    console.error('채팅 메시지 로드 실패:', error);
+    // 에러 시 빈 배열로 초기화
+    chatMessages.value = [];
+  }
+};
+
+// 채팅 메시지 전송
+const sendChatMessage = async () => {
+  if (!newChatMessage.value.trim()) return;
+  
+  try {
+    const messageData = {
+      receiver: chatPartner.value.name,
+      content: newChatMessage.value.trim()
+    };
+    
+    const response = await fetch('http://localhost:8080/api/v1/chat/send', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': localStorage.getItem('JWT-TOKEN')
+      },
+      body: JSON.stringify(messageData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`메시지 전송 실패: ${response.status}`);
+    }
+    
+    const responseData = await response.json();
+    
+    // 새 메시지를 채팅 목록에 추가
+    const newMessage = {
+      id: responseData.id || Date.now(), // 임시 ID
+      sender: userNickname.value,
+      content: newChatMessage.value.trim(),
+      createdAt: new Date().toISOString()
+    };
+    
+    chatMessages.value.push(newMessage);
+    
+    // 입력창 초기화
+    newChatMessage.value = '';
+    
+    // 스크롤을 맨 아래로 (선택사항)
+    setTimeout(() => {
+      const messagesContainer = document.querySelector('.chat-messages');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }, 100);
+    
+  } catch (error) {
+    console.error('메시지 전송 실패:', error);
+    alert('메시지 전송에 실패했습니다.');
+  }
+};
 
 // 뒤로 가기
 const goBack = () => {
@@ -361,23 +694,26 @@ const getApplyButtonText = () => {
 const formatDate = (dateString) => {
   if (!dateString) return '';
   
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now - date);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const inputDate = new Date(dateString);
+  const today = new Date();
   
-  if (diffDays <= 1) {
-    // 시간 단위로 표시
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    if (diffHours < 1) {
-      const diffMinutes = Math.floor(diffTime / (1000 * 60));
-      return `${diffMinutes}분 전`;
-    }
-    return `${diffHours}시간 전`;
-  } else if (diffDays < 7) {
+  // 시간을 00:00:00으로 설정하여 날짜만 비교
+  const inputDateOnly = new Date(inputDate.getFullYear(), inputDate.getMonth(), inputDate.getDate());
+  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  // 날짜 차이 계산 (일 단위)
+  const diffTime = todayOnly.getTime() - inputDateOnly.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    return '오늘';
+  } else if (diffDays === 1) {
+    return '어제';
+  } else if (diffDays > 1 && diffDays <= 30) {
     return `${diffDays}일 전`;
   } else {
-    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+    // 30일 이상 지난 경우 날짜 형식으로 표시
+    return `${inputDate.getFullYear()}.${String(inputDate.getMonth() + 1).padStart(2, '0')}.${String(inputDate.getDate()).padStart(2, '0')}`;
   }
 };
 
@@ -488,7 +824,7 @@ const toggleApply = () => {
   }
 };
 
-// 게시글 상태 변경 (작성자용) - 수정된 부분
+// 게시글 상태 변경 (작성자용)
 const togglePostStatus = async () => {
   // 이미 마감된 상태라면 아무 동작 없음
   if (post.value.boardType === 'CLOSED') {
@@ -568,6 +904,8 @@ const submitComment = async () => {
       content: responseData.content,
       createdAt: responseData.createdAt,
       isAuthor: responseData.isAuthor,
+      gender: responseData.gender,
+      age: responseData.age,
       isNew: true // 애니메이션 효과를 위한 플래그
     };
     
@@ -600,7 +938,6 @@ const cancelEdit = () => {
   editingCommentId.value = null;
   editContent.value = '';
 };
-
 
 // 댓글 수정 완료
 const submitEdit = async (commentId) => {
@@ -650,8 +987,6 @@ const submitEdit = async (commentId) => {
   }
 };
 
-
-
 // 댓글 삭제
 const deleteComment = async (commentId) => {
   if (confirm('정말 댓글을 삭제하시겠습니까?')) {
@@ -687,7 +1022,6 @@ const deleteComment = async (commentId) => {
     }
   }
 };
-
 
 // 스크롤 이벤트 핸들러
 const handleScroll = () => {
@@ -733,10 +1067,13 @@ const fetchPostDetail = async () => {
         estimatedCost: data.cost,
         createdAt: data.createdAt,
         views: data.viewCount || 0,
-        interestCount: 0, // API에서 제공하지 않는 경우
+        interestCount: 0,
         commentCount: data.comments?.length || 0,
-        isInterested: false, // API에서 제공하지 않는 경우
-        boardType: data.boardType || 'OPEN' // 게시글 상태 추가
+        isInterested: false, 
+        boardType: data.boardType || 'OPEN', 
+        preferenceMinAge: data.preferenceMinAge || 20,
+        preferenceMaxAge: data.preferenceMaxAge || 35,
+        preferenceGender: data.preferenceGender || 'ANY',
     };
     
     // 사용자가 작성자인지 확인
@@ -750,7 +1087,9 @@ const fetchPostDetail = async () => {
         content: comment.content,
         createdAt: comment.createdAt,
         isAuthor: comment.writer === data.nickname, // 게시글 작성자와 댓글 작성자가 같은지
-        profileImage: comment.wiriterProfileImage
+        profileImage: comment.wiriterProfileImage,
+        gender: comment.gender, // 성별 정보 추가
+        age: comment.age // 나이 정보 추가
       }));
     } else {
       comments.value = [];
@@ -762,6 +1101,104 @@ const fetchPostDetail = async () => {
     isLoading.value = false;
   }
 };
+
+// 게시글 수정 페이지로 이동
+const editPost = () => {
+  isEditingPost.value = true;
+  editPostData.value = {
+    title: post.value.title,
+    memberCount: post.value.recruitCount,
+    cost: post.value.estimatedCost,
+    preferenceMinAge: post.value.preferenceMinAge,
+    preferenceMaxAge: post.value.preferenceMaxAge,
+    preferenceGender: post.value.preferenceGender,
+    content: post.value.content
+  };
+};
+
+// 게시글 수정 취소
+const cancelEditPost = () => {
+  isEditingPost.value = false;
+  editPostData.value = {
+    title: '',
+    memberCount: 1,
+    cost: 0,
+    preferenceMinAge: 20,
+    preferenceMaxAge: 35,
+    preferenceGender: 'ANY',
+    content: ''
+  };
+};
+
+// 게시글 수정 완료
+const submitEditPost = async () => {
+  try {
+    const postId = route.params.id;
+    
+    // 수정할 데이터 구성
+    const updateData = {
+      title: editPostData.value.title,
+      memberCount: editPostData.value.memberCount,
+      cost: editPostData.value.cost,
+      preferenceMinAge: editPostData.value.preferenceMinAge,
+      preferenceMaxAge: editPostData.value.preferenceMaxAge,
+      preferenceGender: editPostData.value.preferenceGender,
+      detail: editPostData.value.content
+    };
+    
+    // API 호출
+    const response = await fetch(`http://localhost:8080/api/v1/boards/${postId}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': localStorage.getItem('JWT-TOKEN')
+      },
+      body: JSON.stringify(updateData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`게시글 수정 실패: ${response.status}`);
+    }
+    
+    // 성공 시 UI 업데이트
+    post.value.title = editPostData.value.title;
+    post.value.recruitCount = editPostData.value.memberCount;
+    post.value.estimatedCost = editPostData.value.cost;
+    post.value.preferenceMinAge = editPostData.value.preferenceMinAge;
+    post.value.preferenceMaxAge = editPostData.value.preferenceMaxAge;
+    post.value.content = editPostData.value.content;
+    
+    // 수정 모드 종료
+    isEditingPost.value = false;
+    
+    alert('게시글이 성공적으로 수정되었습니다.');
+    
+  } catch (error) {
+    console.error('게시글 수정 실패:', error);
+    alert(`게시글 수정에 실패했습니다: ${error.message}`);
+  }
+};
+
+// 비용 포맷팅을 위한 computed 속성
+const formattedEditCost = computed({
+  get() {
+    if (editPostData.value.cost === 0) return '';
+    return editPostData.value.cost.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  },
+  set(value) {
+    const numericValue = value.replace(/,/g, '');
+    if (numericValue === '') {
+      editPostData.value.cost = 0;
+      return;
+    }
+    if (!/^\d+$/.test(numericValue)) {
+      return;
+    }
+    editPostData.value.cost = parseInt(numericValue, 10);
+  }
+});
 
 // 게시글 삭제 확인
 const confirmDeletePost = () => {
@@ -1260,12 +1697,36 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .comment-author-name {
   font-size: 15px;
   font-weight: 500;
   color: #333;
+}
+
+.comment-author-badges {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.comment-author-badges .badge {
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.comment-author-badges .badge.gender {
+  background-color: rgba(142, 106, 217, 0.1);
+  color: #8e6ad9;
+}
+
+.comment-author-badges .badge.age {
+  background-color: rgba(167, 139, 250, 0.1);
+  color: #a78bfa;
 }
 
 .author-badge {
@@ -1292,6 +1753,40 @@ onBeforeUnmount(() => {
 .comment-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
+}
+
+/* 채팅 버튼 스타일 */
+.chat-comment-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 10px;
+  background-color: rgba(142, 106, 217, 0.05);
+  border: 1px solid rgba(142, 106, 217, 0.2);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #8e6ad9;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-comment-btn:hover {
+  background-color: rgba(142, 106, 217, 0.1);
+  border-color: #8e6ad9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(142, 106, 217, 0.2);
+}
+
+.chat-comment-btn:active {
+  transform: scale(0.95);
+}
+
+.chat-comment-btn svg {
+  margin-right: 4px;
 }
 
 .delete-comment-btn {
@@ -1354,7 +1849,6 @@ onBeforeUnmount(() => {
   transition: all 0.2s;
   position: relative;
   overflow: hidden;
-  margin-right: 8px;
 }
 
 .edit-comment-btn:hover {
@@ -1453,52 +1947,6 @@ onBeforeUnmount(() => {
   cursor: not-allowed;
 }
 
-/* 반응형 */
-@media (max-width: 1024px) {
-  .content-wrapper {
-    flex-direction: column;
-  }
-  
-  .sidebar {
-    width: 100%;
-    order: 2;
-  }
-  
-  .main-column {
-    order: 1;
-  }
-  
-  .author-card {
-    margin-bottom: 0;
-  }
-  
-  .action-buttons {
-    flex-direction: row;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-content {
-    padding: 20px 0;
-  }
-  
-  .post-container, .comments-section {
-    padding: 20px;
-  }
-  
-  .comment-content {
-    padding-left: 0;
-  }
-  
-  .comment-edit-form {
-    padding-left: 0;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-  }
-}
-
 .post-title-wrapper {
   display: flex;
   align-items: center;
@@ -1533,6 +1981,31 @@ onBeforeUnmount(() => {
 .post-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
+}
+
+.edit-post-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #f0f9ff;
+  color: #0284c7;
+  border: 1px solid #bae6fd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-post-btn:hover {
+  background-color: #e0f2fe;
+  border-color: #0284c7;
+}
+
+.edit-post-btn svg {
+  margin-right: 4px;
 }
 
 .delete-post-btn {
@@ -1558,4 +2031,548 @@ onBeforeUnmount(() => {
 .delete-post-btn svg {
   margin-right: 4px;
 }
+
+.post-title-edit {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 12px;
+  background-color: #f9f9f9;
+  flex: 1;
+}
+
+.post-title-edit:focus {
+  outline: none;
+  border-color: #8e6ad9;
+  background-color: white;
+}
+
+.post-edit-form {
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.edit-form-group {
+  margin-bottom: 20px;
+}
+
+.edit-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.member-count-edit {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.count-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.count-btn:hover {
+  background-color: #8e6ad9;
+  color: white;
+  border-color: #8e6ad9;
+}
+
+.count-value {
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+}
+
+.cost-edit-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cost-edit-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: right;
+}
+
+.cost-unit {
+  font-weight: 500;
+  color: #666;
+}
+
+.age-edit-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.age-edit-input {
+  width: 80px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.content-edit-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.content-edit-textarea:focus, .cost-edit-input:focus, .age-edit-input:focus {
+  outline: none;
+  border-color: #8e6ad9;
+  box-shadow: 0 0 0 2px rgba(142, 106, 217, 0.1);
+}
+
+.post-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.gender-preference-edit {
+  display: flex;
+  gap: 8px;
+}
+
+.gender-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: white;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.gender-btn:hover {
+  background-color: rgba(142, 106, 217, 0.05);
+  border-color: #8e6ad9;
+}
+
+.gender-btn.active {
+  background-color: #8e6ad9;
+  border-color: #8e6ad9;
+  color: white;
+}
+
+/* =================
+   채팅 패널 스타일
+   ================= */
+
+.chat-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+.chat-panel {
+  width: 400px;
+  height: 100vh;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #f8f9fa;
+}
+
+.chat-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chat-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.chat-user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-user-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.chat-user-badges {
+  display: flex;
+  gap: 6px;
+}
+
+.chat-user-badges .badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.chat-close-btn {
+  width: 36px;
+  height: 36px;
+  background-color: transparent;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chat-close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background-color: #fafafa;
+}
+
+.no-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+  font-size: 14px;
+}
+
+.chat-message {
+  display: flex;
+  max-width: 80%;
+  animation: messageSlideIn 0.2s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.my-message {
+  align-self: flex-end;
+  justify-content: flex-end;
+}
+
+.other-message {
+  align-self: flex-start;
+  justify-content: flex-start;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.message-text {
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+.my-message .message-text {
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
+  color: white;
+  border-bottom-right-radius: 6px;
+}
+
+.other-message .message-text {
+  background-color: white;
+  color: #333;
+  border: 1px solid #e1e5e9;
+  border-bottom-left-radius: 6px;
+}
+
+.message-time {
+  font-size: 11px;
+  color: #888;
+  padding: 0 4px;
+  align-self: flex-end;
+}
+
+.my-message .message-time {
+  text-align: right;
+}
+
+.other-message .message-time {
+  text-align: left;
+}
+
+.chat-input-area {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  background-color: white;
+}
+
+.chat-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 14px;
+  resize: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+  background-color: #f8f9fa;
+  min-height: 44px;
+  max-height: 120px;
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: #8e6ad9;
+  background-color: white;
+  box-shadow: 0 0 0 2px rgba(142, 106, 217, 0.1);
+}
+
+.send-chat-btn {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.send-chat-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.3);
+}
+
+.send-chat-btn:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.send-chat-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* 채팅 메시지 스크롤바 커스터마이징 */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 반응형 - 모바일 */
+@media (max-width: 1024px) {
+  .content-wrapper {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    order: 2;
+  }
+  
+  .main-column {
+    order: 1;
+  }
+  
+  .author-card {
+    margin-bottom: 0;
+  }
+  
+  .action-buttons {
+    flex-direction: row;
+  }
+  
+  .navigation-bar {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 20px 0;
+  }
+  
+  .post-container, .comments-section {
+    padding: 20px;
+  }
+  
+  .comment-content {
+    padding-left: 0;
+  }
+  
+  .comment-edit-form {
+    padding-left: 0;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  /* 모바일에서 채팅 패널 전체 화면 */
+  .chat-panel {
+    width: 100vw;
+  }
+  
+  .chat-overlay {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-wrapper {
+    padding: 0 10px;
+  }
+  
+  .navigation-bar {
+    margin-left: 10px;
+    margin-right: 10px;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .post-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .edit-post-btn, .delete-post-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .comment-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+  }
+  
+  .chat-user-info {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  
+  .chat-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .chat-panel,
+  .chat-message,
+  .send-chat-btn:hover,
+  .apply-btn:hover,
+  .submit-comment-btn:hover {
+    animation: none;
+    transition: none;
+    transform: none;
+  }
+}
+
 </style>

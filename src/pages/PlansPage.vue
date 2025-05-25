@@ -1,3 +1,4 @@
+<!-- pages/PlansPage.vue - 수정된 부분만 표시 -->
 <template>
   <div class="plans-page">
     <AppHeader :is-shrunk="isScrolled" />
@@ -39,7 +40,7 @@
             <img :src="plan.thumbnail || '/placeholder-image.jpg'" alt="여행 이미지">
           </div>
           <div class="plan-info">
-            <h3>{{ plan.planTitle }}</h3>
+            <h3>{{ plan.title }}</h3>
             <p class="plan-date">{{ formatDate(plan.startDate) }} - {{ formatDate(plan.endDate) }}</p>
             <p class="plan-location">{{ getCityName(plan.cityName) }}</p>
             <div class="plan-meta">
@@ -64,19 +65,24 @@
       </div>
       
       <!-- 오류 메시지 -->
-      <div v-if="apiError" class="error-message">
-        <p>{{ apiErrorMessage }}</p>
-        <button @click="fetchPlans" class="retry-button">다시 시도</button>
+      <div v-if="apiError" class="error-container">
+        <div class="error-content">
+          <div class="error-icon">😥</div>
+          <h3>데이터를 불러올 수 없습니다</h3>
+          <p class="error-message">{{ apiErrorMessage }}</p>
+          <div class="error-actions">
+            <button @click="fetchPlans" class="retry-button">다시 시도</button>
+          </div>
+        </div>
       </div>
 
-      
-      <!-- 새로 추가: 프로필 설정 안내 모달 -->
+      <!-- 프로필 설정 안내 모달 -->
       <div v-if="showProfileModal" class="modal-overlay">
         <div class="profile-modal">
           <div class="modal-icon">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#8e6ad9" stroke-width="2"/>
-              <path d="M12 16V12" stroke="#8e6ad9" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#8e6ad9" strokeWidth="2"/>
+              <path d="M12 16V12" stroke="#8e6ad9" strokeWidth="2" strokeLinecap="round"/>
               <circle cx="12" cy="8" r="1" fill="#8e6ad9"/>
             </svg>
           </div>
@@ -95,9 +101,6 @@
           </div>
         </div>
       </div>
-
-
-
     </main>
   </div>
 </template>
@@ -109,12 +112,27 @@ import AppHeader from '@/components/common/AppHeader.vue';
 import { useAuth } from '../composables/userAuth';
 import axios from 'axios';
 
-// 새로 추가: 모달 상태 관리
+const router = useRouter();
+
+// 모달 상태 관리
 const showProfileModal = ref(false);
 const userAge = ref(null);
 
+// 인증 컴포저블 사용
+const { loggedIn, userName, userNickname, checkLoginStatus, logout, goToLogin } = useAuth()
 
-// 새로 추가: 사용자 정보 가져오기
+// 반응형 상태 정의
+const isScrolled = ref(false);
+const isLoading = ref(true);
+const hasPlans = ref(false);
+const plans = ref([]);
+const apiError = ref(false);
+const apiErrorMessage = ref('');
+
+// API URL
+const API_URL = 'http://localhost:8080/api/v1/plans';
+
+// 사용자 정보 가져오기
 const fetchUserInfo = async () => {
   try {
     const response = await axios.get('http://localhost:8080/api/v1/users/me', {
@@ -133,9 +151,7 @@ const fetchUserInfo = async () => {
   }
 };
 
-
-
-// 새 여행 생성 페이지로 이동 (기존 함수 수정)
+// 새 여행 생성 페이지로 이동 (수정됨)
 const goToCreate = async () => {
   // 사용자 나이가 설정되지 않았다면 모달 표시
   if (userAge.value === 0) {
@@ -146,41 +162,27 @@ const goToCreate = async () => {
   }
 };
 
-// 새로 추가: 계속해서 생성 페이지로 이동
+// 계속해서 생성 페이지로 이동
 const continueToCreate = () => {
   showProfileModal.value = false;
   router.push('/create-plan');
 };
 
-// 새로 추가: 프로필 페이지로 이동
+// 프로필 페이지로 이동
 const goToProfile = () => {
   showProfileModal.value = false;
   router.push('/profile');
 };
 
-// 컴포넌트 마운트 시 초기화 (기존 함수 수정)
-onMounted(() => {
-  console.log('컴포넌트 마운트됨');
-  window.addEventListener('scroll', handleScroll);
-  checkLoginStatus(true);
-  fetchPlans();
-  fetchUserInfo(); // 사용자 정보 가져오기 추가
-});
+// 여행 상세보기 페이지로 이동 (수정됨)
+const viewPlanDetails = (planId) => {
+  router.push(`/plans/${planId}`);
+};
 
-
-// 인증 컴포저블 사용
-const { loggedIn, userName, userNickname, checkLoginStatus, logout, goToLogin } = useAuth()
-
-// 반응형 상태 정의
-const isScrolled = ref(false);
-const isLoading = ref(true);
-const hasPlans = ref(false);
-const plans = ref([]);
-const apiError = ref(false);
-const apiErrorMessage = ref('');
-
-// API URL - 개발용 공개 API로 변경
-const API_URL = 'http://localhost:8080/api/v1/plans';
+// 스크롤 이벤트 핸들러
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 10;
+};
 
 // 날짜 형식 변환 함수
 const formatDate = (dateString) => {
@@ -202,25 +204,24 @@ const formatDate = (dateString) => {
 const getCityName = (cityId) => {
   const cityMap = {
     1: '서울',
-    2: '부산',
-    3: '제주',
-    // 더 많은 도시 추가
+    2: '인천',
+    3: '대전',
+    4: '대구',
+    5: '광주',
+    6: '부산',
+    7: '울산',
+    8: '세종',
+    9: '경기',
+    10: '강원',
+    11: '충청북도',
+    12: '충청남도',
+    13: '경상북도',
+    14: '경상남도',
+    15: '전라북도',
+    16: '전라남도',
+    17: '제주도'
   };
   return cityMap[cityId] || '알 수 없는 지역';
-};
-
-// 라우터 설정
-const router = useRouter();
-
-// 스크롤 이벤트 핸들러
-const handleScroll = () => {
-  isScrolled.value = window.scrollY > 10;
-};
-
-
-// 여행 상세보기 페이지로 이동
-const viewPlanDetails = (planId) => {
-  router.push(`/plan/${planId}`);
 };
 
 // 여행 계획 데이터 가져오기
@@ -254,21 +255,20 @@ const fetchPlans = async () => {
     apiError.value = true;
     apiErrorMessage.value = '데이터를 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.';
 
-    if (error.response.status === 401) {
-        apiErrorMessage.value = '인증이 필요합니다. 다시 로그인해주세요.';
-      }
-
+    if (error.response?.status === 401) {
+      apiErrorMessage.value = '인증이 필요합니다. 다시 로그인해주세요.';
+    }
   } finally {
     isLoading.value = false;
   }
 };
 
-// 컴포넌트 마운트 시 초기화
-onMounted(() => {
-  console.log('컴포넌트 마운트됨');
+// 라이프사이클 훅
+onMounted(async () => {
+  await checkLoginStatus();
+  await fetchUserInfo();
+  await fetchPlans();
   window.addEventListener('scroll', handleScroll);
-  checkLoginStatus()
-  fetchPlans();
 });
 
 // 컴포넌트 언마운트 시 이벤트 리스너 제거
@@ -277,9 +277,8 @@ onBeforeUnmount(() => {
 });
 </script>
 
-
 <style scoped>
-/* 기존 스타일 유지하고 추가 */
+/* 기존 스타일들은 그대로 유지... */
 .plans-page {
   padding-top: 60px;
   min-height: 100vh;
@@ -457,7 +456,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background-color: #f7f2ff;
-  height: 276px; /* 여행 계획 카드와 동일한 높이 */
+  height: 276px;
   border: 2px dashed #a78bfa;
 }
 
@@ -477,8 +476,7 @@ onBeforeUnmount(() => {
   color: #4b5563;
 }
 
-
-/* 모달 스타일 추가 */
+/* 모달 스타일 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -567,5 +565,62 @@ onBeforeUnmount(() => {
 .modal-button.secondary:hover {
   background-color: #e4daff;
   transform: translateY(-2px);
+}
+
+.error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  margin: 2rem 0;
+}
+
+.error-content {
+  text-align: center;
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-family: 'Marines', 'Pretendard', sans-serif;
+}
+
+.error-message {
+  margin: 0 0 2rem 0;
+  color: #718096;
+  line-height: 1.5;
+}
+
+.error-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.retry-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #a78bda;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Marines', 'Pretendard', sans-serif;
+}
+
+.retry-button:hover {
+  background-color: #9979d5;
+  transform: translateY(-1px);
 }
 </style>

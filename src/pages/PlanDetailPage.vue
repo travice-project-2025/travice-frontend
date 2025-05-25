@@ -1,588 +1,1001 @@
-<!-- pages/PlanDetailPage.vue -->
 <template>
   <div class="plan-detail-page">
-    <AppHeader
-      :title="planData.title"
-      :subtitle="formatDateRange(planData.startDate, planData.endDate)"
-    />
-
-    <div class="plan-content">
-      <!-- 왼쪽: 지도 영역 -->
-      <div class="map-section">
-        <!-- 검색 바를 지도 위로 이동 -->
-        <div class="map-search-container">
-          <PlaceSearch @select-place="handleSelectPlace" />
+    <!-- 헤더 영역 -->
+    <div class="page-header">
+      <div class="header-content">
+        <button @click="goBack" class="back-button">
+          <span class="back-icon">←</span>
+          목록으로
+        </button>
+        
+        <div class="header-info">
+          <div class="title-container">
+            <h1 class="page-title">{{ pageTitle }}</h1>
+            <span v-if="isEditMode && !isLoading" class="edit-indicator">편집중</span>
+          </div>
+          <p class="page-subtitle">{{ pageSubtitle }}</p>
+          <!-- 모드 설명을 헤더 정보 안으로 이동 -->
+          <div class="mode-description" v-if="!isLoading">
+            {{
+              isEditMode
+                ? "일정을 자유롭게 수정할 수 있습니다"
+                : "여행 계획을 확인하고 있습니다"
+            }}
+          </div>
         </div>
-
-        <TripMap :places="filteredPlaces" />
-      </div>
-
-      <!-- 오른쪽: 일정 영역 -->
-      <div class="itinerary-section">
-        <div class="itinerary-header">
-          <DayTab v-model="activeDay" :total-days="planData.totalDays" />
-        </div>
-
-        <div class="itinerary-body">
-          <PlaceList
-            v-model:places="filteredPlaces"
-            @delete-place="deletePlaceById"
-            @add-place="showAddPlaceModal = true"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- 장소 추가 모달 -->
-    <div
-      v-if="showAddPlaceModal"
-      class="modal-overlay"
-      @click.self="showAddPlaceModal = false"
-    >
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>새 장소 추가</h2>
-          <button @click="showAddPlaceModal = false" class="modal-close-button">
-            ×
+        
+        <div class="header-actions">
+          <!-- 통합된 모드 전환 버튼 -->
+          <button
+            @click="toggleEditMode"
+            class="mode-toggle-button"
+            :class="{ 'edit-mode': isEditMode, 'view-mode': !isEditMode }"
+            :disabled="isLoading"
+          >
+            <span class="mode-text">{{ isEditMode ? "보기 모드" : "편집하기" }}</span>
           </button>
         </div>
+      </div>
+    </div>
 
-        <div class="modal-body">
-          <form @submit.prevent="addNewPlace">
-            <div class="form-group">
-              <label for="placeName">장소 이름</label>
-              <input
-                type="text"
-                id="placeName"
-                v-model="newPlace.planDetailName"
-                required
-                class="form-input"
-              />
-            </div>
+    <!-- 로딩 상태 -->
+    <div v-if="isLoading" class="loading-container">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <h3>여행 계획을 불러오는 중...</h3>
+        <p>잠시만 기다려주세요</p>
+      </div>
+    </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label for="departureTime">출발 시간</label>
-                <input
-                  type="time"
-                  id="departureTime"
-                  v-model="newPlace.departureTime"
-                  required
-                  class="form-input"
-                />
-              </div>
-              <div class="form-group">
-                <label for="arrivalTime">도착 시간</label>
-                <input
-                  type="time"
-                  id="arrivalTime"
-                  v-model="newPlace.arrivalTime"
-                  required
-                  class="form-input"
-                />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="transport">이동 수단</label>
-              <select
-                id="transport"
-                v-model="newPlace.transportName"
-                class="form-select"
-              >
-                <option value="자가용">자가용</option>
-                <option value="대중교통">대중교통</option>
-                <option value="도보">도보</option>
-                <option value="택시">택시</option>
-                <option value="자전거">자전거</option>
-                <option value="항공">항공</option>
-                <option value="기차">기차</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="memo">메모 (선택)</label>
-              <textarea
-                id="memo"
-                v-model="newPlace.memo"
-                rows="3"
-                class="form-textarea"
-              ></textarea>
-            </div>
-
-            <div class="form-actions">
-              <button
-                type="button"
-                @click="showAddPlaceModal = false"
-                class="cancel-button"
-              >
-                취소
-              </button>
-              <button type="submit" class="submit-button">추가</button>
-            </div>
-          </form>
+    <!-- 오류 상태 -->
+    <div v-else-if="hasError" class="error-container">
+      <div class="error-content">
+        <div class="error-icon">😥</div>
+        <h3>여행 계획을 불러올 수 없습니다</h3>
+        <p class="error-message">{{ errorMessage }}</p>
+        <div class="error-actions">
+          <button @click="retry" class="retry-button">
+            <span class="retry-icon">🔄</span>
+            다시 시도
+          </button>
+          <button @click="goBack" class="back-button-error">
+            <span class="back-icon">←</span>
+            목록으로 돌아가기
+          </button>
         </div>
       </div>
     </div>
+
+    <!-- 메인 콘텐츠 -->
+    <div v-else class="main-content">
+      <!-- 데이터가 없을 때 -->
+      <div v-if="!planData || !planData.title" class="no-data-container">
+        <div class="no-data-content">
+          <div class="no-data-icon">📋</div>
+          <h3>여행 계획 데이터가 없습니다</h3>
+          <p>계획을 다시 불러오거나 목록으로 돌아가주세요.</p>
+        </div>
+      </div>
+
+
+
+      <!-- 보기 모드 -->
+      <PlanViewMode v-if="!isEditMode && enrichedPlanData" :plan-data="enrichedPlanData" />
+
+      <!-- 편집 모드 -->
+      <PlanEditView
+        v-else-if="isEditMode && editablePlanData"
+        v-model:plan-data="editablePlanData"
+        :is-saving="isSaving"
+        :show-save-bar="false"
+        @save="savePlan"
+      />
+
+      <!-- 편집 모드 시 추가 액션 -->
+      <div v-if="isEditMode" class="edit-mode-footer">
+        <div class="footer-content">
+          <div class="edit-info">
+            <span class="info-icon">💡</span>
+            <div class="info-text">
+              <div class="info-title">편집 팁</div>
+              <div class="info-description">
+                지도에서 장소를 검색하여 추가하거나, 드래그로 순서를 변경할 수
+                있습니다
+              </div>
+            </div>
+          </div>
+          <div class="edit-actions">
+            <button @click="cancelEdit" class="cancel-button">
+              취소
+            </button>
+            <button
+              @click="savePlan"
+              class="save-button-large"
+              :disabled="isSaving"
+            >
+              <span class="save-icon">💾</span>
+              {{ isSaving ? "저장 중..." : "변경사항 저장" }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 저장 성공 토스트 -->
+    <Transition name="toast">
+      <div v-if="showSuccessToast" class="success-toast">
+        <span class="toast-icon">✅</span>
+        <span class="toast-message"
+          >여행 계획이 성공적으로 저장되었습니다!</span
+        >
+      </div>
+    </Transition>
   </div>
 </template>
 
-<script>
-import { ref, computed, watch } from "vue";
-import AppHeader from "@/components/common/AppHeader.vue";
-import DayTab from "@/components/plan/DayTab.vue";
-import PlaceList from "@/components/plan/PlaceList.vue";
-import PlaceSearch from "@/components/plan/PlaceSearch.vue";
-import TripMap from "@/components/plan/TripMap.vue";
+<script setup>
+import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAuth } from "@/composables/userAuth";
+import PlanEditView from "@/components/plan/PlanEditView.vue";
+import PlanViewMode from "@/components/plan/PlanViewMode.vue";
+import { usePlanDetail } from "@/composables/usePlanDetail";
+import { usePlanSave } from "@/composables/usePlanSave";
 
-export default {
-  name: "PlanDetailPage",
-  components: {
-    AppHeader,
-    DayTab,
-    PlaceList,
-    PlaceSearch,
-    TripMap,
-  },
-  props: {
-    id: {
-      type: [Number, String],
-      required: true,
-    },
-  },
-  setup(props) {
-    // 여행 계획 데이터 (실제로는 API에서 가져와야 함)
-    const planData = ref({
-      id: Number(props.id),
-      title: "제주도 3일 여행",
-      startDate: "2025-06-01",
-      endDate: "2025-06-03",
-      totalDays: 3,
-      details: [
-        {
-          id: 1,
-          planDetailName: "제주국제공항",
-          day: 1,
-          arrivalTime: "10:00:00",
-          departureTime: "11:00:00",
-          memo: "렌터카 픽업",
-          transportFromPrevious: { name: "항공" },
-          latitude: 33.5067,
-          longitude: 126.493,
-        },
-        {
-          id: 2,
-          planDetailName: "성산일출봉",
-          day: 1,
-          arrivalTime: "13:00:00",
-          departureTime: "15:00:00",
-          memo: "세계자연유산, 정상까지 20-30분 소요",
-          transportFromPrevious: { name: "자가용" },
-          latitude: 33.4588,
-          longitude: 126.9427,
-        },
-        {
-          id: 3,
-          planDetailName: "제주 함덕 해수욕장",
-          day: 2,
-          arrivalTime: "09:00:00",
-          departureTime: "12:00:00",
-          memo: "에메랄드빛 바다, 산책하기 좋음",
-          transportFromPrevious: { name: "자가용" },
-          latitude: 33.543,
-          longitude: 126.6699,
-        },
-        {
-          id: 4,
-          planDetailName: "만장굴",
-          day: 2,
-          arrivalTime: "14:00:00",
-          departureTime: "16:00:00",
-          memo: "세계자연유산, 시원한 용암동굴",
-          transportFromPrevious: { name: "자가용" },
-          latitude: 33.5282,
-          longitude: 126.7714,
-        },
-        {
-          id: 5,
-          planDetailName: "한라산 국립공원",
-          day: 3,
-          arrivalTime: "08:00:00",
-          departureTime: "15:00:00",
-          memo: "제주의 상징, 아름다운 자연경관",
-          transportFromPrevious: { name: "자가용" },
-          latitude: 33.3616,
-          longitude: 126.5292,
-        },
-        {
-          id: 6,
-          planDetailName: "제주국제공항",
-          day: 3,
-          arrivalTime: "18:00:00",
-          departureTime: "20:00:00",
-          memo: "렌터카 반납",
-          transportFromPrevious: { name: "자가용" },
-          latitude: 33.5067,
-          longitude: 126.493,
-        },
-      ],
-    });
+const route = useRoute();
+const router = useRouter();
+const { checkLoginStatus } = useAuth();
 
-    // 현재 선택된 일자
-    const activeDay = ref(1);
+// 상태 관리
+const isEditMode = ref(false);
+const isSaving = ref(false);
+const isLoading = ref(true);
+const hasError = ref(false);
+const errorMessage = ref("");
+const showSuccessToast = ref(false);
+const originalPlanData = ref(null); // 편집 취소용
+const editablePlanData = ref(null); // 편집용 데이터
 
-    // 현재 일자에 해당하는 장소들
-    const filteredPlaces = computed({
-      get: () => {
-        return planData.value.details
-          .filter((detail) => detail.day === activeDay.value)
-          .sort((a, b) => {
-            // 도착 시간 기준 정렬
-            return a.arrivalTime.localeCompare(b.arrivalTime);
-          });
-      },
-      set: (newPlaces) => {
-        // 다른 일자 장소들은 유지
-        const otherDayPlaces = planData.value.details.filter(
-          (detail) => detail.day !== activeDay.value
-        );
+// Composables
+const { planData, loadPlanDetail} = usePlanDetail();
+const { updatePlan } = usePlanSave();
 
-        // 전체 데이터 업데이트
-        planData.value.details = [...otherDayPlaces, ...newPlaces];
-      },
-    });
+// 컴퓨티드
+const pageTitle = computed(() => {
+  if (isLoading.value) return "여행 계획 로딩 중...";
+  if (hasError.value) return "오류 발생";
+  return planData.value?.title || "여행 계획";
+});
 
-    // 장소 추가 모달 상태
-    const showAddPlaceModal = ref(false);
+const pageSubtitle = computed(() => {
+  if (isLoading.value || hasError.value) return "";
+  return formatDateRange(planData.value?.startDate, planData.value?.endDate);
+});
 
-    // 새 장소 데이터
-    const newPlace = ref({
-      planDetailName: "",
-      arrivalTime: "12:00",
-      departureTime: "13:00",
-      memo: "",
-      transportName: "자가용",
-      latitude: 33.38,
-      longitude: 126.54,
-    });
+// PlanViewMode에서 필요한 totalDays 계산
+const enrichedPlanData = computed(() => {
+  if (!planData.value) return null;
+  
+  // 총 일수 계산
+  let totalDays = 1;
+  if (planData.value.startDate && planData.value.endDate) {
+    const start = new Date(planData.value.startDate);
+    const end = new Date(planData.value.endDate);
+    totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+  }
+  
+  // details가 있으면 최대 day 값으로 totalDays 계산
+  if (planData.value.details && planData.value.details.length > 0) {
+    const maxDay = Math.max(...planData.value.details.map(detail => detail.day || 1));
+    totalDays = Math.max(totalDays, maxDay);
+  }
+  
+  return {
+    ...planData.value,
+    totalDays
+  };
+});
 
-    // 장소 삭제 메서드
-    const deletePlaceById = (id) => {
-      planData.value.details = planData.value.details.filter(
-        (detail) => detail.id !== id
-      );
-    };
+// 라이프사이클
+onMounted(async () => {
+  await checkLoginStatus();
+  await loadPlan();
+});
 
-    // 새 장소 추가 메서드
-    const addNewPlace = () => {
-      const newId = Math.max(...planData.value.details.map((d) => d.id), 0) + 1;
+// planData 변경 감지하여 editablePlanData 업데이트
+watch(planData, (newValue) => {
+  if (newValue && !isEditMode.value) {
+    // totalDays 계산 후 추가
+    let totalDays = 1;
+    if (newValue.startDate && newValue.endDate) {
+      const start = new Date(newValue.startDate);
+      const end = new Date(newValue.endDate);
+      totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    }
+    
+    if (newValue.details && newValue.details.length > 0) {
+      const maxDay = Math.max(...newValue.details.map(detail => detail.day || 1));
+      totalDays = Math.max(totalDays, maxDay);
+    }
+    
+    const enrichedData = { ...newValue, totalDays };
+    editablePlanData.value = JSON.parse(JSON.stringify(enrichedData));
+  }
+}, { deep: true });
 
-      planData.value.details.push({
-        id: newId,
-        planDetailName: newPlace.value.planDetailName,
-        day: activeDay.value,
-        arrivalTime: newPlace.value.arrivalTime,
-        departureTime: newPlace.value.departureTime,
-        memo: newPlace.value.memo,
-        transportFromPrevious: { name: newPlace.value.transportName },
-        latitude: newPlace.value.latitude,
-        longitude: newPlace.value.longitude,
-      });
+// 메서드들
+const loadPlan = async () => {
+  const planId = route.params.planId;
 
-      // 모달 닫기 및 폼 초기화
-      showAddPlaceModal.value = false;
-      newPlace.value = {
-        planDetailName: "",
-        arrivalTime: "12:00",
-        departureTime: "13:00",
-        memo: "",
-        transportName: "자가용",
-        latitude: 33.38,
-        longitude: 126.54,
-      };
-    };
+  if (!planId) {
+    hasError.value = true;
+    errorMessage.value = "잘못된 계획 ID입니다.";
+    isLoading.value = false;
+    return;
+  }
 
-    // 검색에서 장소 선택 처리
-    const handleSelectPlace = (place) => {
-      newPlace.value = {
-        ...newPlace.value,
-        planDetailName: place.planDetailName,
-        latitude: place.latitude,
-        longitude: place.longitude,
-      };
+  try {
+    isLoading.value = true;
+    hasError.value = false;
+    errorMessage.value = "";
 
-      showAddPlaceModal.value = true;
-    };
+    await loadPlanDetail(planId);
 
-    // 날짜 범위 포맷팅
-    const formatDateRange = (startDate, endDate) => {
-      const formatDate = (dateStr) => {
-        const date = new Date(dateStr);
-        return `${date.getFullYear()}년 ${
-          date.getMonth() + 1
-        }월 ${date.getDate()}일`;
-      };
-
-      return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
-    };
-
-    // 실제 구현에서는 데이터 저장 API 호출이 필요
-    watch(
-      () => planData.value.details,
-      (newDetails) => {
-        console.log("여행 계획이 업데이트되었습니다:", newDetails);
-        // API 호출 구현: savePlanToServer(planData.value);
-      },
-      { deep: true }
-    );
-
-    return {
-      planData,
-      activeDay,
-      filteredPlaces,
-      showAddPlaceModal,
-      newPlace,
-      deletePlaceById,
-      addNewPlace,
-      handleSelectPlace,
-      formatDateRange,
-    };
-  },
+    // 편집용 데이터 복사
+    if (planData.value) {
+      editablePlanData.value = JSON.parse(JSON.stringify(planData.value));
+    }
+    
+    console.log("계획 로드 완료:", planData.value);
+    
+    // 편집용 데이터에도 totalDays 추가
+    if (planData.value) {
+      const enrichedData = { ...planData.value };
+      
+      // totalDays 계산
+      let totalDays = 1;
+      if (planData.value.startDate && planData.value.endDate) {
+        const start = new Date(planData.value.startDate);
+        const end = new Date(planData.value.endDate);
+        totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+      }
+      
+      if (planData.value.details && planData.value.details.length > 0) {
+        const maxDay = Math.max(...planData.value.details.map(detail => detail.day || 1));
+        totalDays = Math.max(totalDays, maxDay);
+      }
+      
+      enrichedData.totalDays = totalDays;
+      editablePlanData.value = JSON.parse(JSON.stringify(enrichedData));
+    }
+    
+  } catch (error) {
+    console.error("계획 로드 오류:", error);
+    hasError.value = true;
+    errorMessage.value = error.message || "여행 계획을 불러올 수 없습니다.";
+  } finally {
+    isLoading.value = false;
+  }
 };
+
+const retry = async () => {
+  await loadPlan();
+};
+
+const goBack = () => {
+  if (isEditMode.value && hasChanges()) {
+    const confirmed = confirm(
+      "저장하지 않은 변경사항이 있습니다. 정말 나가시겠습니까?"
+    );
+    if (!confirmed) return;
+  }
+  router.push("/plans");
+};
+
+const toggleEditMode = () => {
+  console.log("=== toggleEditMode 시작 ===");
+  console.log("현재 isEditMode:", isEditMode.value);
+  console.log("현재 planData:", planData.value);
+  console.log("현재 editablePlanData:", editablePlanData.value);
+
+  if (!planData.value) {
+    console.error("planData가 없습니다.");
+    alert("여행 계획 데이터를 먼저 로드해주세요.");
+    return;
+  }
+
+  if (isEditMode.value && hasChanges()) {
+    const confirmed = confirm(
+      "저장하지 않은 변경사항이 있습니다. 편집을 취소하시겠습니까?"
+    );
+    if (!confirmed) {
+      console.log("사용자가 취소했습니다.");
+      return;
+    }
+
+    // 원본 데이터로 복원
+    editablePlanData.value = JSON.parse(JSON.stringify(originalPlanData.value));
+    console.log("원본 데이터로 복원했습니다.");
+  }
+
+  const previousMode = isEditMode.value;
+  isEditMode.value = !isEditMode.value;
+  console.log(`모드 전환: ${previousMode} → ${isEditMode.value}`);
+
+  // 편집 모드 진입 시 원본 백업
+  if (isEditMode.value) {
+    console.log("편집 모드로 진입합니다.");
+    
+    // 원본 데이터 백업
+    originalPlanData.value = JSON.parse(JSON.stringify(planData.value));
+    
+    // editablePlanData가 없으면 생성
+    if (!editablePlanData.value) {
+      editablePlanData.value = JSON.parse(JSON.stringify(planData.value));
+    }
+    
+    // details 배열 확인 및 초기화
+    if (!editablePlanData.value.details) {
+      editablePlanData.value.details = [];
+    }
+
+    const startDate = editablePlanData.value.startDate;
+    const endDate = editablePlanData.value.endDate;
+
+    if (!startDate || !endDate) {
+      console.error("시작일 또는 종료일이 없습니다.");
+      alert("여행 계획의 날짜 정보가 올바르지 않습니다.");
+      isEditMode.value = false;
+      return;
+    }
+
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      console.error("날짜 형식이 올바르지 않습니다:", { startDate, endDate });
+      alert("여행 계획의 날짜 형식이 올바르지 않습니다.");
+      isEditMode.value = false;
+      return;
+    }
+
+    console.log("편집 모드 진입 완료");
+  }
+};
+
+const cancelEdit = () => {
+  if (hasChanges()) {
+    const confirmed = confirm(
+      "저장하지 않은 변경사항이 있습니다. 정말 취소하시겠습니까?"
+    );
+    if (!confirmed) return;
+  }
+
+  // 원본 데이터로 복원
+  editablePlanData.value = JSON.parse(JSON.stringify(originalPlanData.value));
+  isEditMode.value = false;
+};
+
+const savePlan = async () => {
+  isSaving.value = true;
+
+  try {
+    // editablePlanData를 서버에 저장
+    await updatePlan(editablePlanData.value);
+
+    // 성공 시 planData와 originalPlanData 업데이트
+    planData.value = JSON.parse(JSON.stringify(editablePlanData.value));
+    originalPlanData.value = JSON.parse(JSON.stringify(editablePlanData.value));
+
+    // 성공 토스트 표시
+    showSuccessToast.value = true;
+    setTimeout(() => {
+      showSuccessToast.value = false;
+    }, 3000);
+
+    // 보기 모드로 전환
+    isEditMode.value = false;
+    
+  } catch (error) {
+    console.error("저장 오류:", error);
+    alert(`여행 계획을 저장하는 중 오류가 발생했습니다: ${error.message}`);
+  } finally {
+    isSaving.value = false;
+  }
+};
+
+// 변경사항 감지
+const hasChanges = () => {
+  if (!originalPlanData.value || !editablePlanData.value) return false;
+  return (
+    JSON.stringify(editablePlanData.value) !== JSON.stringify(originalPlanData.value)
+  );
+};
+
+const formatDateRange = (startDate, endDate) => {
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return `${date.getFullYear()}년 ${
+      date.getMonth() + 1
+    }월 ${date.getDate()}일`;
+  };
+  return `${formatDate(startDate)} ~ ${formatDate(endDate)}`;
+};
+
+// 페이지 이탈 시 확인
+window.addEventListener("beforeunload", (e) => {
+  if (isEditMode.value && hasChanges()) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
 </script>
 
 <style scoped>
 .plan-detail-page {
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
   background-color: #f9fafb;
 }
 
-.plan-content {
-  display: flex;
-  flex: 1;
-  padding: 1rem;
-  gap: 1rem;
+.page-header {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.header-content {
   max-width: 1600px;
   margin: 0 auto;
-  width: 100%;
-}
-
-.map-section {
-  flex: 1;
-  height: calc(100vh - 10rem);
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.itinerary-section {
-  width: 500px;
-  display: flex;
-  flex-direction: column;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.itinerary-header {
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.itinerary-body {
-  flex: 1;
   padding: 1rem;
-  overflow-y: auto;
-}
-
-/* 모달 스타일 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 50;
+  gap: 1rem;
 }
 
-.modal-content {
-  width: 100%;
-  max-width: 500px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
+.header-info {
+  flex: 1;
+  margin: 0 1rem;
 }
 
-.modal-header {
+.title-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 0.5rem;
 }
 
-.modal-header h2 {
+.page-title {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
   font-family: "Marines", "Pretendard", sans-serif;
 }
 
-.modal-close-button {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
+.edit-indicator {
+  font-size: 0.75rem;
   color: #9ca3af;
-  cursor: pointer;
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
+  background-color: #f3f4f6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
-.modal-close-button:hover {
-  background-color: #f3f4f6;
+.page-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
   color: #6b7280;
 }
 
-.modal-body {
-  padding: 1.5rem;
+.mode-description {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: #9ca3af;
 }
 
-/* 폼 스타일 */
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-row {
+/* 헤더 액션 */
+.header-actions {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.form-row .form-group {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #4b5563;
-}
-
-.form-input,
-.form-select,
-.form-textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-}
-
-.form-input:focus,
-.form-select:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: #8e6ad9;
-  box-shadow: 0 0 0 3px rgba(142, 106, 217, 0.1);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 80px;
-}
-
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1.5rem;
+  align-items: center;
 }
 
-.cancel-button {
-  padding: 0.75rem 1.5rem;
-  background-color: #f3f4f6;
-  color: #4b5563;
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-family: "Marines", "Pretendard", sans-serif;
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.back-button:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* 모드 전환 버튼 */
+.mode-toggle-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.mode-toggle-button.view-mode {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.mode-toggle-button.edit-mode {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.mode-toggle-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.mode-toggle-button:disabled {
+  background-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 로딩 상태 */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
+.loading-content {
+  text-align: center;
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #a78bda;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.loading-content p {
+  margin: 0;
+  color: #718096;
+}
+
+/* 오류 상태 */
+.error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
+.error-content {
+  text-align: center;
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.error-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #2d3748;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.error-message {
+  margin: 0 0 2rem 0;
+  color: #718096;
+  line-height: 1.5;
+}
+
+.error-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.retry-button,
+.back-button-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.retry-button {
+  background-color: #a78bda;
+  color: white;
+}
+
+.retry-button:hover {
+  background-color: #9979d5;
+  transform: translateY(-1px);
+}
+
+.back-button-error {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+
+.back-button-error:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* 메인 콘텐츠 */
+.main-content {
+  position: relative;
+}
+
+.no-data-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
+.no-data-content {
+  text-align: center;
+  background: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.no-data-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+/* 지도 미리보기 섹션 개선 */
+
+/* 편집 모드 푸터 */
+.edit-mode-footer {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.05);
+  z-index: 20;
+}
+
+.footer-content {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.edit-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.info-icon {
+  font-size: 1.5rem;
+}
+
+.info-text {
+  flex: 1;
+}
+
+.info-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+
+.info-description {
+  font-size: 0.75rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.cancel-button,
+.save-button-large {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Marines", "Pretendard", sans-serif;
+}
+
+.cancel-button {
+  background-color: #f3f4f6;
+  color: #4b5563;
 }
 
 .cancel-button:hover {
   background-color: #e5e7eb;
+  transform: translateY(-1px);
 }
 
-.submit-button {
-  padding: 0.75rem 1.5rem;
-  background-color: #a78bda;
+.save-button-large {
+  background-color: #10b981;
   color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.submit-button:hover {
-  background-color: #9979d5;
+.save-button-large:hover:not(:disabled) {
+  background-color: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
 }
 
-/* PlanDetailPage.vue - 지도 위 검색바 관련 CSS 추가 */
-.map-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 10rem);
-  background-color: white;
+.save-button-large:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 성공 토스트 */
+.success-toast {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background-color: #10b981;
+  color: white;
+  padding: 1rem 1.5rem;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 100;
+  font-weight: 500;
 }
 
-.map-search-container {
-  padding: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+.toast-icon {
+  font-size: 1.25rem;
 }
 
-/* TripMap 컴포넌트는 이제 flex-grow: 1로 설정하여 남은 공간을 차지하도록 수정 */
-:deep(.trip-map-container) {
-  flex: 1;
+/* 토스트 애니메이션 */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
 }
 
-/* 반응형 스타일 */
-@media (max-width: 1024px) {
-  .plan-content {
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .header-content {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .back-button {
+    order: -1;
+    width: 100%;
+  }
+
+  .header-info {
+    order: 0;
+    margin: 0;
+  }
+
+  .header-actions {
+    order: 1;
+    margin-left: auto;
+  }
+
+  .title-container {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .edit-indicator {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+  }
+
+  .header-actions button {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .edit-actions {
+    width: 100%;
+  }
+
+  .cancel-button,
+  .save-button-large {
+    flex: 1;
+  }
+
+  .error-content,
+  .loading-content {
+    padding: 2rem;
+    margin: 1rem;
+  }
+
+  .error-actions {
     flex-direction: column;
   }
 
-  .map-section {
-    height: 400px;
+  .retry-button,
+  .back-button-error {
+    width: 100%;
+    justify-content: center;
   }
 
-  .itinerary-section {
-    width: 100%;
+  .success-toast {
+    right: 10px;
+    left: 10px;
+    top: 80px;
+  }
+
+  /* 지도 반응형 */
+}
+
+@media (max-width: 480px) {
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+  }
+  
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .plan-detail-page {
+    background-color: #111827;
+  }
+  
+  .page-header {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .map-container {
+    background: #1f2937;
+    border-color: #374151;
+  }
+  
+  .map-header {
+    background: #111827;
+    border-color: #374151;
+  }
+  
+  .map-wrapper {
+    background: #111827;
+  }
+  
+  .loading-content,
+  .error-content,
+  .no-data-content {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .edit-mode-footer {
+    background: #1f2937;
+    border-color: #374151;
+  }
+}
+
+/* 지도 로딩 상태 */
+
+/* 포커스 관리 */
+.back-button:focus,
+.mode-toggle-button:focus,
+.cancel-button:focus,
+.save-button-large:focus {
+  outline: 2px solid #a78bda;
+  outline-offset: 2px;
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  .back-button,
+  .mode-toggle-button,
+  .cancel-button,
+  .save-button-large {
+    min-height: 44px;
   }
 }
 </style>

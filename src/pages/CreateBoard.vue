@@ -4,7 +4,7 @@
       
       
       <div class="page-title-area">
-        <h1 class="page-title">여행 파트너 모집하기</h1>
+        <h1 class="page-title">여행 <span class="highlight">파트너</span> 모집하기</h1>
         <p class="page-description">함께 여행할 동행을 찾아보세요</p>
       </div>
       
@@ -126,11 +126,7 @@
                       </div>
                     </div>
                     
-                    <div class="plan-select-indicator" v-if="postData.planId === plan.id">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </div>
+                    
                   </div>
                 </div>
               </div>
@@ -328,23 +324,57 @@
                     </div>
                   </div>
                   
-                  <div class="age-graph-container">
-                    <div class="age-graph">
-                      <div class="age-graph-bar">
-                        <div 
-                          class="age-graph-fill"
-                          :style="{
-                            left: ((postData.preferenceMinAge - 15) / 55 * 100) + '%',
-                            width: ((postData.preferenceMaxAge - postData.preferenceMinAge) / 55 * 100) + '%'
-                          }"
-                        ></div>
+                 <div class="age-graph-container">
+                  <div class="age-graph">
+                    <div class="age-graph-bar">
+                      <div 
+                        class="age-graph-fill"
+                        :style="{
+                          left: ((postData.preferenceMinAge - 15) / 55 * 100) + '%',
+                          width: ((postData.preferenceMaxAge - postData.preferenceMinAge) / 55 * 100) + '%'
+                        }"
+                      ></div>
+                      <!-- 왼쪽 드래그 핸들 추가 -->
+                      <div 
+                        class="drag-handle left-handle"
+                        :style="{ left: ((postData.preferenceMinAge - 15) / 55 * 100) + '%' }"
+                        @mousedown="startDragMin"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="12" r="10" fill="url(#gradient)" />
+                          <path d="M10 8L6 12L10 16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <defs>
+                            <linearGradient id="age-slider-gradient-min" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                              <stop offset="0" stop-color="#8e6ad9" />
+                              <stop offset="1" stop-color="#a78bfa" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
                       </div>
-                      <div class="age-labels">
-                        <span>15세</span>
-                        <span>70세</span>
+                      <!-- 오른쪽 드래그 핸들 추가 -->
+                      <div 
+                        class="drag-handle right-handle"
+                        :style="{ left: ((postData.preferenceMaxAge - 15) / 55 * 100) + '%' }"
+                        @mousedown="startDragMax"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <circle cx="12" cy="12" r="10" fill="url(#gradient2)" />
+                          <path d="M14 8L18 12L14 16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <defs>
+                            <linearGradient id="age-slider-gradient-max" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                              <stop offset="0" stop-color="#8e6ad9" />
+                              <stop offset="1" stop-color="#a78bfa" />
+                            </linearGradient>
+                          </defs>
+                        </svg>
                       </div>
                     </div>
+                    <div class="age-labels">
+                      <span>15세</span>
+                      <span>70세</span>
+                    </div>
                   </div>
+                </div>
                   
                   <div class="age-presets">
                     <button type="button" class="age-preset-btn" @click="setAgePreset(20, 29)">20대</button>
@@ -442,7 +472,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 
 // 라우터 설정
@@ -790,9 +820,222 @@ watch(() => postData.value.planId, (newPlanId) => {
     postData.value.title = '';
   }
 });
+
+
+
+// 드래그 이벤트 처리를 위한 상태 및 메서드
+const isDraggingMin = ref(false);
+const isDraggingMax = ref(false);
+
+// 최소 연령 드래그 시작
+const startDragMin = (event) => {
+  isDraggingMin.value = true;
+  document.addEventListener('mousemove', handleDragMin);
+  document.addEventListener('mouseup', stopDragMin);
+  event.preventDefault();
+};
+
+// 최대 연령 드래그 시작
+const startDragMax = (event) => {
+  isDraggingMax.value = true;
+  document.addEventListener('mousemove', handleDragMax);
+  document.addEventListener('mouseup', stopDragMax);
+  event.preventDefault();
+};
+
+// 최소 연령 드래그 처리
+const handleDragMin = (event) => {
+  if (!isDraggingMin.value) return;
+  
+  const graphBar = document.querySelector('.age-graph-bar');
+  if (!graphBar) return;
+  
+  const rect = graphBar.getBoundingClientRect();
+  
+  // 마우스가 바의 왼쪽 끝보다 작으면 15로 고정
+  if (event.clientX <= rect.left) {
+    postData.value.preferenceMinAge = 15;
+    return;
+  }
+  
+  // 마우스가 바의 오른쪽 끝을 넘어가면 최대값 - 1로 설정
+  if (event.clientX >= rect.right) {
+    postData.value.preferenceMinAge = postData.value.preferenceMaxAge - 1;
+    return;
+  }
+  
+  const percentage = (event.clientX - rect.left) / rect.width;
+  // 백분율이 0~1 사이인지 확인
+  const clampedPercentage = Math.max(0, Math.min(percentage, 1));
+  const newMinAge = Math.round(15 + clampedPercentage * 55);
+  
+  // 범위 및 최대 연령과의 관계 확인
+  postData.value.preferenceMinAge = Math.max(
+    15, 
+    Math.min(newMinAge, postData.value.preferenceMaxAge - 1)
+  );
+};
+
+// 최대 연령 드래그 처리
+const handleDragMax = (event) => {
+  if (!isDraggingMax.value) return;
+  
+  const graphBar = document.querySelector('.age-graph-bar');
+  if (!graphBar) return;
+  
+  const rect = graphBar.getBoundingClientRect();
+  
+  // 마우스가 바의 오른쪽 끝을 넘어가면 70으로 고정
+  if (event.clientX >= rect.right) {
+    postData.value.preferenceMaxAge = 70;
+    return;
+  }
+  
+  // 마우스가 바의 왼쪽 끝보다 작으면 최소값 + 1로 설정
+  if (event.clientX <= rect.left) {
+    postData.value.preferenceMaxAge = postData.value.preferenceMinAge + 1;
+    return;
+  }
+  
+  const percentage = (event.clientX - rect.left) / rect.width;
+  // 백분율이 0~1 사이인지 확인
+  const clampedPercentage = Math.max(0, Math.min(percentage, 1));
+  const newMaxAge = Math.round(15 + clampedPercentage * 55);
+  
+  // 범위 및 최소 연령과의 관계 확인
+  postData.value.preferenceMaxAge = Math.max(
+    postData.value.preferenceMinAge + 1, 
+    Math.min(newMaxAge, 70)
+  );
+};
+
+// 나이 입력값 검증 함수 개선
+const validateAgeInputs = () => {
+  // 최소값이 15보다 작거나 70보다 크면 조정
+  if (postData.value.preferenceMinAge < 15) {
+    postData.value.preferenceMinAge = 15;
+  } else if (postData.value.preferenceMinAge > 70) {
+    postData.value.preferenceMinAge = 70;
+  }
+  
+  // 최대값이 15보다 작거나 70보다 크면 조정
+  if (postData.value.preferenceMaxAge < 15) {
+    postData.value.preferenceMaxAge = 15;
+  } else if (postData.value.preferenceMaxAge > 70) {
+    postData.value.preferenceMaxAge = 70;
+  }
+  
+  // 최소값이 최대값보다 크면 최대값-1로 조정
+  if (postData.value.preferenceMinAge >= postData.value.preferenceMaxAge) {
+    postData.value.preferenceMinAge = postData.value.preferenceMaxAge - 1;
+  }
+  
+  // 최대값이 최소값보다 작으면 최소값+1로 조정
+  if (postData.value.preferenceMaxAge <= postData.value.preferenceMinAge) {
+    postData.value.preferenceMaxAge = postData.value.preferenceMinAge + 1;
+  }
+};
+
+
+// 드래그 중지
+const stopDragMin = () => {
+  if (!isDraggingMin.value) return;
+  isDraggingMin.value = false;
+  document.removeEventListener('mousemove', handleDragMin);
+  document.removeEventListener('mouseup', stopDragMin);
+  
+  // 한번 더 값 검증
+  validateAgeInputs();
+};
+
+const stopDragMax = () => {
+  if (!isDraggingMax.value) return;
+  isDraggingMax.value = false;
+  document.removeEventListener('mousemove', handleDragMax);
+  document.removeEventListener('mouseup', stopDragMax);
+  
+  // 한번 더 값 검증
+  validateAgeInputs();
+};
+
+// 컴포넌트 언마운트 시 이벤트 리스너 제거
+onBeforeUnmount(() => {
+  document.removeEventListener('mousemove', handleDragMin);
+  document.removeEventListener('mouseup', stopDragMin);
+  document.removeEventListener('mousemove', handleDragMax);
+  document.removeEventListener('mouseup', stopDragMax);
+});
+
+
+
 </script>
 
 <style scoped>
+
+/* 폰트 정의 */
+@font-face { 
+  font-family: 'MarinesBold'; 
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2502-1@1.0/MarinesBold.woff2') format('woff2'); 
+  font-weight: 700;
+  font-style: normal; 
+}
+
+
+/* 드래그 핸들 스타일 */
+.drag-handle {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 10;
+  filter: drop-shadow(0 2px 6px rgba(142, 106, 217, 0.4));
+  transition: transform 0.2s;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.drag-handle:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.drag-handle svg {
+  width: 100%;
+  height: 100%;
+}
+
+.left-handle {
+  left: 0;
+}
+
+.right-handle {
+  left: 100%;
+}
+
+/* 슬라이더 바 높이 조정 */
+.age-graph-bar {
+  height: 8px;
+  background-color: #eee;
+  border-radius: 4px;
+  position: relative;
+  margin: 25px 0 15px;
+}
+
+.age-graph-fill {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
+  border-radius: 4px;
+  transition: all 0.1s;
+}
+
+
+
+
 /* 기본 스타일 */
 * {
   box-sizing: border-box;
@@ -803,7 +1046,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 .travel-partner-page {
   min-height: 100vh;
   background-color: #f8f9fa;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: 'MarinesBold', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   color: #333;
   padding-top: 60px;
 }
@@ -832,13 +1075,13 @@ watch(() => postData.value.planId, (newPlanId) => {
 .logo-icon {
   width: 32px;
   height: 32px;
-  color: #4a6ee0;
+  color: #8e6ad9;
 }
 
 .logo-text {
   font-size: 20px;
   font-weight: 700;
-  color: #4a6ee0;
+  color: #8e6ad9;
 }
 
 .close-btn {
@@ -853,8 +1096,8 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .close-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #333;
+  background-color: rgba(142, 106, 217, 0.1);
+  color: #8e6ad9;
 }
 
 .close-btn svg {
@@ -873,11 +1116,17 @@ watch(() => postData.value.planId, (newPlanId) => {
   font-weight: 700;
   margin-bottom: 8px;
   color: #333;
+  font-family: 'MarinesBold', sans-serif;
+}
+
+.page-title .highlight {
+  color: #8e6ad9;
 }
 
 .page-description {
   font-size: 16px;
   color: #666;
+  font-family: 'MarinesBold', sans-serif;
 }
 
 /* 메인 콘텐츠 영역 */
@@ -906,7 +1155,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 
 .progress-fill {
   height: 100%;
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   border-radius: 2px;
   transition: width 0.4s ease;
 }
@@ -937,7 +1186,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .step.active:not(:last-child)::after {
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
 }
 
 .step-number {
@@ -958,12 +1207,12 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .step.active .step-number {
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
 }
 
 .step.current .step-number {
   transform: scale(1.2);
-  box-shadow: 0 0 0 4px rgba(74, 110, 224, 0.2);
+  box-shadow: 0 0 0 4px rgba(142, 106, 217, 0.2);
 }
 
 .step-label {
@@ -973,7 +1222,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .step.active .step-label {
-  color: #4a6ee0;
+  color: #8e6ad9;
   font-weight: 500;
 }
 
@@ -1054,8 +1303,8 @@ watch(() => postData.value.planId, (newPlanId) => {
 
 .form-input:focus, .form-textarea:focus {
   outline: none;
-  border-color: #4a6ee0;
-  box-shadow: 0 0 0 2px rgba(74, 110, 224, 0.1);
+  border-color: #8e6ad9;
+  box-shadow: 0 0 0 2px rgba(142, 106, 217, 0.1);
 }
 
 .form-textarea {
@@ -1122,9 +1371,9 @@ watch(() => postData.value.planId, (newPlanId) => {
   gap: 10px;
   margin-top: 15px;
   padding: 12px 16px;
-  background-color: rgba(74, 110, 224, 0.08);
+  background-color: rgba(142, 106, 217, 0.08);
   border-radius: 8px;
-  color: #4a6ee0;
+  color: #8e6ad9;
 }
 
 .duration-icon {
@@ -1167,8 +1416,8 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .count-btn:hover {
-  background-color: #4a6ee0;
-  border-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
+  border-color: #8e6ad9;
   color: white;
 }
 
@@ -1210,12 +1459,12 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .preference-btn:hover {
-  background-color: rgba(74, 110, 224, 0.04);
+  background-color: rgba(142, 106, 217, 0.04);
 }
 
 .preference-btn.active {
-  border-color: #4a6ee0;
-  background-color: rgba(74, 110, 224, 0.08);
+  border-color: #8e6ad9;
+  background-color: rgba(142, 106, 217, 0.08);
 }
 
 .gender-icon {
@@ -1240,7 +1489,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .preference-btn.active .gender-icon {
-  color: #4a6ee0;
+  color: #8e6ad9;
 }
 
 .preference-btn span {
@@ -1249,7 +1498,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .preference-btn.active span {
-  color: #4a6ee0;
+  color: #8e6ad9;
 }
 
 .gender-icon svg {
@@ -1321,7 +1570,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 .age-graph-fill {
   position: absolute;
   height: 100%;
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   border-radius: 4px;
   transition: all 0.3s;
 }
@@ -1353,9 +1602,9 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .age-preset-btn:hover {
-  background-color: rgba(74, 110, 224, 0.04);
-  border-color: #4a6ee0;
-  color: #4a6ee0;
+  background-color: rgba(142, 106, 217, 0.04);
+  border-color: #8e6ad9;
+  color: #8e6ad9;
 }
 
 /* 비용 입력 필드 */
@@ -1378,6 +1627,7 @@ watch(() => postData.value.planId, (newPlanId) => {
   font-weight: 500;
   pointer-events: none;
 }
+
 .detail-input-container {
   position: relative;
 }
@@ -1397,8 +1647,8 @@ watch(() => postData.value.planId, (newPlanId) => {
 
 .form-textarea:focus {
   outline: none;
-  border-color: #4a6ee0;
-  box-shadow: 0 0 0 2px rgba(74, 110, 224, 0.1);
+  border-color: #8e6ad9;
+  box-shadow: 0 0 0 2px rgba(142, 106, 217, 0.1);
 }
 
 .textarea-tools {
@@ -1429,8 +1679,8 @@ watch(() => postData.value.planId, (newPlanId) => {
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(74, 110, 224, 0.2);
-  border-top: 4px solid #4a6ee0;
+  border: 4px solid rgba(142, 106, 217, 0.2);
+  border-top: 4px solid #8e6ad9;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 15px;
@@ -1459,7 +1709,7 @@ watch(() => postData.value.planId, (newPlanId) => {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1468,10 +1718,12 @@ watch(() => postData.value.planId, (newPlanId) => {
   cursor: pointer;
   transition: all 0.2s;
   margin-top: 10px;
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.3);
 }
 
 .create-plan-btn:hover {
-  background-color: #3a5ecc;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(142, 106, 217, 0.4);
 }
 
 .create-plan-btn svg {
@@ -1491,7 +1743,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 
 .plan-card {
   border: 1px solid #e0e0e0;
-  border-radius: 10px;
+  border-radius: 12px;
   background-color: white;
   overflow: hidden;
   cursor: pointer;
@@ -1503,12 +1755,12 @@ watch(() => postData.value.planId, (newPlanId) => {
 
 .plan-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(142, 106, 217, 0.15);
 }
 
 .plan-card.selected {
-  border-color: #4a6ee0;
-  background-color: rgba(74, 110, 224, 0.04);
+  border-color: #8e6ad9;
+  background-color: rgba(142, 106, 217, 0.04);
 }
 
 .plan-header {
@@ -1530,7 +1782,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .plan-badge {
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   color: white;
   font-size: 12px;
   padding: 3px 8px;
@@ -1576,7 +1828,7 @@ watch(() => postData.value.planId, (newPlanId) => {
 .info-icon {
   display: flex;
   align-items: center;
-  color: #4a6ee0;
+  color: #8e6ad9;
   flex-shrink: 0;
 }
 
@@ -1601,7 +1853,7 @@ watch(() => postData.value.planId, (newPlanId) => {
   right: 20px;
   width: 22px;
   height: 22px;
-  color: #4a6ee0;
+  color: #8e6ad9;
 }
 
 /* 단계 액션 버튼 */
@@ -1632,7 +1884,8 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .back-btn:hover {
-  background-color: #e4e4e4;
+  background-color: rgba(142, 106, 217, 0.1);
+  color: #8e6ad9;
 }
 
 .back-btn svg {
@@ -1644,19 +1897,23 @@ watch(() => postData.value.planId, (newPlanId) => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   border: none;
   color: white;
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.3);
 }
 
 .next-btn:hover {
-  background-color: #3a5ecc;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(142, 106, 217, 0.4);
 }
 
 .next-btn:disabled {
   background-color: #bbb;
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .next-btn svg {
@@ -1665,19 +1922,23 @@ watch(() => postData.value.planId, (newPlanId) => {
 }
 
 .submit-btn {
-  background-color: #4a6ee0;
+  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
   border: none;
   color: white;
   min-width: 140px;
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.3);
 }
 
 .submit-btn:hover {
-  background-color: #3a5ecc;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(142, 106, 217, 0.4);
 }
 
 .submit-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* 트랜지션 효과 */

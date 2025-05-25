@@ -17,6 +17,7 @@ import { useAuth } from '@/composables/userAuth'
 const route = useRoute();
 const isHeaderShrunk = ref(false);
 const { checkLoginStatus } = useAuth()
+
 const handleScroll = () => {
   if (window.scrollY > 20) {
     isHeaderShrunk.value = true;
