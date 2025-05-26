@@ -1,4 +1,3 @@
-<!-- pages/PlansPage.vue - 수정된 부분만 표시 -->
 <template>
   <div class="plans-page">
     <AppHeader :is-shrunk="isScrolled" />
@@ -36,8 +35,20 @@
           class="plan-card"
           @click="viewPlanDetails(plan.id)"
         >
-          <div class="plan-image">
-            <img :src="plan.thumbnail || '/placeholder-image.jpg'" alt="여행 이미지">
+          <div class="plan-image" @click.stop>
+            <img :src="plan.thumbnail || defaultPlanImage" alt="여행 이미지">
+            <!-- 이미지 수정 버튼 (호버 시에만 표시) -->
+            <div class="image-edit-overlay">
+              <button 
+                @click="openImageEdit(plan)"
+                class="image-edit-btn"
+                title="이미지 변경"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
+                </svg>
+              </button>
+            </div>
           </div>
           <div class="plan-info">
             <h3>{{ plan.title }}</h3>
@@ -101,6 +112,60 @@
           </div>
         </div>
       </div>
+
+      <!-- 이미지 수정 모달 -->
+      <div v-if="showImageEditModal" class="modal-overlay" @click="closeImageEdit">
+        <div class="image-edit-modal" @click.stop>
+          <div class="modal-header">
+            <h3>여행 이미지 변경</h3>
+            <button @click="closeImageEdit" class="close-button">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="current-image">
+              <img :src="selectedPlan?.thumbnail || defaultPlanImage" alt="현재 이미지">
+              <p class="image-label">현재 이미지</p>
+            </div>
+            
+            <div class="image-upload-section">
+              <input 
+                ref="fileInput"
+                type="file" 
+                accept="image/*" 
+                @change="handleImageSelect"
+                style="display: none"
+              >
+              <button 
+                @click="$refs.fileInput.click()"
+                class="upload-button"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                새 이미지 선택
+              </button>
+              
+              <!-- 미리보기 -->
+              <div v-if="previewImage" class="preview-section">
+                <img :src="previewImage" alt="미리보기">
+                <p class="image-label">미리보기</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button @click="closeImageEdit" class="cancel-button">취소</button>
+            <button 
+              @click="updatePlanImage" 
+              :disabled="!previewImage || isUpdating"
+              class="save-button"
+            >
+              {{ isUpdating ? '저장 중...' : '저장' }}
+            </button>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 </template>
@@ -111,6 +176,8 @@ import { useRouter } from 'vue-router';
 import AppHeader from '@/components/common/AppHeader.vue';
 import { useAuth } from '../composables/userAuth';
 import axios from 'axios';
+// 디폴트 이미지 import
+import defaultPlanImage from '@/assets/images/default_plan.png';
 
 const router = useRouter();
 
@@ -128,6 +195,13 @@ const hasPlans = ref(false);
 const plans = ref([]);
 const apiError = ref(false);
 const apiErrorMessage = ref('');
+
+// 이미지 수정 관련 상태들
+const showImageEditModal = ref(false);
+const selectedPlan = ref(null);
+const previewImage = ref(null);
+const selectedFile = ref(null);
+const isUpdating = ref(false);
 
 // API URL
 const API_URL = 'http://localhost:8080/api/v1/plans';
@@ -177,6 +251,90 @@ const goToProfile = () => {
 // 여행 상세보기 페이지로 이동 (수정됨)
 const viewPlanDetails = (planId) => {
   router.push(`/plans/${planId}`);
+};
+
+// 이미지 수정 모달 열기
+const openImageEdit = (plan) => {
+  selectedPlan.value = plan;
+  showImageEditModal.value = true;
+  previewImage.value = null;
+  selectedFile.value = null;
+};
+
+// 이미지 수정 모달 닫기
+const closeImageEdit = () => {
+  showImageEditModal.value = false;
+  selectedPlan.value = null;
+  previewImage.value = null;
+  selectedFile.value = null;
+};
+
+// 이미지 파일 선택 처리
+const handleImageSelect = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    // 파일 크기 검증 (5MB 제한)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB 이하로 선택해주세요.');
+      return;
+    }
+    
+    // 파일 타입 검증
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 선택할 수 있습니다.');
+      return;
+    }
+    
+    selectedFile.value = file;
+    
+    // 미리보기 생성
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImage.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+// 이미지 업데이트 (실제 API 호출)
+const updatePlanImage = async () => {
+  if (!selectedFile.value || !selectedPlan.value) return;
+  
+  isUpdating.value = true;
+  
+  try {
+    const formData = new FormData();
+    formData.append('image', selectedFile.value);
+    
+    // API 호출 (실제 엔드포인트에 맞게 수정 필요)
+    const response = await axios.put(
+      `${API_URL}/${selectedPlan.value.id}/image`,
+      formData,
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+    
+    // 성공 시 로컬 상태 업데이트
+    const planIndex = plans.value.findIndex(p => p.id === selectedPlan.value.id);
+    if (planIndex !== -1) {
+      plans.value[planIndex].thumbnail = response.data.thumbnailUrl || previewImage.value;
+    }
+    
+    closeImageEdit();
+    
+    // 성공 메시지 (선택사항)
+    console.log('이미지가 성공적으로 업데이트되었습니다.');
+    
+  } catch (error) {
+    console.error('이미지 업데이트 중 오류 발생:', error);
+    alert('이미지 업데이트에 실패했습니다. 다시 시도해주세요.');
+  } finally {
+    isUpdating.value = false;
+  }
 };
 
 // 스크롤 이벤트 핸들러
@@ -278,7 +436,7 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* 기존 스타일들은 그대로 유지... */
+/* 기존 스타일들 */
 .plans-page {
   padding-top: 60px;
   min-height: 100vh;
@@ -392,7 +550,9 @@ onBeforeUnmount(() => {
   box-shadow: 0 8px 20px rgba(142, 106, 217, 0.15);
 }
 
+/* 이미지 수정 관련 스타일 */
 .plan-image {
+  position: relative;
   height: 200px;
   overflow: hidden;
 }
@@ -401,6 +561,38 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.image-edit-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.plan-card:hover .image-edit-overlay {
+  opacity: 1;
+}
+
+.image-edit-btn {
+  width: 32px;
+  height: 32px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.image-edit-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
 }
 
 .plan-info {
@@ -476,7 +668,7 @@ onBeforeUnmount(() => {
   color: #4b5563;
 }
 
-/* 모달 스타일 */
+/* 모달 기본 스타일 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -490,6 +682,7 @@ onBeforeUnmount(() => {
   z-index: 100;
 }
 
+/* 프로필 모달 스타일 */
 .profile-modal {
   background-color: white;
   border-radius: 16px;
@@ -567,6 +760,178 @@ onBeforeUnmount(() => {
   transform: translateY(-2px);
 }
 
+/* 이미지 수정 모달 스타일 */
+.image-edit-modal {
+  background-color: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.current-image {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.current-image img {
+  width: 200px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.image-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.image-upload-section {
+  text-align: center;
+}
+
+.upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #8e6ad9;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1.5rem;
+}
+
+.upload-button:hover {
+  background-color: #7c5bd0;
+  transform: translateY(-1px);
+}
+
+.preview-section {
+  margin-top: 1rem;
+}
+
+.preview-section img {
+  width: 200px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.modal-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.cancel-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover {
+  background-color: #e5e7eb;
+}
+
+.save-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #8e6ad9;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-button:hover:not(:disabled) {
+  background-color: #7c5bd0;
+  transform: translateY(-1px);
+}
+
+.save-button:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 오류 처리 스타일 */
 .error-container {
   display: flex;
   align-items: center;
@@ -622,5 +987,85 @@ onBeforeUnmount(() => {
 .retry-button:hover {
   background-color: #9979d5;
   transform: translateY(-1px);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .main-content {
+    padding: 20px 15px;
+  }
+
+  .welcome-title {
+    font-size: 24px;
+  }
+
+  .plans-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+  }
+
+  .image-edit-modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+  
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 1rem;
+  }
+  
+  .current-image img,
+  .preview-section img {
+    width: 160px;
+    height: 96px;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .profile-modal {
+    width: 95%;
+    padding: 20px;
+  }
+
+  .image-edit-btn {
+    width: 28px;
+    height: 28px;
+  }
+
+  .image-edit-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .plans-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .welcome-title {
+    font-size: 20px;
+  }
+
+  .welcome-subtitle {
+    font-size: 14px;
+  }
+
+  .empty-card {
+    width: 150px;
+    height: 150px;
+  }
+
+  .create-text {
+    font-size: 16px;
+  }
 }
 </style>
