@@ -468,10 +468,16 @@
         </div>
       </div>
     </div>
+    <Transition name="toast">
+  <div v-if="showSuccessToast" class="success-toast">
+    <span class="toast-icon">✅</span>
+    <span class="toast-message">동행 모집 게시글이 성공적으로 등록되었습니다!</span>
   </div>
+</Transition>
+</div>
 </template>
-
 <script setup>
+
 import { ref, computed, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -483,6 +489,7 @@ const isSubmitting = ref(false);
 const isLoadingPlans = ref(true);
 const currentStep = ref(0);
 const myPlans = ref([]);
+const showSuccessToast = ref(false);
 
 // 게시글 데이터 (memberCount 기본값 변경됨)
 const postData = ref({
@@ -595,6 +602,7 @@ const formattedCost = computed({
     postData.value.estimatedCost = parseInt(numericValue, 10);
   }
 });
+
 const displayMinAge = computed(() => {
   // 최소 연령이 범위를 벗어나면 15세로 제한
   const minAge = Math.max(15, Math.min(postData.value.preferenceMinAge, 70));
@@ -741,16 +749,34 @@ const fetchMyPlans = async () => {
 
 // cityName ID를 실제 도시 이름으로 변환하는 함수
 const getCityName = (cityId) => {
-  // 실제 구현에서는 도시 ID에 따른 도시 이름 매핑 테이블 필요
   const cityMap = {
-    1: '제주도',
-    2: '서울',
-    3: '부산',
-    4: '강원도',
-    5: '울산'
-    // 필요에 따라 더 많은 도시 추가
+    1: '서울',
+    2: '부산',
+    3: '제주',
+    4: '강릉',
+    5: '경주',
+    6: '전주',
+    7: '속초',
+    8: '여수',
+    9: '수원',
+    10: '인천',
+    11: '대구',
+    12: '대전',
+    13: '광주',
+    14: '울산',
+    15: '안동',
+    16: '양양',
+    17: '고성',
+    18: '가평',
+    19: '순천',
+    20: '남해',
+    21: '목포',
+    22: '천안',
+    23: '보성',
+    24: '포항',
+    25: '무주'
+    
   };
-  
   return cityMap[cityId] || '알 수 없는 지역';
 };
 
@@ -795,8 +821,16 @@ const submitPost = async () => {
     const result = await response.json();
     console.log('등록 성공:', result);
     
-    alert('동행 모집 게시글이 성공적으로 등록되었습니다!');
-    router.push('/board');
+    // 성공 토스트 표시
+    showSuccessToast.value = true;
+    setTimeout(() => {
+      showSuccessToast.value = false;
+      // 토스트가 사라진 후 페이지 이동
+      setTimeout(() => {
+        router.push('/board');
+      }, 500);
+    }, 3000);
+    
   } catch (error) {
     console.error('게시글 등록 실패:', error);
     alert('게시글을 등록하는 중 오류가 발생했습니다.');
@@ -820,8 +854,6 @@ watch(() => postData.value.planId, (newPlanId) => {
     postData.value.title = '';
   }
 });
-
-
 
 // 드래그 이벤트 처리를 위한 상태 및 메서드
 const isDraggingMin = ref(false);
@@ -936,7 +968,6 @@ const validateAgeInputs = () => {
   }
 };
 
-
 // 드래그 중지
 const stopDragMin = () => {
   if (!isDraggingMin.value) return;
@@ -965,8 +996,6 @@ onBeforeUnmount(() => {
   document.removeEventListener('mousemove', handleDragMax);
   document.removeEventListener('mouseup', stopDragMax);
 });
-
-
 
 </script>
 
@@ -1052,7 +1081,7 @@ onBeforeUnmount(() => {
 }
 
 .page-container {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
   position: relative;
@@ -1291,14 +1320,16 @@ onBeforeUnmount(() => {
   color: #444;
 }
 
-.form-input, .form-textarea {
+.form-input {
   width: 100%;
-  padding: 12px 15px;
+  padding: 12px 15px; /* height: 220px 제거 */
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 15px;
   transition: border-color 0.2s;
   background-color: #fcfcfc;
+  font-family: 'HakgyoansimAllimjangTTF-B', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 300;
 }
 
 .form-input:focus, .form-textarea:focus {
@@ -1306,10 +1337,19 @@ onBeforeUnmount(() => {
   border-color: #8e6ad9;
   box-shadow: 0 0 0 2px rgba(142, 106, 217, 0.1);
 }
-
 .form-textarea {
-  resize: vertical;
-  min-height: 120px;
+  width: 100%;
+  height: 220px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 15px; /* 10px에서 15px로 다시 조정 - 너무 작을 수 있어요 */
+  line-height: 1.6;
+  resize: none;
+  background-color: #fcfcfc;
+  transition: all 0.2s;
+  font-family: 'HakgyoansimAllimjangTTF-B', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 300; /* 얇은 굵기로 설정 */
 }
 
 /* 읽기 전용 입력 필드 */
@@ -1736,7 +1776,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-height: 650px;
+  max-height: 750px;
   overflow-y: auto;
   padding: 10px 5px;
 }
@@ -1749,7 +1789,7 @@ onBeforeUnmount(() => {
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  padding: 20px;
+  padding: 6px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
@@ -1793,12 +1833,12 @@ onBeforeUnmount(() => {
 .plan-content {
   padding-bottom: 5px;
   display: flex;
-  gap: 20px;
+  gap: 30px;
 }
 
 .plan-thumbnail {
-  width: 120px;
-  height: 90px;
+  width: 160px;
+  height: 100px;
   border-radius: 6px;
   overflow: hidden;
   flex-shrink: 0;
@@ -1991,4 +2031,73 @@ onBeforeUnmount(() => {
     display: none;
   }
 }
+
+@font-face { 
+  font-family: 'HakgyoansimAllimjangTTF-B'; 
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-5@1.0/HakgyoansimAllimjangTTF-B.woff2') format('woff2'); 
+  font-weight: 400; /* 700에서 400으로 변경 */
+  font-style: normal; 
+}
+
+
+.success-toast {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background: linear-gradient(135deg, 
+#10b981 0%, 
+#059669 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 100;
+  max-width: 400px;
+}
+.toast-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+.toast-content {
+  flex: 1;
+}
+.toast-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+.toast-subtitle {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.4s ease;
+}
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(100%) scale(0.8);
+}
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%) scale(0.8);
+}
+  .success-toast {
+    right: 10px;
+    left: 10px;
+    top: 80px;
+  }
+ .toast-title {
+    font-size: 0.875rem;
+  }
+
+  .toast-subtitle {
+    font-size: 0.75rem;
+  }
+
+
 </style>

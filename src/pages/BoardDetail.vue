@@ -2,6 +2,28 @@
 <template>
   <div class="post-detail-page">
     <AppHeader :is-shrunk="isScrolled" />
+
+    <!-- 토스트 메시지들 -->
+    <Transition name="toast">
+      <div v-if="showSuccessToast" class="success-toast">
+        <span class="toast-icon">✅</span>
+        <span class="toast-message">{{ successMessage }}</span>
+      </div>
+    </Transition>
+
+    <Transition name="toast">
+      <div v-if="showErrorToast" class="error-toast">
+        <span class="toast-icon">❌</span>
+        <span class="toast-message">{{ errorMessage }}</span>
+      </div>
+    </Transition>
+
+    <Transition name="toast">
+      <div v-if="showWarningToast" class="warning-toast">
+        <span class="toast-icon">⚠️</span>
+        <span class="toast-message">{{ warningMessage }}</span>
+      </div>
+    </Transition>
     
     <!-- 채팅 패널 오버레이 -->
     <div v-if="isChatOpen" class="chat-overlay" @click="closeChatPanel">
@@ -491,6 +513,37 @@ const { userName, userNickname, requireAuth } = useAuth();
 const router = useRouter();
 const route = useRoute();
 
+// 토스트 메시지 상태 관리
+const showSuccessToast = ref(false);
+const showErrorToast = ref(false);
+const showWarningToast = ref(false);
+const successMessage = ref('');
+const errorMessage = ref('');
+const warningMessage = ref('');
+
+// 토스트 메시지 표시 함수들
+const showToast = (type, message, duration = 3000) => {
+  if (type === 'success') {
+    successMessage.value = message;
+    showSuccessToast.value = true;
+    setTimeout(() => {
+      showSuccessToast.value = false;
+    }, duration);
+  } else if (type === 'error') {
+    errorMessage.value = message;
+    showErrorToast.value = true;
+    setTimeout(() => {
+      showErrorToast.value = false;
+    }, duration);
+  } else if (type === 'warning') {
+    warningMessage.value = message;
+    showWarningToast.value = true;
+    setTimeout(() => {
+      showWarningToast.value = false;
+    }, duration);
+  }
+};
+
 // 기존 상태 정의
 const isScrolled = ref(false);
 const isLoading = ref(true);
@@ -677,7 +730,7 @@ const openChatPanel = async (comment) => {
     
   } catch (error) {
     console.error('채팅 패널 열기 실패:', error);
-    alert('채팅을 열 수 없습니다.');
+    showToast('error', '채팅을 열 수 없습니다.');
   }
 };
 
@@ -795,7 +848,7 @@ const sendChatMessage = async () => {
     
   } catch (error) {
     console.error('메시지 전송 실패:', error);
-    alert('메시지 전송에 실패했습니다.');
+    showToast('error', '메시지 전송에 실패했습니다.');
   }
 };
 
@@ -931,7 +984,7 @@ const toggleInterest = async () => {
 // 동행 신청 토글 (비작성자용)
 const toggleApply = () => {
   if (post.value.boardType === 'CLOSED') {
-    alert('이미 마감된 게시글입니다.');
+    showToast('warning', '이미 마감된 게시글입니다.');
     return;
   }
   
@@ -979,12 +1032,12 @@ const togglePostStatus = async () => {
       // 성공 시 UI 업데이트
       post.value.boardType = 'CLOSED';
       
-      // 알림 메시지
-      alert('동행 모집이 마감되었습니다.');
+      // 성공 토스트 메시지
+      showToast('success', '동행 모집이 마감되었습니다.');
       
     } catch (error) {
       console.error('게시글 상태 변경 실패:', error);
-      alert('게시글 상태 변경에 실패했습니다.');
+      showToast('error', '게시글 상태 변경에 실패했습니다.');
     }
   }
 };
@@ -1042,7 +1095,7 @@ const submitComment = async () => {
     
   } catch (error) {
     console.error('댓글 등록 실패:', error);
-    alert(`댓글 등록에 실패했습니다: ${error.message}`);
+    showToast('error', `댓글 등록에 실패했습니다: ${error.message}`);
   }
 };
 
@@ -1097,15 +1150,15 @@ const submitEdit = async (commentId) => {
       comments.value[commentIndex].content = editContent.value;
     }
     
-    // 성공 메시지
-    alert('댓글이 성공적으로 수정되었습니다.');
+    // 성공 토스트 메시지
+    showToast('success', '댓글이 성공적으로 수정되었습니다.');
     
     // 편집 모드 종료
     cancelEdit();
     
   } catch (error) {
     console.error('댓글 수정 실패:', error);
-    alert(`댓글 수정에 실패했습니다: ${error.message}`);
+    showToast('error', `댓글 수정에 실패했습니다: ${error.message}`);
   }
 };
 
@@ -1135,12 +1188,12 @@ const deleteComment = async (commentId) => {
       // 댓글 카운트 감소
       post.value.commentCount = Math.max(0, (post.value.commentCount || 1) - 1);
       
-      // 성공 메시지
-      alert('댓글이 성공적으로 삭제되었습니다.');
+      // 성공 토스트 메시지
+      showToast('success', '댓글이 성공적으로 삭제되었습니다.');
       
     } catch (error) {
       console.error('댓글 삭제 실패:', error);
-      alert(`댓글 삭제에 실패했습니다: ${error.message}`);
+      showToast('error', `댓글 삭제에 실패했습니다: ${error.message}`);
     }
   }
 };
@@ -1296,11 +1349,11 @@ const submitEditPost = async () => {
     // 수정 모드 종료
     isEditingPost.value = false;
     
-    alert('게시글이 성공적으로 수정되었습니다.');
+    showToast('success', '게시글이 성공적으로 수정되었습니다.');
     
   } catch (error) {
     console.error('게시글 수정 실패:', error);
-    alert(`게시글 수정에 실패했습니다: ${error.message}`);
+    showToast('error', `게시글 수정에 실패했습니다: ${error.message}`);
   }
 };
 
@@ -1350,15 +1403,17 @@ const deletePost = async () => {
       throw new Error(`게시글 삭제 실패: ${response.status}`);
     }
     
-    // 성공 메시지
-    alert('게시글이 성공적으로 삭제되었습니다.');
+    // 성공 토스트 메시지
+    showToast('success', '게시글이 성공적으로 삭제되었습니다.');
     
-    // 게시판 목록 페이지로 리디렉션
-    router.push('/board');
+    // 게시판 목록 페이지로 리디렉션 (토스트 표시 후)
+    setTimeout(() => {
+      router.push('/board');
+    }, 1500);
     
   } catch (error) {
     console.error('게시글 삭제 실패:', error);
-    alert(`게시글 삭제에 실패했습니다: ${error.message}`);
+    showToast('error', `게시글 삭제에 실패했습니다: ${error.message}`);
   }
 };
 
@@ -2703,5 +2758,74 @@ onBeforeUnmount(() => {
     transform: none;
   }
 }
+
+/* 성공 토스트 */
+.success-toast {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 100;
+  max-width: 400px;
+}
+
+
+.toast-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.toast-subtitle {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+/* 토스트 애니메이션 */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.4s ease;
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(100%) scale(0.8);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%) scale(0.8);
+}
+
+
+  .success-toast {
+    right: 10px;
+    left: 10px;
+    top: 80px;
+  }
+
+ .toast-title {
+    font-size: 0.875rem;
+  }
+  
+  .toast-subtitle {
+    font-size: 0.75rem;
+  }
 
 </style>

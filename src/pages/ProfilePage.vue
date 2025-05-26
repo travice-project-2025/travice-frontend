@@ -130,11 +130,11 @@
                 <div class="stats-label">총 여행 횟수</div>
               </div>
               <div class="stats-item">
-                <div class="stats-number">{{ userInfo.companionCount != null ? userInfo.tripCount : 0 }}</div>
+                <div class="stats-number">{{ userInfo.companionCount != null ? userInfo.companionCount : 0 }}</div>
                 <div class="stats-label">동행 횟수</div>
               </div>
               <div class="stats-item">
-                <div class="stats-number">{{ userInfo.regionCount != null ? userInfo.tripCount : 0 }}</div>
+                <div class="stats-number">{{ userInfo.regionCount != null ? userInfo.regionCount : 0 }}</div>
                 <div class="stats-label">방문 지역 수</div>
               </div>
             </div>
@@ -202,6 +202,14 @@
         </div>
       </div>
     </main>
+
+    <!-- 성공 토스트 -->
+    <Transition name="toast">
+      <div v-if="showSuccessToast" class="success-toast">
+        <span class="toast-icon">✅</span>
+        <span class="toast-message">프로필이 성공적으로 업데이트되었습니다!</span>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -215,6 +223,7 @@ const isLoading = ref(false);
 const previewImage = ref(null);
 const fileInput = ref(null);
 const ageError = ref('');
+const showSuccessToast = ref(false);
 
 // 사용자 정보
 const userInfo = ref({
@@ -378,8 +387,11 @@ const updateProfile = async () => {
     console.log('응답:', result);
     
     if (result.success) {
-      // 성공 메시지 표시
-      alert(result.message || '프로필이 성공적으로 업데이트되었습니다.');
+      // 성공 토스트 표시
+      showSuccessToast.value = true;
+      setTimeout(() => {
+        showSuccessToast.value = false;
+      }, 3000);
       
       // 최신 정보로 프로필 다시 불러오기
       await fetchUserProfile();
@@ -396,7 +408,7 @@ const updateProfile = async () => {
 
 // 여행 상세 페이지로 이동
 const viewTripDetails = (tripId) => {
-  router.push(`/plan/${tripId}`);
+  router.push(`/plans/${tripId}`);
 };
 
 // 새 여행 생성 페이지로 이동
@@ -1004,6 +1016,49 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(142, 106, 217, 0.2);
 }
 
+/* 성공 토스트 */
+.success-toast {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 100;
+  max-width: 400px;
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.toast-message {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* 토스트 애니메이션 */
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.4s ease;
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(100%) scale(0.8);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%) scale(0.8);
+}
+
 /* 반응형 디자인 */
 @media (max-width: 1024px) {
   .profile-content {
@@ -1034,6 +1089,12 @@ onMounted(async () => {
   
   .gender-option {
     flex-basis: calc(50% - 4px);
+  }
+
+  .success-toast {
+    right: 10px;
+    left: 10px;
+    top: 80px;
   }
 }
 

@@ -14,37 +14,7 @@
       <p>실제 경로를 계산하는 중...</p>
     </div>
     
-    <div class="map-controls">
-      <!-- 기존 컨트롤들 -->
-      <button @click="resetMapBounds" class="map-control-button" title="모든 장소 보기">
-        <!-- 기존 SVG -->
-      </button>
-      <button @click="togglePolyline" class="map-control-button" title="경로 표시/숨기기">
-        <!-- 기존 SVG -->
-      </button>
-      
-      <!-- 경로 타입 선택 버튼들 추가 -->
-      <div class="route-type-controls">
-        <button 
-          @click="changeRouteType('car')" 
-          class="route-type-button"
-          :class="{ active: routeType === 'car' }"
-          title="자동차"
-        >🚗</button>
-        <button 
-          @click="changeRouteType('walk')" 
-          class="route-type-button"
-          :class="{ active: routeType === 'walk' }"  
-          title="도보"
-        >🚶</button>
-        <button 
-          @click="changeRouteType('transit')" 
-          class="route-type-button"
-          :class="{ active: routeType === 'transit' }"
-          title="대중교통"
-        >🚌</button>
-      </div>
-    </div>
+    
   </div>
 </template>
 
