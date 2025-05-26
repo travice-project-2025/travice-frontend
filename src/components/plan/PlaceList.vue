@@ -11,7 +11,7 @@
       ghost-class="ghost"
       chosen-class="chosen"
       drag-class="dragging"
-      @change="emitChange"
+      @end="emitChange"
       handle=".drag-handle"
     >
       <template #item="{ element, index }">
@@ -41,6 +41,7 @@
             <PlaceItem 
               :place="element" 
               @delete="$emit('delete-place', element.id)"
+              @click="$emit('place-click', element)"
             />
           </div>
         </div>
@@ -75,7 +76,7 @@ export default {
       required: true
     }
   },
-  emits: ['update:places', 'delete-place', 'add-place'],
+  emits: ['update:places', 'delete-place', 'add-place', 'place-click'],
   setup(props, { emit }) {
     const innerPlaces = ref([...props.places]);
 
@@ -100,51 +101,52 @@ export default {
 
     // 순서 변경 이벤트 발생
     const emitChange = () => {
-      emit('update:places', innerPlaces.value);
+      // innerPlaces의 변경사항을 부모에게 전달
+      emit('update:places', [...innerPlaces.value]);
     };
 
     // 소요시간 계산 메서드 추가
-  const calculateDuration = (currentIndex) => {
-    if (currentIndex <= 0 || !innerPlaces.value[currentIndex] || !innerPlaces.value[currentIndex-1]) {
-      return '정보 없음';
-    }
-    
-    const prevPlace = innerPlaces.value[currentIndex-1];
-    const currentPlace = innerPlaces.value[currentIndex];
-    
-    if (!prevPlace.departureTime || !currentPlace.arrivalTime) {
-      return '정보 없음';
-    }
-    
-    // 시간 포맷 변환 (HH:MM:SS -> 분 단위)
-    const convertTimeToMinutes = (timeStr) => {
-      const parts = timeStr.split(':');
-      const hours = parseInt(parts[0], 10);
-      const minutes = parseInt(parts[1], 10);
-      return hours * 60 + minutes;
+    const calculateDuration = (currentIndex) => {
+      if (currentIndex <= 0 || !innerPlaces.value[currentIndex] || !innerPlaces.value[currentIndex-1]) {
+        return '정보 없음';
+      }
+      
+      const prevPlace = innerPlaces.value[currentIndex-1];
+      const currentPlace = innerPlaces.value[currentIndex];
+      
+      if (!prevPlace.departureTime || !currentPlace.arrivalTime) {
+        return '정보 없음';
+      }
+      
+      // 시간 포맷 변환 (HH:MM:SS -> 분 단위)
+      const convertTimeToMinutes = (timeStr) => {
+        const parts = timeStr.split(':');
+        const hours = parseInt(parts[0], 10);
+        const minutes = parseInt(parts[1], 10);
+        return hours * 60 + minutes;
+      };
+      
+      const departureMinutes = convertTimeToMinutes(prevPlace.departureTime);
+      const arrivalMinutes = convertTimeToMinutes(currentPlace.arrivalTime);
+      
+      // 소요 시간 계산 (분 단위)
+      let durationMinutes = arrivalMinutes - departureMinutes;
+      
+      // 날짜를 넘어가는 경우 (음수인 경우 처리)
+      if (durationMinutes < 0) {
+        durationMinutes += 24 * 60; // 하루를 더함
+      }
+      
+      // 시간과 분으로 변환
+      const hours = Math.floor(durationMinutes / 60);
+      const minutes = durationMinutes % 60;
+      
+      // 포맷팅
+      if (hours > 0) {
+        return `${hours}시간 ${minutes > 0 ? minutes + '분' : ''}`;
+      }
+      return `${minutes}분`;
     };
-    
-    const departureMinutes = convertTimeToMinutes(prevPlace.departureTime);
-    const arrivalMinutes = convertTimeToMinutes(currentPlace.arrivalTime);
-    
-    // 소요 시간 계산 (분 단위)
-    let durationMinutes = arrivalMinutes - departureMinutes;
-    
-    // 날짜를 넘어가는 경우 (음수인 경우 처리)
-    if (durationMinutes < 0) {
-      durationMinutes += 24 * 60; // 하루를 더함
-    }
-    
-    // 시간과 분으로 변환
-    const hours = Math.floor(durationMinutes / 60);
-    const minutes = durationMinutes % 60;
-    
-    // 포맷팅
-    if (hours > 0) {
-      return `${hours}시간 ${minutes > 0 ? minutes + '분' : ''}`;
-    }
-    return `${minutes}분`;
-  };
 
     return {
       innerPlaces,

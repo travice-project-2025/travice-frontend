@@ -513,6 +513,103 @@ const editPostData = ref({
   content: ''
 });
 
+const wsConnection = ref(null);
+const isWsConnected = ref(false);
+
+const connectWebSocket = () => {
+  try {
+    const token = localStorage.getItem('JWT-TOKEN');
+    if (!token) {
+      console.error('JWT 토큰이 없습니다');
+      return;
+    }
+    
+    // WebSocket 연결 (JWT 토큰을 헤더로 전달)
+    const wsUrl = `ws://localhost:8080/ws/chat`;
+    wsConnection.value = new WebSocket(wsUrl, [], {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    // 연결 성공
+    wsConnection.value.onopen = (event) => {
+      console.log('WebSocket 연결 성공:', event);
+      isWsConnected.value = true;
+    };
+    
+    // 메시지 수신
+    wsConnection.value.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        console.log('WebSocket 메시지 수신:', message);
+        
+        // 현재 채팅 상대와의 메시지인 경우에만 화면에 추가
+        if (isChatOpen.value && 
+            (message.senderId === chatPartner.value.id || message.receiverId === chatPartner.value.id)) {
+          
+          // 중복 메시지 체크
+          const existingMessage = chatMessages.value.find(msg => msg.id === message.id);
+          if (!existingMessage) {
+            chatMessages.value.push({
+              id: message.id,
+              sender: message.senderNickname,
+              content: message.content,
+              createdAt: message.createdAt
+            });
+            
+            // 스크롤을 맨 아래로
+            scrollToBottom();
+          }
+        }
+        
+      } catch (error) {
+        console.error('WebSocket 메시지 파싱 오류:', error);
+      }
+    };
+    
+    // 연결 에러
+    wsConnection.value.onerror = (error) => {
+      console.error('WebSocket 에러:', error);
+      isWsConnected.value = false;
+    };
+    
+    // 연결 종료
+    wsConnection.value.onclose = (event) => {
+      console.log('WebSocket 연결 종료:', event);
+      isWsConnected.value = false;
+      
+      // 자동 재연결 (선택사항)
+      setTimeout(() => {
+        if (!isWsConnected.value) {
+          console.log('WebSocket 재연결 시도...');
+          connectWebSocket();
+        }
+      }, 3000);
+    };
+    
+  } catch (error) {
+    console.error('WebSocket 연결 실패:', error);
+  }
+};
+
+const disconnectWebSocket = () => {
+  if (wsConnection.value) {
+    wsConnection.value.close();
+    wsConnection.value = null;
+    isWsConnected.value = false;
+  }
+};
+
+const scrollToBottom = () => {
+  setTimeout(() => {
+    const messagesContainer = document.querySelector('.chat-messages');
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+  }, 100);
+};
+
 // 채팅 기능 관련 상태 변수들
 const isChatOpen = ref(false);
 const chatPartner = ref({
@@ -561,14 +658,22 @@ const openChatPanel = async (comment) => {
       name: comment.author,
       gender: comment.gender,
       age: comment.age,
-      id: comment.id // 또는 comment.authorId 등 실제 사용자 ID
+      id: comment.writerId,
     };
+    
+    // WebSocket 연결 시작
+    if (!isWsConnected.value) {
+      connectWebSocket();
+    }
     
     // 채팅 패널 열기
     isChatOpen.value = true;
     
     // 해당 사용자와의 채팅 메시지 목록 가져오기
-    await fetchChatMessages(comment.author);
+    await fetchChatMessages(comment.writerId);
+    
+    // 스크롤을 맨 아래로
+    scrollToBottom();
     
   } catch (error) {
     console.error('채팅 패널 열기 실패:', error);
@@ -587,13 +692,16 @@ const closeChatPanel = () => {
   };
   chatMessages.value = [];
   newChatMessage.value = '';
+  
+  // WebSocket 연결 유지 (다른 채팅에서도 사용할 수 있도록)
+  // 필요시 disconnectWebSocket() 호출
 };
 
 // 채팅 메시지 목록 가져오기
-const fetchChatMessages = async (partnerName) => {
+const fetchChatMessages = async (partnerId) => {
   try {
     // API 호출 - 실제 구현 시 적절한 엔드포인트로 변경
-    const response = await fetch(`http://localhost:8080/api/v1/chat/messages?partner=${partnerName}`, {
+    const response = await fetch(`http://localhost:8080/api/v1/chat/messages/${partnerId}`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -627,49 +735,63 @@ const fetchChatMessages = async (partnerName) => {
 const sendChatMessage = async () => {
   if (!newChatMessage.value.trim()) return;
   
+  const content = newChatMessage.value.trim();
+  const receiverId = chatPartner.value.id;
+  
   try {
-    const messageData = {
-      receiver: chatPartner.value.name,
-      content: newChatMessage.value.trim()
-    };
-    
-    const response = await fetch('http://localhost:8080/api/v1/chat/send', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': localStorage.getItem('JWT-TOKEN')
-      },
-      body: JSON.stringify(messageData)
-    });
-    
-    if (!response.ok) {
-      throw new Error(`메시지 전송 실패: ${response.status}`);
-    }
-    
-    const responseData = await response.json();
-    
-    // 새 메시지를 채팅 목록에 추가
-    const newMessage = {
-      id: responseData.id || Date.now(), // 임시 ID
-      sender: userNickname.value,
-      content: newChatMessage.value.trim(),
-      createdAt: new Date().toISOString()
-    };
-    
-    chatMessages.value.push(newMessage);
-    
-    // 입력창 초기화
-    newChatMessage.value = '';
-    
-    // 스크롤을 맨 아래로 (선택사항)
-    setTimeout(() => {
-      const messagesContainer = document.querySelector('.chat-messages');
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    // 1차: WebSocket으로 실시간 전송 시도
+    if (wsConnection.value && wsConnection.value.readyState === WebSocket.OPEN) {
+      const messageData = {
+        receiverId: receiverId,
+        content: content
+      };
+      
+      wsConnection.value.send(JSON.stringify(messageData));
+      console.log('WebSocket으로 메시지 전송:', messageData);
+      
+      // 입력창 초기화
+      newChatMessage.value = '';
+      
+    } else {
+      // 2차: WebSocket 실패 시 HTTP API로 대체
+      console.warn('WebSocket 연결이 끊어져 있음, HTTP API 사용');
+      
+      const response = await fetch('http://localhost:8080/api/v1/chat/send', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('JWT-TOKEN')}`
+        },
+        body: JSON.stringify({
+          receiverId: receiverId,
+          content: content
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`메시지 전송 실패: ${response.status}`);
       }
-    }, 100);
+      
+      const responseData = await response.json();
+      
+      // HTTP로 전송한 경우 수동으로 UI에 추가
+      const newMessage = {
+        id: responseData.id || Date.now(),
+        sender: userNickname.value,
+        content: content,
+        createdAt: new Date().toISOString()
+      };
+      
+      chatMessages.value.push(newMessage);
+      
+      // 입력창 초기화
+      newChatMessage.value = '';
+      
+      // 스크롤을 맨 아래로
+      scrollToBottom();
+    }
     
   } catch (error) {
     console.error('메시지 전송 실패:', error);
@@ -1089,7 +1211,8 @@ const fetchPostDetail = async () => {
         isAuthor: comment.writer === data.nickname, // 게시글 작성자와 댓글 작성자가 같은지
         profileImage: comment.wiriterProfileImage,
         gender: comment.gender, // 성별 정보 추가
-        age: comment.age // 나이 정보 추가
+        age: comment.age, // 나이 정보 추가
+        writerId : comment.writerId
       }));
     } else {
       comments.value = [];
@@ -1248,11 +1371,17 @@ onMounted(async () => {
 
   // 게시글 상세 정보 가져오기
   await fetchPostDetail();
+
+   // WebSocket 연결 시작 (페이지 로드 시)
+  connectWebSocket();
 });
 
 // 컴포넌트 언마운트 시
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', handleScroll);
+
+   // WebSocket 연결 해제
+  disconnectWebSocket();
 });
 </script>
 

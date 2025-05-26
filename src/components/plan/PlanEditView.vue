@@ -7,7 +7,11 @@
         <div class="map-search-container">
           <PlaceSearch @select-place="handleSelectPlace" />
         </div>
-        <TripMap :places="currentDayPlaces" />
+        <TripMap 
+          :places="currentDayPlaces"
+          :selected-place-id="selectedPlaceId"
+          @marker-click="handleMarkerClick" 
+        />
       </div>
 
       <!-- 오른쪽: 일정 영역 -->
@@ -22,6 +26,7 @@
             @update:places="updateCurrentDayPlaces"
             @delete-place="deletePlaceById"
             @add-place="showAddPlaceModal = true"
+            @place-click="handlePlaceClick"
           />
         </div>
       </div>
@@ -74,6 +79,18 @@ const emit = defineEmits(['save', 'update:planData'])
 
 // 상태 관리
 const activeDay = ref(1)
+const selectedPlaceId = ref(null)
+
+// 마커 클릭 핸들러
+const handleMarkerClick = (placeId) => {
+  selectedPlaceId.value = selectedPlaceId.value === placeId ? null : placeId
+}
+
+// 장소 리스트에서 장소 클릭 핸들러
+const handlePlaceClick = (place) => {
+  selectedPlaceId.value = selectedPlaceId.value === place.id ? null : place.id
+}
+
 const showAddPlaceModal = ref(false)
 const newPlace = ref({
   planDetailName: '',
@@ -106,7 +123,7 @@ const calculateTotalDays = computed(() => {
   return diffDays + 1 // 당일 포함
 })
 
-// 현재 일자에 해당하는 장소들
+// 현재 일자에 해당하는 장소들 - 지도에 전달할 형태로 정리
 const currentDayPlaces = computed(() => {
   if (!localPlanData.value?.details) return []
   
@@ -117,6 +134,18 @@ const currentDayPlaces = computed(() => {
       const timeB = normalizeTime(b.arrivalTime)
       return timeA.localeCompare(timeB)
     })
+    .map(place => ({
+      id: place.id,
+      planDetailName: place.planDetailName,
+      latitude: parseFloat(place.latitude),
+      longitude: parseFloat(place.longitude),
+      arrivalTime: place.arrivalTime,
+      departureTime: place.departureTime,
+      memo: place.memo || '',
+      address: place.address || '',
+      transportFromPrevious: place.transportFromPrevious,
+      day: place.day
+    }))
 })
 
 // 시간 정규화 함수
@@ -145,8 +174,14 @@ const updateCurrentDayPlaces = (newPlaces) => {
     detail => detail.day !== activeDay.value
   )
   
+  // 새로운 장소들을 현재 날짜로 설정 (day 속성 추가)
+  const updatedPlaces = newPlaces.map(place => ({
+    ...place,
+    day: activeDay.value
+  }))
+  
   // 새로운 장소들과 합치기
-  localPlanData.value.details = [...otherDayPlaces, ...newPlaces]
+  localPlanData.value.details = [...otherDayPlaces, ...updatedPlaces]
   
   // 부모 컴포넌트에 변경사항 전달
   emitUpdate()
@@ -159,6 +194,11 @@ const deletePlaceById = (id) => {
   localPlanData.value.details = localPlanData.value.details.filter(
     detail => detail.id !== id
   )
+  
+  // 선택된 장소가 삭제된 경우 선택 해제
+  if (selectedPlaceId.value === id) {
+    selectedPlaceId.value = null
+  }
   
   // 부모 컴포넌트에 변경사항 전달
   emitUpdate()
@@ -188,7 +228,7 @@ const addNewPlace = () => {
     },
     latitude: parseFloat(newPlace.value.latitude) || 33.38,
     longitude: parseFloat(newPlace.value.longitude) || 126.54,
-    address: place.address || place.road_address_name || place.address_name || ''
+    address: newPlace.value.address || ''
   }
 
   console.log('새 장소 추가:', placeDetail)
@@ -267,13 +307,18 @@ const handleSelectPlace = (place) => {
     departureTime: defaultDepartureTime,
     memo: '',
     transportName: dayPlaces.length > 0 ? '자가용' : '시작점',
-    latitude: place.latitude || place.y,
-    longitude: place.longitude || place.x,
+    latitude: parseFloat(place.latitude || place.y) || 33.38,
+    longitude: parseFloat(place.longitude || place.x) || 126.54,
     address: place.address || place.road_address_name || place.address_name || ''
   }
 
   showAddPlaceModal.value = true
 }
+
+// 액티브 데이 변경 시 선택된 장소 초기화
+watch(activeDay, () => {
+  selectedPlaceId.value = null
+})
 </script>
 
 <style scoped>

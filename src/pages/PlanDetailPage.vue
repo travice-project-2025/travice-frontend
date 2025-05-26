@@ -73,14 +73,16 @@
         <div class="no-data-content">
           <div class="no-data-icon">📋</div>
           <h3>여행 계획 데이터가 없습니다</h3>
-          <p>계획을 다시 불러오거나 목록으로 돌아가주세요.</p>
+          <p>데이터를 불러오는 중 문제가 발생했습니다.</p>
+          <button @click="retry" class="retry-button">다시 시도</button>
         </div>
       </div>
 
-
-
       <!-- 보기 모드 -->
-      <PlanViewMode v-if="!isEditMode && enrichedPlanData" :plan-data="enrichedPlanData" />
+      <PlanViewMode
+        v-else-if="!isEditMode && planData"
+        :plan-data="planData"
+      />
 
       <!-- 편집 모드 -->
       <PlanEditView
@@ -134,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuth } from "@/composables/userAuth";
 import PlanEditView from "@/components/plan/PlanEditView.vue";
@@ -157,7 +159,7 @@ const originalPlanData = ref(null); // 편집 취소용
 const editablePlanData = ref(null); // 편집용 데이터
 
 // Composables
-const { planData, loadPlanDetail} = usePlanDetail();
+const { planData, loadPlanDetail } = usePlanDetail();
 const { updatePlan } = usePlanSave();
 
 // 컴퓨티드
@@ -172,30 +174,6 @@ const pageSubtitle = computed(() => {
   return formatDateRange(planData.value?.startDate, planData.value?.endDate);
 });
 
-// PlanViewMode에서 필요한 totalDays 계산
-const enrichedPlanData = computed(() => {
-  if (!planData.value) return null;
-  
-  // 총 일수 계산
-  let totalDays = 1;
-  if (planData.value.startDate && planData.value.endDate) {
-    const start = new Date(planData.value.startDate);
-    const end = new Date(planData.value.endDate);
-    totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-  }
-  
-  // details가 있으면 최대 day 값으로 totalDays 계산
-  if (planData.value.details && planData.value.details.length > 0) {
-    const maxDay = Math.max(...planData.value.details.map(detail => detail.day || 1));
-    totalDays = Math.max(totalDays, maxDay);
-  }
-  
-  return {
-    ...planData.value,
-    totalDays
-  };
-});
-
 // 라이프사이클
 onMounted(async () => {
   await checkLoginStatus();
@@ -205,21 +183,7 @@ onMounted(async () => {
 // planData 변경 감지하여 editablePlanData 업데이트
 watch(planData, (newValue) => {
   if (newValue && !isEditMode.value) {
-    // totalDays 계산 후 추가
-    let totalDays = 1;
-    if (newValue.startDate && newValue.endDate) {
-      const start = new Date(newValue.startDate);
-      const end = new Date(newValue.endDate);
-      totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-    }
-    
-    if (newValue.details && newValue.details.length > 0) {
-      const maxDay = Math.max(...newValue.details.map(detail => detail.day || 1));
-      totalDays = Math.max(totalDays, maxDay);
-    }
-    
-    const enrichedData = { ...newValue, totalDays };
-    editablePlanData.value = JSON.parse(JSON.stringify(enrichedData));
+    editablePlanData.value = JSON.parse(JSON.stringify(newValue));
   }
 }, { deep: true });
 
@@ -242,33 +206,9 @@ const loadPlan = async () => {
     await loadPlanDetail(planId);
 
     // 편집용 데이터 복사
-    if (planData.value) {
-      editablePlanData.value = JSON.parse(JSON.stringify(planData.value));
-    }
+    editablePlanData.value = JSON.parse(JSON.stringify(planData.value));
     
     console.log("계획 로드 완료:", planData.value);
-    
-    // 편집용 데이터에도 totalDays 추가
-    if (planData.value) {
-      const enrichedData = { ...planData.value };
-      
-      // totalDays 계산
-      let totalDays = 1;
-      if (planData.value.startDate && planData.value.endDate) {
-        const start = new Date(planData.value.startDate);
-        const end = new Date(planData.value.endDate);
-        totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-      }
-      
-      if (planData.value.details && planData.value.details.length > 0) {
-        const maxDay = Math.max(...planData.value.details.map(detail => detail.day || 1));
-        totalDays = Math.max(totalDays, maxDay);
-      }
-      
-      enrichedData.totalDays = totalDays;
-      editablePlanData.value = JSON.parse(JSON.stringify(enrichedData));
-    }
-    
   } catch (error) {
     console.error("계획 로드 오류:", error);
     hasError.value = true;
@@ -395,7 +335,6 @@ const savePlan = async () => {
 
     // 보기 모드로 전환
     isEditMode.value = false;
-    
   } catch (error) {
     console.error("저장 오류:", error);
     alert(`여행 계획을 저장하는 중 오류가 발생했습니다: ${error.message}`);
@@ -471,7 +410,7 @@ window.addEventListener("beforeunload", (e) => {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #1f2937;
   font-family: "Marines", "Pretendard", sans-serif;
 }
 
@@ -709,8 +648,6 @@ window.addEventListener("beforeunload", (e) => {
   margin-bottom: 1rem;
 }
 
-/* 지도 미리보기 섹션 개선 */
-
 /* 편집 모드 푸터 */
 .edit-mode-footer {
   position: sticky;
@@ -916,86 +853,6 @@ window.addEventListener("beforeunload", (e) => {
     right: 10px;
     left: 10px;
     top: 80px;
-  }
-
-  /* 지도 반응형 */
-}
-
-@media (max-width: 480px) {
-}
-
-/* 접근성 개선 */
-@media (prefers-reduced-motion: reduce) {
-  .loading-spinner {
-    animation: none;
-  }
-  
-  * {
-    transition: none !important;
-    animation: none !important;
-  }
-}
-
-/* 고대비 모드 지원 */
-@media (prefers-contrast: high) {
-}
-
-/* 다크 모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .plan-detail-page {
-    background-color: #111827;
-  }
-  
-  .page-header {
-    background: #1f2937;
-    border-color: #374151;
-  }
-  
-  .map-container {
-    background: #1f2937;
-    border-color: #374151;
-  }
-  
-  .map-header {
-    background: #111827;
-    border-color: #374151;
-  }
-  
-  .map-wrapper {
-    background: #111827;
-  }
-  
-  .loading-content,
-  .error-content,
-  .no-data-content {
-    background: #1f2937;
-    color: #f9fafb;
-  }
-  
-  .edit-mode-footer {
-    background: #1f2937;
-    border-color: #374151;
-  }
-}
-
-/* 지도 로딩 상태 */
-
-/* 포커스 관리 */
-.back-button:focus,
-.mode-toggle-button:focus,
-.cancel-button:focus,
-.save-button-large:focus {
-  outline: 2px solid #a78bda;
-  outline-offset: 2px;
-}
-
-/* 터치 디바이스 최적화 */
-@media (hover: none) and (pointer: coarse) {
-  .back-button,
-  .mode-toggle-button,
-  .cancel-button,
-  .save-button-large {
-    min-height: 44px;
   }
 }
 </style>

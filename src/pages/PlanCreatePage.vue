@@ -103,7 +103,6 @@ const { checkLoginStatus } = useAuth()
 // 상태 관리
 const step = ref('recommendation')
 const loading = ref(false)
-const isLoading = ref(false)
 const isSaving = ref(false)
 const isConverting = ref(false)
 const showSuccessToast = ref(false)
