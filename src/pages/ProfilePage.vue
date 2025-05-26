@@ -126,15 +126,15 @@
             <h3 class="stats-title">여행 통계</h3>
             <div class="stats-grid">
               <div class="stats-item">
-                <div class="stats-number">{{ userInfo.tripCount }}</div>
+                <div class="stats-number">{{ userInfo.tripCount != null ? userInfo.tripCount : 0}}</div>
                 <div class="stats-label">총 여행 횟수</div>
               </div>
               <div class="stats-item">
-                <div class="stats-number">{{ userInfo.companionCount }}</div>
+                <div class="stats-number">{{ userInfo.companionCount != null ? userInfo.tripCount : 0 }}</div>
                 <div class="stats-label">동행 횟수</div>
               </div>
               <div class="stats-item">
-                <div class="stats-number">{{ userInfo.regionCount }}</div>
+                <div class="stats-number">{{ userInfo.regionCount != null ? userInfo.tripCount : 0 }}</div>
                 <div class="stats-label">방문 지역 수</div>
               </div>
             </div>
@@ -146,23 +146,26 @@
             <div class="passport-description">
               지금까지 {{ userStats.regionCount }}곳의 지역을 방문했어요!
             </div>
-            <div class="passport-stamps">
-              <div 
-                v-for="stamp in userStats.visitedRegions" 
-                :key="stamp.code"
-                class="stamp"
-                :class="{ 'has-visited': stamp.visited }"
-              >
-                <div class="stamp-inner">
-                  <div class="stamp-icon">
-                    <svg v-if="stamp.visited" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M9 11L12 14L22 4" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+              <!-- 여권 스탬프 HTML 수정 -->
+              <div class="passport-stamps">
+                <div 
+                  v-for="stamp in userStats.visitedRegions" 
+                  :key="stamp.code"
+                  class="stamp"
+                  :class="{ 'has-visited': stamp.visited }"
+                >
+                  <div class="stamp-inner">
+                    <!-- 모든 지역에 이미지 표시 (방문 여부에 따라 투명도 조절) -->
+                    <img 
+                      :src="`src/assets/images/${stamp.name}.png`" 
+                      :alt="stamp.name"
+                      class="stamp-image"
+                      :class="{ 'visited': stamp.visited, 'not-visited': !stamp.visited }"
+                      @error="handleImageError"
+                    />
                   </div>
-                  <div class="stamp-name">{{ stamp.name }}</div>
                 </div>
               </div>
-            </div>
           </div>
 
           <!-- 최근 여행 목록 -->
@@ -176,7 +179,7 @@
                 @click="viewTripDetails(trip.id)"
               >
                 <div class="trip-item-image">
-                  <img :src="trip.imageUrl || '/placeholder-image.jpg'" alt="여행 이미지">
+                  <img :src="trip.imageUrl || 'src/assets/images/default_plan.png'" alt="여행 이미지">
                 </div>
                 <div class="trip-item-info">
                   <div class="trip-item-title">{{ trip.title }}</div>
@@ -239,18 +242,18 @@ const userStats = ref({
     { code: 'seoul', name: '서울', visited: true },
     { code: 'busan', name: '부산', visited: true },
     { code: 'jeju', name: '제주', visited: true },
-    { code: 'gangneung', name: '강릉', visited: true },
+    { code: 'ulsan', name: '울산', visited: true },
+    { code: 'daejeon', name: '대전', visited: true },
     { code: 'gyeongju', name: '경주', visited: true },
     { code: 'jeonju', name: '전주', visited: true },
-    { code: 'sokcho', name: '속초', visited: true },
-    { code: 'yeosu', name: '여수', visited: true },
-    { code: 'suwon', name: '수원', visited: false },
-    { code: 'incheon', name: '인천', visited: false },
-    { code: 'daegu', name: '대구', visited: false },
-    { code: 'daejeon', name: '대전', visited: false },
-    { code: 'gwangju', name: '광주', visited: false },
-    { code: 'ulsan', name: '울산', visited: false },
+    { code: 'yangyang', name: '양양', visited: false },
+    { code: 'pohang', name: '포항', visited: false },
     { code: 'andong', name: '안동', visited: false },
+    { code: 'geoje', name: '거제', visited: false },
+    { code: 'gosung', name: '고성', visited: false },
+    { code: 'boseong', name: '보성', visited: false },
+    { code: 'Yeosu', name: '여수', visited: false },
+    { code: 'Inchon', name: '인천', visited: false },
   ],
   
   // 최근 여행 목록 초기화
@@ -261,6 +264,33 @@ const userStats = ref({
 const triggerImageUpload = () => {
   fileInput.value.click();
 };
+
+// 이미지 로드 에러 핸들러
+const handleImageError = (event) => {
+  console.log('이미지 로드 실패:', event.target.src);
+  const stampName = event.target.alt;
+  const isVisited = event.target.classList.contains('visited');
+  
+  // 이미지를 숨기고 텍스트로 대체
+  event.target.style.display = 'none';
+  
+  // 텍스트 엘리먼트 생성
+  const textElement = document.createElement('div');
+  textElement.className = 'stamp-name-fallback';
+  textElement.textContent = stampName;
+  textElement.style.cssText = `
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+    text-align: center;
+    line-height: 1.2;
+    opacity: ${isVisited ? '1' : '0.5'};
+  `;
+  
+  // 부모 요소에 텍스트 추가
+  event.target.parentElement.appendChild(textElement);
+};
+
 
 // 이미지 변경 핸들러
 const handleImageChange = (event) => {
@@ -449,7 +479,7 @@ const fetchRecentTrips = async () => {
     // 최대 3개의 최근 여행만 가져오기
     const recentTrips = sortedTrips.slice(0, 3).map(trip => ({
       id: trip.id,
-      title: trip.planTitle,
+      title: trip.title,
       date: `${formatDate(trip.startDate)} ~ ${formatDate(trip.endDate)}`,
       imageUrl: trip.thumbnail
     }));
@@ -815,41 +845,76 @@ onMounted(async () => {
   gap: 15px;
 }
 
+
 .stamp {
-  background-color: #f7f2ff;
+  background-color: transparent;
   border-radius: 12px;
   aspect-ratio: 1;
   transition: all 0.25s ease;
   cursor: default;
-  opacity: 0.5;
 }
 
 .stamp.has-visited {
-  background-color: #f0e7fd;
-  opacity: 1;
-  box-shadow: 0 4px 8px rgba(142, 106, 217, 0.1);
+  background-color: transparent;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.stamp.has-visited .stamp-inner {
+  padding: 0;
+  background-color: transparent;
 }
 
 .stamp-inner {
   height: 100%;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 10px;
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: transparent;
 }
 
+.stamp-image.visited {
+  opacity: 1;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stamp-image.not-visited {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+
+.stamp-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.stamp.has-visited:hover .stamp-image.visited {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stamp:not(.has-visited):hover .stamp-image.not-visited {
+  opacity: 0.7;
+}
+
+.stamp-name-only {
+  display: none;
+}
+
+
 .stamp-icon {
-  color: #8e6ad9;
-  margin-bottom: 5px;
-  height: 20px;
+  display: none; /* 더 이상 사용하지 않음 */
 }
 
 .stamp-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #4b5563;
-  text-align: center;
+  display: none; /* 방문한 지역에서는 텍스트 숨김 */
 }
 
 .recent-trips-list {
@@ -874,8 +939,8 @@ onMounted(async () => {
 }
 
 .trip-item-image {
-  width: 60px;
-  height: 60px;
+  width: 100px;
+  height: 70px;
   border-radius: 8px;
   overflow: hidden;
   margin-right: 15px;
