@@ -242,11 +242,7 @@ export function usePlanSave() {
       // JSON 파싱 실패 시
       console.error('응답 파싱 오류:', jsonError)
       
-      if (status === 401) {
-        clearAuthTokens()
-        router.push('/login')
-        throw new Error('인증이 만료되었습니다. 다시 로그인해주세요.')
-      }
+      
       
       throw new Error(`${operation}에 실패했습니다. (${status})`)
     }

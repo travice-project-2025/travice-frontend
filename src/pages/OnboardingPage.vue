@@ -4,77 +4,95 @@
 
     <!-- 배경 오버레이 -->
     <div class="background-overlay"></div>
-    
+
     <!-- 히어로 비디오 섹션 -->
-    <div 
+    <div
       class="video-container"
       :style="{
         transform: `scale(${videoScale}) translateY(${videoTranslateY}px)`,
-        transformOrigin: 'center bottom'
+        transformOrigin: 'center bottom',
       }"
     >
       <div class="video-wrapper">
- <video 
-   ref="heroVideo"
-   src="../assets/travel.mp4" 
-   class="hero-image"
-   autoplay
-   loop
-   muted
-   playsinline
-   style="filter: contrast(1.2) saturate(1.3) brightness(1.1);"
- />
- <div class="video-overlay">
-   <div class="overlay-content">
-     <h1 class="hero-title marines-bold">With Travice</h1>
-     <p class="hero-subtitle">AI와 함께하는 완벽한 여행</p>
-   </div>
- </div>
-</div>
-      
+        <video
+          ref="heroVideo"
+          src="../assets/travel.mp4"
+          class="hero-image"
+          autoplay
+          loop
+          muted
+          playsinline
+          style="filter: contrast(1) saturate(1.3) brightness(0.7)"
+        />
+        <div class="video-overlay">
+          <div class="overlay-content">
+            <h2 class="hero-title marines-bold">여행을 더 특별하게</h2>
+            <p class="hero-subtitle">트래비스와 함께 떠나는 당신만의 여정</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 메인 콘텐츠 -->
     <main class="main-content">
-      <!-- 첫 번째 섹션 - 서비스 소개 -->
-      <section class="intro-section">
-        <div class="content-wrapper">
-          <div class="text-content">
-            <h2 class="section-title">
-              AI와 함께 <span class="highlight">쉽고 즐겁게</span><br/>
-              여행 계획을 세워보세요
+      <!-- Step 01 - AI 계획 -->
+      <section class="step-section step-1" id="step1">
+        <div class="step-background">
+          <div class="step-number">01</div>
+          <div class="step-content">
+            <div class="step-emoji">🤖</div>
+            <h2 class="step-title">
+              말만 하면<br/>
+              <span class="highlight">AI가 척척</span>
             </h2>
-            <p class="section-description">
-              Travice와 함께라면 모든 여행이 특별해집니다.<br/>
-              당신만의 완벽한 여행 일정을 만들어 드립니다.
+            <p class="step-subtitle">
+              "제주도 2박3일 힐링여행" 한 마디면<br/>
+              완벽한 일정이 뚝딱!
             </p>
-            <div class="feature-list">
-              <div class="feature-item">
-                <div class="feature-icon">✓</div>
-                <span>AI 기반 맞춤형 여행 추천</span>
+            <div class="demo-chat">
+              <div class="chat-bubble user">
+                제주도 2박3일로 힐링여행 계획해줘
               </div>
-              <div class="feature-item">
-                <div class="feature-icon">✓</div>
-                <span>간편한 일정 관리와 공유</span>
-              </div>
-              <div class="feature-item">
-                <div class="feature-icon">✓</div>
-                <span>맞춤형 여행 동행 매칭</span>
+              <div class="chat-bubble ai">
+                🌊 성산일출봉 일출 → 카페거리 산책<br/>
+                🍊 귤밭 체험 → 온천 힐링<br/>
+                ✨ 맞춤 맛집까지 추천완료!
               </div>
             </div>
           </div>
-          <div class="visual-content">
-            <div class="device-mockup">
-              <div class="browser-window">
-                <div class="browser-header">
-                  <div class="browser-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
+        </div>
+      </section>
+
+      <!-- Step 02 - 동행 매칭 -->
+      <section class="step-section step-2" id="step2">
+        <div class="step-background">
+          <div class="step-number">02</div>
+          <div class="step-content">
+            <div class="step-emoji">👥</div>
+            <h2 class="step-title">
+              혼자가기 아쉽다면<br/>
+              <span class="highlight">동행 찾기</span>
+            </h2>
+            <p class="step-subtitle">
+              MBTI, 취향, 여행스타일까지<br/>
+              딱 맞는 여행 메이트를 찾아드려요
+            </p>
+            <div class="matching-demo">
+              <div class="profile-card card-me">
+                <div class="profile-img">😊</div>
+                <div class="profile-info">
+                  <div class="name">나</div>
+                  <div class="mlti">ENFP</div>
+                  <div class="style">#액티브 #맛집탐방</div>
                 </div>
-                <div class="browser-content">
-                  <img src="../assets/images/sample2.jpg" alt="여행 계획 화면" class="mockup-image" />
+              </div>
+              <div class="match-icon">💝</div>
+              <div class="profile-card card-match">
+                <div class="profile-img">😄</div>
+                <div class="profile-info">
+                  <div class="name">김여행</div>
+                  <div class="mbti">ENFJ</div>
+                  <div class="style">#액티브 #맛집탐방</div>
                 </div>
               </div>
             </div>
@@ -82,97 +100,33 @@
         </div>
       </section>
 
-      <!-- 두 번째 섹션 - 기능 소개 -->
-      <section class="features-section">
-        <div class="content-wrapper reverse">
-          <div class="visual-content">
-            <div class="device-mockup">
-              <div class="monitor-mockup">
-                <div class="monitor-screen">
-                  <img src="../assets/images/sample2.jpg" alt="AI 추천 화면" class="mockup-image" />
-                </div>
-                <div class="monitor-stand"></div>
-              </div>
-            </div>
-          </div>
-          <div class="text-content">
-            <h2 class="section-title">
-              <span class="highlight">스마트한 AI</span>가<br/>
-              완벽한 여행을 제안합니다
+      <!-- Step 03 - 실시간 공유 -->
+      <section class="step-section step-3" id="step3">
+        <div class="step-background">
+          <div class="step-number">03</div>
+          <div class="step-content">
+            <div class="step-emoji">📱</div>
+            <h2 class="step-title">
+              여행 중에도<br/>
+              <span class="highlight">실시간 소통</span>
             </h2>
-            <p class="section-description">
-              복잡한 여행 계획, 이제 AI에게 맡기세요.<br/>
-              취향, 성격, MBTI를 모두 고려해 계획을 만들어줍니다.
+            <p class="step-subtitle">
+              계획 변경부터 맛집 공유까지<br/>
+              모든 걸 함께 즐겨요
             </p>
-            <div class="stats-grid">
-              <div class="stat-item">
-                <h3>100%</h3>
-                <p>사용자 만족도</p>
-              </div>
-              <div class="stat-item">
-                <h3>50만+</h3>
-                <p>추천 여행지</p>
-              </div>
-              <div class="stat-item">
-                <h3>GPT-4o</h3>
-                <p>AI Model</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 세 번째 섹션 - 협업 기능 -->
-      <section class="collaboration-section">
-        <div class="content-wrapper">
-          <div class="text-content">
-            <h2 class="section-title">
-              동행을 구해<br/>
-              <span class="highlight">여행을 즐기세요</span>
-            </h2>
-            <p class="section-description">
-              자신의 계획을 공유하고 함께 할 친구를 만들어보세요.<br/>
-              마음에 드는 계획에 함께 참여하세요.
-            </p>
-            <div class="collaboration-features">
-              <div class="collab-item">
-                <div class="collab-icon">👥</div>
-                <div>
-                  <h4>동행 구하기</h4>
-                  <p>새로운 친구 만들기</p>
+            <div class="live-demo">
+              <div class="notification-card">
+                <div class="noti-icon">📍</div>
+                <div class="noti-text">
+                  <strong>김여행님</strong>이 새로운 맛집을 발견했어요!
                 </div>
               </div>
-              <div class="collab-item">
-                <div class="collab-icon">💬</div>
-                <div>
-                  <h4>채팅 & 댓글</h4>
-                  <p>여행 계획 공유</p>
+              <div class="notification-card">
+                <div class="noti-icon">💬</div>
+                <div class="noti-text">
+                  <strong>3명</strong>이 내일 일정 변경을 제안했어요
                 </div>
               </div>
-              <div class="collab-item">
-                <div class="collab-icon">📱</div>
-                <div>
-                  <h4>모바일 동기화</h4>
-                  <p>언제 어디서나 접근</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="visual-content">
-            <div class="collaboration-visual">
-              <div class="floating-card card-1">
-                <div class="user-avatar">👤</div>
-                <p>이태호님이 제주도 <br> 계획을 올렸습니다.</p>
-              </div>
-              <div class="floating-card card-2">
-                <div class="user-avatar">👤</div>
-                <p>홍정인님이 이태호님에게 <br> 댓글을 달았습니다.</p>
-              </div>
-              <div class="floating-card card-3">
-                <div class="user-avatar">👤</div>
-                <p>이태호님과 홍정인님의 <br> 동행이 매칭되었습니다.</p>
-              </div>
-              
             </div>
           </div>
         </div>
@@ -182,21 +136,37 @@
       <section class="cta-section">
         <div class="cta-container">
           <div class="cta-content">
-            <h2 class="cta-title">지금 바로 시작하세요</h2>
+            <div class="cta-emoji">🚀</div>
+            <h2 class="cta-title">
+              여행이 이렇게<br/>
+              <span class="cta-highlight">쉬워도 되나요?</span>
+            </h2>
             <p class="cta-description">
-              Travice와 함께하는 새로운 여행 경험이 기다리고 있습니다
+              지금 시작하면 첫 여행 계획은 무료!
             </p>
             <div class="cta-buttons">
-              <button class="btn-primary">시작하기</button>
-              <button class="btn-secondary">둘러보기</button>
+              <button class="btn-primary">
+                무료로 시작하기
+                <span class="btn-icon">→</span>
+              </button>
+              <button class="btn-secondary">
+                <span class="play-icon">▶</span>
+                2분만에 보는 데모
+              </button>
             </div>
-          </div>
-          <div class="cta-visual">
-            <div class="floating-elements">
-              <div class="float-element element-1">✈️</div>
-              <div class="float-element element-2">🗺️</div>
-              <div class="float-element element-3">📸</div>
-              <div class="float-element element-4">🎒</div>
+            <div class="trust-badges">
+              <div class="badge">
+                <span class="badge-icon">⭐</span>
+                <span>4.9/5.0 사용자 만족도</span>
+              </div>
+              <div class="badge">
+                <span class="badge-icon">👥</span>
+                <span>10만+ 여행메이트</span>
+              </div>
+              <div class="badge">
+                <span class="badge-icon">🎯</span>
+                <span>95% 매칭 성공률</span>
+              </div>
             </div>
           </div>
         </div>
@@ -206,45 +176,47 @@
     <!-- 푸터 -->
     <footer class="footer">
       <div class="footer-content">
-        <div class="footer-section">
+        <div class="footer-main">
           <div class="footer-logo">
             <div class="logo-icon">T</div>
             <span class="logo-text">Travice</span>
           </div>
-          <p class="footer-description">
-            AI와 함께하는 스마트한 여행 계획 서비스
+          <p class="footer-tagline">
+            여행이 이렇게 쉬워도 되나요? 🌍
           </p>
+          <div class="social-links">
+            <a href="#" class="social-link">📧</a>
+            <a href="#" class="social-link">💬</a>
+            <a href="#" class="social-link">📱</a>
+          </div>
         </div>
-        <div class="footer-section">
-          <h4>서비스</h4>
-          <ul>
-            <li><a href="#">여행 계획</a></li>
-            <li><a href="#">AI 추천</a></li>
-            <li><a href="#">커뮤니티</a></li>
-            <li><a href="#">동행 찾기</a></li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h4>지원</h4>
-          <ul>
-            <li><a href="#">고객센터</a></li>
-            <li><a href="#">사용법</a></li>
-            <li><a href="#">FAQ</a></li>
-            <li><a href="#">문의하기</a></li>
-          </ul>
-        </div>
-        <div class="footer-section">
-          <h4>회사</h4>
-          <ul>
-            <li><a href="#">회사 소개</a></li>
-            <li><a href="#">이용약관</a></li>
-            <li><a href="#">개인정보처리방침</a></li>
-            <li><a href="#">채용</a></li>
-          </ul>
+        
+        <div class="footer-links">
+          <div class="link-group">
+            <h4>서비스</h4>
+            <a href="#">AI 여행계획</a>
+            <a href="#">동행 찾기</a>
+            <a href="#">여행 커뮤니티</a>
+          </div>
+          
+          <div class="link-group">
+            <h4>지원</h4>
+            <a href="#">도움말</a>
+            <a href="#">문의하기</a>
+            <a href="#">FAQ</a>
+          </div>
+          
+          <div class="link-group">
+            <h4>회사</h4>
+            <a href="#">About</a>
+            <a href="#">채용</a>
+            <a href="#">개인정보처리방침</a>
+          </div>
         </div>
       </div>
+      
       <div class="footer-bottom">
-        <p>&copy; 2025 Travice. All rights reserved.</p>
+        <p>&copy; 2025 Travice. 모든 여행을 특별하게 ✨</p>
       </div>
     </footer>
   </div>
@@ -436,10 +408,11 @@ onUnmounted(() => {
 .video-container {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 110vh;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   z-index: 10;
+  scroll-snap-align: start;
 }
 
 .video-wrapper {
@@ -479,7 +452,7 @@ onUnmounted(() => {
 }
 
 .hero-title {
-  font-size: 5rem;
+  font-size: 3rem;
   font-weight: 800;
   margin-bottom: 24px;
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -495,51 +468,66 @@ onUnmounted(() => {
   font-family: 'MarinesBold', sans-serif;
 }
 
-/* 메인 콘텐츠 */
+/* 메인 콘텐츠 - 스텝별 전환 효과 */
 .main-content {
   position: relative;
   z-index: 5;
-  background: rgba(249, 250, 252, 0.9);
-  backdrop-filter: blur(10px);
+  background: transparent;
 }
 
-/* 공통 섹션 스타일 */
-.intro-section,
-.features-section,
-.collaboration-section {
-  padding: 120px 0;
+/* 스텝 섹션 공통 스타일 */
+.step-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  scroll-snap-align: start;
 }
 
-.content-wrapper {
-  max-width: 1400px;
-  margin: 0 auto;
+.step-background {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
   padding: 0 40px;
   display: flex;
   align-items: center;
-  gap: 80px;
-}
-
-.content-wrapper.reverse {
-  flex-direction: row-reverse;
-}
-
-.text-content {
-  flex: 1;
-}
-
-.visual-content {
-  flex: 1;
-  display: flex;
   justify-content: center;
 }
 
-.section-title {
-  font-size: 3.5rem;
-  font-weight: 700;
-  line-height: 1.1;
+.step-number {
+  position: absolute;
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8rem;
+  font-weight: 900;
+  color: rgba(98, 49, 203, 0.1);
+  font-family: 'MarinesBold', sans-serif;
+  z-index: 1;
+}
+
+.step-content {
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+}
+
+.step-emoji {
+  font-size: 5rem;
   margin-bottom: 32px;
+  display: block;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.step-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 24px;
   color: #1a1a1a;
-  letter-spacing: -1px;
   font-family: 'MarinesBold', sans-serif;
 }
 
@@ -560,508 +548,530 @@ onUnmounted(() => {
   z-index: -1;
 }
 
-.section-description {
-  font-size: 1.25rem;
-  line-height: 1.7;
-  color: #4a5568;
+.step-subtitle {
+  font-size: 1.4rem;
+  color: #6b7280;
   margin-bottom: 48px;
+  line-height: 1.6;
   font-family: 'MarinesBold', sans-serif;
 }
 
-/* 기능 리스트 */
-.feature-list {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+/* Step 1 - AI 계획 */
+.step-1 {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
 }
 
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.demo-chat {
+  background: white;
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(98, 49, 203, 0.15);
+  max-width: 500px;
+  margin: 0 auto;
 }
 
-.feature-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #6231cb, #8f5cf6);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-/* 통계 그리드 */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
-  margin-top: 48px;
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-item h3 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #6231cb;
-  margin-bottom: 8px;
-  font-family: 'MarinesBold', sans-serif;
-}
-
-.stat-item p {
-  color: #6b7280;
-  font-weight: 500;
-  font-family: 'MarinesBold', sans-serif;
-}
-
-/* 협업 기능 */
-.collaboration-features {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
-.collab-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-}
-
-.collab-icon {
-  font-size: 2rem;
-  background: linear-gradient(135deg, #6231cb, #8f5cf6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.collab-item h4 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #1a1a1a;
-  font-family: 'MarinesBold', sans-serif;
-}
-
-.collab-item p {
-  color: #6b7280;
+.chat-bubble {
+  padding: 16px 20px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  font-size: 1rem;
   line-height: 1.5;
   font-family: 'MarinesBold', sans-serif;
 }
 
-/* 디바이스 모형 */
-.device-mockup {
-  position: relative;
+.chat-bubble.user {
+  background: #6231cb;
+  color: white;
+  margin-left: 40px;
+  border-bottom-right-radius: 8px;
 }
 
-.browser-window {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  width: 480px;
+.chat-bubble.ai {
+  background: #f1f5f9;
+  color: #1a1a1a;
+  margin-right: 40px;
+  border-bottom-left-radius: 8px;
+  animation: typeWriter 2s ease-in-out;
 }
 
-.browser-header {
-  background: #f8f9fa;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e9ecef;
+/* Step 2 - 동행 매칭 */
+.step-2 {
+  background: linear-gradient(135deg, #fef7ff 0%, #f3e8ff 100%);
 }
 
-.browser-dots {
-  display: flex;
-  gap: 8px;
-}
-
-.browser-dots span {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #dee2e6;
-}
-
-.browser-dots span:nth-child(1) { background: #ff5f56; }
-.browser-dots span:nth-child(2) { background: #ffbd2e; }
-.browser-dots span:nth-child(3) { background: #27ca3f; }
-
-.browser-content {
-  height: 320px;
-  overflow: hidden;
-}
-
-.monitor-mockup {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.monitor-screen {
-  background: #1a1a1a;
-  border-radius: 8px;
-  padding: 8px;
-  width: 500px;
-  height: 320px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-}
-
-.monitor-stand {
-  width: 80px;
-  height: 40px;
-  background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
-  border-radius: 0 0 8px 8px;
-  margin-top: -4px;
-}
-
-.mockup-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 4px;
-}
-
-/* 협업 비주얼 */
-.collaboration-visual {
-  position: relative;
-  width: 480px;
-  height: 320px;
-}
-
-.floating-card {
-  position: absolute;
-  background: white;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 14px;
-  max-width: 400px;
-  animation: float 3s ease-in-out infinite;
-}
-
-.card-1 {
-  top: 20px;
-  left: 20px;
-  animation-delay: 0s;
-}
-
-.card-2 {
-  top: 100px;
-  right: 20px;
-  animation-delay: 1s;
-}
-
-.card-3 {
-  bottom: 40px;
-  left: 40px;
-  animation-delay: 2s;
-}
-
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+.matching-demo {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  gap: 40px;
+  margin-top: 48px;
+}
+
+.profile-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 15px 40px rgba(98, 49, 203, 0.12);
+  text-align: center;
+  min-width: 140px;
+  transform: scale(0.9);
+  animation: profilePop 1s ease-out 0.5s forwards;
+}
+
+.profile-img {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+.name {
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 4px;
+  font-family: 'MarinesBold', sans-serif;
+}
+
+.mbti {
+  background: #6231cb;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: inline-block;
+  font-family: 'MarinesBold', sans-serif;
+}
+
+.style {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-family: 'MarinesBold', sans-serif;
+}
+
+.match-icon {
+  font-size: 2.5rem;
+  animation: heartBeat 1.5s ease-in-out infinite;
+}
+
+/* Step 3 - 실시간 공유 */
+.step-3 {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.live-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.notification-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.15);
+  transform: translateX(-100px);
+  opacity: 0;
+  animation: slideInLeft 0.8s ease-out forwards;
+}
+
+.notification-card:nth-child(1) { animation-delay: 0.2s; }
+.notification-card:nth-child(2) { animation-delay: 0.4s; }
+
+.noti-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
-.main-screen {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 280px;
-  height: 180px;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+.noti-text {
+  font-size: 0.95rem;
+  color: #374151;
+  line-height: 1.4;
+  font-family: 'MarinesBold', sans-serif;
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+.noti-text strong {
+  color: #0ea5e9;
+  font-weight: 700;
 }
 
-/* CTA 섹션 */
+/* CTA 섹션 - 새로운 스타일 */
 .cta-section {
-  background: linear-gradient(135deg, #6231cb 0%, #8f5cf6 100%);
-  padding: 120px 0;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d1b69 50%, #6231cb 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: white;
   position: relative;
   overflow: hidden;
+  scroll-snap-align: start;
+}
+
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/></svg>');
+  animation: starMove 20s linear infinite;
 }
 
 .cta-container {
-  max-width: 1400px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 0 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 80px;
+  text-align: center;
+  position: relative;
+  z-index: 2;
 }
 
-.cta-content {
-  flex: 1;
+.cta-emoji {
+  font-size: 4rem;
+  margin-bottom: 32px;
+  display: block;
+  animation: rocketFloat 3s ease-in-out infinite;
 }
 
 .cta-title {
-  font-size: 3.5rem;
-  font-weight: 700;
+  font-size: 4rem;
+  font-weight: 900;
   margin-bottom: 24px;
   line-height: 1.1;
   font-family: 'MarinesBold', sans-serif;
 }
 
+.cta-highlight {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+}
+
 .cta-description {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   margin-bottom: 48px;
   opacity: 0.9;
-  line-height: 1.6;
   font-family: 'MarinesBold', sans-serif;
 }
 
 .cta-buttons {
   display: flex;
-  gap: 20px;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 64px;
+  flex-wrap: wrap;
 }
 
 .btn-primary {
-  background: rgba(249, 250, 252, 0.95);
-  color: #6231cb;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1a1a;
   border: none;
-  padding: 16px 32px;
-  border-radius: 30px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  padding: 18px 36px;
+  border-radius: 50px;
+  font-size: 1.2rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
   font-family: 'MarinesBold', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s;
+}
+
+.btn-primary:hover::before {
+  left: 100%;
 }
 
 .btn-primary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 15px 40px rgba(251, 191, 36, 0.4);
+}
+
+.btn-icon {
+  font-size: 1.5rem;
+  transition: transform 0.3s;
+}
+
+.btn-primary:hover .btn-icon {
+  transform: translateX(4px);
 }
 
 .btn-secondary {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  padding: 16px 32px;
-  border-radius: 30px;
-  font-size: 1.1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 18px 36px;
+  border-radius: 50px;
+  font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
   backdrop-filter: blur(10px);
   font-family: 'MarinesBold', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.play-icon {
+  font-size: 1rem;
+  color: #fbbf24;
+}
+
+.trust-badges {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.6);
+  padding: 12px 20px;
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: 'MarinesBold', sans-serif;
+  transition: all 0.3s;
 }
 
-.cta-visual {
-  flex: 1;
-  position: relative;
-  height: 300px;
+.badge:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
-.floating-elements {
-  position: relative;
-  width: 100%;
-  height: 100%;
+.badge-icon {
+  font-size: 1rem;
 }
 
-.float-element {
-  position: absolute;
-  font-size: 3rem;
-  animation: floatRotate 6s ease-in-out infinite;
-}
-
-.element-1 {
-  top: 20%;
-  left: 20%;
-  animation-delay: 0s;
-}
-
-.element-2 {
-  top: 60%;
-  right: 30%;
-  animation-delay: 1.5s;
-}
-
-.element-3 {
-  bottom: 30%;
-  left: 30%;
-  animation-delay: 3s;
-}
-
-.element-4 {
-  top: 10%;
-  right: 10%;
-  animation-delay: 4.5s;
-}
-
-@keyframes floatRotate {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-20px) rotate(5deg);
-  }
-  50% {
-    transform: translateY(-10px) rotate(-5deg);
-  }
-  75% {
-    transform: translateY(-15px) rotate(3deg);
-  }
-}
-
-/* 푸터 */
+/* 푸터 - 새로운 스타일 */
 .footer {
-  background: rgba(26, 26, 26, 0.95);
+  background: #0f0f0f;
   color: white;
   position: relative;
   z-index: 5;
-  backdrop-filter: blur(10px);
 }
 
 .footer-content {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 80px 40px 40px;
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  padding: 60px 40px 0;
+  display: flex;
+  justify-content: space-between;
   gap: 60px;
 }
 
-.footer-section h4 {
+.footer-main {
+  flex: 1;
+  max-width: 400px;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.footer-tagline {
+  color: #9ca3af;
   font-size: 1.1rem;
-  font-weight: 700;
   margin-bottom: 24px;
+  font-family: 'MarinesBold', sans-serif;
+}
+
+.social-links {
+  display: flex;
+  gap: 16px;
+}
+
+.social-link {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1.2rem;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.social-link:hover {
+  background: rgba(98, 49, 203, 0.2);
+  transform: translateY(-2px);
+}
+
+.footer-links {
+  display: flex;
+  gap: 48px;
+}
+
+.link-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.link-group h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
   color: white;
   font-family: 'MarinesBold', sans-serif;
 }
 
-.footer-section ul {
-  list-style: none;
-}
-
-.footer-section ul li {
-  margin-bottom: 12px;
-}
-
-.footer-section ul li a {
+.link-group a {
   color: #9ca3af;
   text-decoration: none;
+  font-size: 0.9rem;
   transition: color 0.2s;
   font-family: 'MarinesBold', sans-serif;
 }
 
-.footer-section ul li a:hover {
-  color: #8f5cf6;
-}
-
-.footer-description {
-  color: #9ca3af;
-  line-height: 1.6;
-  margin-top: 16px;
-  font-family: 'MarinesBold', sans-serif;
+.link-group a:hover {
+  color: #fbbf24;
 }
 
 .footer-bottom {
-  border-top: 1px solid #374151;
+  border-top: 1px solid #1f2937;
   padding: 24px 40px;
   text-align: center;
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: 1200px;
+  margin: 24px auto 0;
 }
 
 .footer-bottom p {
   color: #6b7280;
   font-size: 0.9rem;
   font-family: 'MarinesBold', sans-serif;
-}.cta-visual {
-  flex: 1;
-  position: relative;
-  height: 300px;
 }
 
-.floating-elements {
-  position: relative;
-  width: 100%;
-  height: 100%;
+/* 애니메이션 */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
 }
 
-.float-element {
-  position: absolute;
-  font-size: 3rem;
-  animation: floatRotate 6s ease-in-out infinite;
+@keyframes typeWriter {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.element-1 {
-  top: 20%;
-  left: 20%;
-  animation-delay: 0s;
+@keyframes profilePop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
-.element-2 {
-  top: 60%;
-  right: 30%;
-  animation-delay: 1.5s;
+@keyframes heartBeat {
+  0%, 50%, 100% {
+    transform: scale(1);
+  }
+  25%, 75% {
+    transform: scale(1.1);
+  }
 }
 
-.element-3 {
-  bottom: 30%;
-  left: 30%;
-  animation-delay: 3s;
+@keyframes slideInLeft {
+  0% {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
-.element-4 {
-  top: 10%;
-  right: 10%;
-  animation-delay: 4.5s;
-}
-
-@keyframes floatRotate {
+@keyframes rocketFloat {
   0%, 100% {
     transform: translateY(0px) rotate(0deg);
   }
-  25% {
-    transform: translateY(-20px) rotate(5deg);
-  }
   50% {
-    transform: translateY(-10px) rotate(-5deg);
+    transform: translateY(-15px) rotate(5deg);
   }
-  75% {
-    transform: translateY(-15px) rotate(3deg);
+}
+
+@keyframes starMove {
+  0% {
+    transform: translateY(0px) translateX(0px);
   }
+  100% {
+    transform: translateY(-10px) translateX(-10px);
+  }
+}
+
+/* 스크롤 스냅 효과 */
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
 }
 
 /* 반응형 디자인 */
 @media (max-width: 1200px) {
   .header-content,
-  .content-wrapper,
+  .step-background,
   .cta-container,
   .footer-content {
     max-width: 1200px;
@@ -1069,7 +1079,7 @@ onUnmounted(() => {
     padding-right: 32px;
   }
   
-  .section-title {
+  .step-title {
     font-size: 3rem;
   }
   
@@ -1083,17 +1093,7 @@ onUnmounted(() => {
     display: none;
   }
   
-  .content-wrapper {
-    flex-direction: column;
-    gap: 60px;
-    text-align: center;
-  }
-  
-  .content-wrapper.reverse {
-    flex-direction: column;
-  }
-  
-  .section-title {
+  .step-title {
     font-size: 2.5rem;
   }
   
@@ -1101,227 +1101,12 @@ onUnmounted(() => {
     font-size: 3.5rem;
   }
   
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-  
-  .cta-container {
-    flex-direction: column;
-    text-align: center;
-    gap: 60px;
-  }
-  
-  .footer-content {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 40px;
-  }
-}
-
-@media (max-width: 768px) {
-  .header-content {
-    padding: 12px 20px;
-  }
-  
-  .intro-section,
-  .features-section,
-  .collaboration-section {
-    padding: 80px 0;
-  }
-  
-  .content-wrapper {
-    padding: 0 20px;
-    gap: 40px;
-  }
-  
-  .section-title {
-    font-size: 2rem;
-  }
-  
-  .hero-title {
-    font-size: 2.5rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1.2rem;
-  }
-  
-  .browser-window {
-    width: 100%;
-    max-width: 400px;
-  }
-  
-  .monitor-screen {
-    width: 100%;
-    max-width: 320px;
-    height: 200px;
-  }
-  
-  .collaboration-visual {
-    width: 100%;
-    max-width: 400px;
-  }
-  
   .cta-title {
-    font-size: 2.5rem;
-  }
-  
-  .cta-buttons {
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
-  }
-  
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-  
-  .footer-content {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-}
-
-@media (max-width: 576px) {
-  .logo-text {
-    font-size: 20px;
-  }
-  
-  .section-title {
-    font-size: 1.8rem;
-  }
-  
-  .hero-title {
-    font-size: 2rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-  
-  .section-description {
-    font-size: 1.1rem;
-  }
-  
-  .cta-title {
-    font-size: 2rem;
-  }
-  
-  .floating-card {
-    font-size: 12px;
-    padding: 12px;
-    max-width: 160px;
-  }
-  
-  .user-avatar {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
-  }
-  
-  .main-screen {
-    width: 240px;
-    height: 150px;
-  }
-}
-
-/* 스크롤 애니메이션 */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.intro-section,
-.features-section,
-.collaboration-section {
-  animation: fadeInUp 0.8s ease-out;
-}
-
-/* 부드러운 스크롤 */
-html {
-  scroll-behavior: smooth;
-}
-
-/* 스크린 리더 접근성 */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 1200px) {
-  .header-content,
-  .content-wrapper,
-  .cta-container,
-  .footer-content {
-    max-width: 1200px;
-    padding-left: 32px;
-    padding-right: 32px;
-  }
-  
-  .section-title {
     font-size: 3rem;
   }
   
-  .hero-title {
-    font-size: 4rem;
-  }
-}
-
-@media (max-width: 992px) {
-  .nav-links {
-    display: none;
-  }
-  
-  .content-wrapper {
-    flex-direction: column;
-    gap: 60px;
-    text-align: center;
-  }
-  
-  .content-wrapper.reverse {
-    flex-direction: column;
-  }
-  
-  .section-title {
-    font-size: 2.5rem;
-  }
-  
-  .hero-title {
-    font-size: 3.5rem;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-  }
-  
-  .cta-container {
-    flex-direction: column;
-    text-align: center;
-    gap: 60px;
-  }
-  
   .footer-content {
-    grid-template-columns: repeat(2, 1fr);
+    flex-direction: column;
     gap: 40px;
   }
 }
@@ -1331,19 +1116,25 @@ html {
     padding: 12px 20px;
   }
   
-  .intro-section,
-  .features-section,
-  .collaboration-section {
-    padding: 80px 0;
-  }
-  
-  .content-wrapper {
+  .step-background {
     padding: 0 20px;
-    gap: 40px;
   }
   
-  .section-title {
-    font-size: 2rem;
+  .step-number {
+    font-size: 4rem;
+    top: -30px;
+  }
+  
+  .step-emoji {
+    font-size: 3rem;
+  }
+  
+  .step-title {
+    font-size: 2.5rem;
+  }
+  
+  .step-subtitle {
+    font-size: 1.2rem;
   }
   
   .hero-title {
@@ -1354,43 +1145,61 @@ html {
     font-size: 1.2rem;
   }
   
-  .browser-window {
-    width: 100%;
-    max-width: 400px;
+  .matching-demo {
+    flex-direction: column;
+    gap: 20px;
   }
   
-  .monitor-screen {
-    width: 100%;
-    max-width: 320px;
-    height: 200px;
+  .profile-card {
+    min-width: 120px;
   }
   
-  .collaboration-visual {
-    width: 100%;
-    max-width: 400px;
+  .demo-chat {
+    padding: 24px;
+  }
+  
+  .chat-bubble.user {
+    margin-left: 20px;
+  }
+  
+  .chat-bubble.ai {
+    margin-right: 20px;
   }
   
   .cta-title {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
+  }
+  
+  .cta-description {
+    font-size: 1.3rem;
   }
   
   .cta-buttons {
     flex-direction: column;
-    gap: 16px;
+    align-items: center;
   }
   
   .btn-primary,
   .btn-secondary {
     width: 100%;
+    max-width: 300px;
+    justify-content: center;
   }
   
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 32px;
+  .trust-badges {
+    gap: 16px;
+  }
+  
+  .badge {
+    font-size: 0.8rem;
+    padding: 10px 16px;
   }
   
   .footer-content {
-    grid-template-columns: 1fr;
+    padding: 40px 20px 0;
+  }
+  
+  .footer-links {
     gap: 32px;
   }
 }
@@ -1400,8 +1209,8 @@ html {
     font-size: 20px;
   }
   
-  .section-title {
-    font-size: 1.8rem;
+  .step-title {
+    font-size: 2rem;
   }
   
   .hero-title {
@@ -1412,53 +1221,30 @@ html {
     font-size: 1rem;
   }
   
-  .section-description {
+  .step-subtitle {
     font-size: 1.1rem;
   }
   
+  .step-emoji {
+    font-size: 2.5rem;
+  }
+  
+  .cta-container {
+    padding: 0 20px;
+  }
+  
   .cta-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   
-  .floating-card {
-    font-size: 12px;
-    padding: 12px;
-    max-width: 160px;
+  .cta-emoji {
+    font-size: 3rem;
   }
   
-  .user-avatar {
-    width: 28px;
-    height: 28px;
-    font-size: 14px;
+  .footer-links {
+    flex-direction: column;
+    gap: 24px;
   }
-  
-  .main-screen {
-    width: 240px;
-    height: 150px;
-  }
-}
-
-/* 스크롤 애니메이션 */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.intro-section,
-.features-section,
-.collaboration-section {
-  animation: fadeInUp 0.8s ease-out;
-}
-
-/* 부드러운 스크롤 */
-html {
-  scroll-behavior: smooth;
 }
 
 /* 스크린 리더 접근성 */

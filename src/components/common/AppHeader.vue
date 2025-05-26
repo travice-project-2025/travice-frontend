@@ -1,33 +1,35 @@
 <template>
   <header :class="['header', { shrink: isShrunk }]">
-    <!-- 로고 부분: 클릭 시 로그인 상태에 따라 다른 페이지로 이동 -->
-    <div class="logo-container" @click="navigateByLoginStatus">
-      <img src="../../assets/images/logo.png" alt="Travice Logo" class="logo-image">
-      <div class="logo-text">Travice</div>
-    </div>
-    
-    <div class="header-right">
-      <div v-if="loggedIn" class="user-controls">
-        <!-- 게시판 버튼 추가 -->
-        <button @click="goToBoard" class="board-btn">게시판</button>
-        
-        <div class="dropdown" @click.stop>
-          <div class="dropdown-trigger" @click="toggleDropdown">
-            <span class="user-name">{{ userNickname ? userNickname : userName }}님</span>
-            <span class="dropdown-arrow" :class="{ 'open': isDropdownOpen }"></span>
-          </div>
-          <div v-if="isDropdownOpen" class="dropdown-menu">
-            <div class="dropdown-item" @click="goToProfile">
-              <span>내 정보</span>
+    <div class="header-content">
+      <!-- 로고 부분: 클릭 시 로그인 상태에 따라 다른 페이지로 이동 -->
+      <div class="logo-container" @click="navigateByLoginStatus">
+        <img src="../../assets/images/logo.png" alt="Travice Logo" class="logo-image">
+        <div class="logo-text">Travice</div>
+      </div>
+      
+      <div class="header-right">
+        <div v-if="loggedIn" class="user-controls">
+          <!-- 게시판 버튼 추가 -->
+          <button @click="goToBoard" class="board-btn">게시판</button>
+          
+          <div class="dropdown" @click.stop>
+            <div class="dropdown-trigger" @click="toggleDropdown">
+              <span class="user-name">{{ userNickname ? userNickname : userName }}님</span>
+              <span class="dropdown-arrow" :class="{ 'open': isDropdownOpen }"></span>
             </div>
-            <div class="dropdown-item" @click="logout">
-              <span>로그아웃</span>
+            <div v-if="isDropdownOpen" class="dropdown-menu">
+              <div class="dropdown-item" @click="goToProfile">
+                <span>내 정보</span>
+              </div>
+              <div class="dropdown-item" @click="logout">
+                <span>로그아웃</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <div v-else>
-        <button @click="goToLogin" class="login-btn">로그인</button>
+        <div v-else>
+          <button @click="goToLogin" class="login-btn">로그인</button>
+        </div>
       </div>
     </div>
   </header>
@@ -108,20 +110,29 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 60px;
   display: flex;
-  justify-content: center; /* 중앙 정렬 */
   align-items: center;
   z-index: 100;
   background-color: #F9FAFC;
   transition: box-shadow 0.3s ease;
+  /* 좌우 패딩을 헤더 자체에 추가 */
+  padding: 0 145px;
 }
 
-.header-container {
-  max-width: 1400px;
+/* 헤더 내부 컨텐츠를 위한 컨테이너 */
+.header-content {
   width: 100%;
-  padding: 0 40px;
+  max-width: 1400px; /* 최대 너비 제한 (선택사항) */
+  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
+  justify-content: space-between; /* 양끝 정렬 */
   align-items: center;
+}
+
+/* 모바일 반응형을 위한 미디어 쿼리 */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 60px; /* 모바일에서는 패딩 축소 */
+  }
 }
 
 .header.shrink {
@@ -151,7 +162,7 @@ onBeforeUnmount(() => {
 }
 
 .header-right {
-  margin-left: auto;
+  /* margin-left: auto 제거 - justify-content: space-between으로 충분 */
 }
 
 .user-controls {
@@ -168,6 +179,7 @@ onBeforeUnmount(() => {
   border-radius: 20px;
   font-size: 14px;
   font-weight: 700;
+  font-family: 'Marines', 'Pretendard', sans-serif;
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;

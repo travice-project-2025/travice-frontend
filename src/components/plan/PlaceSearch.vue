@@ -115,6 +115,7 @@ export default {
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   font-size: 0.875rem;
+  font-family: 'Marines', 'Pretendard', sans-serif;
 }
 
 .search-button {
@@ -126,6 +127,7 @@ export default {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
+  font-family: 'Marines', 'Pretendard', sans-serif;
 }
 
 .search-loading {

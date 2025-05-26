@@ -4,15 +4,16 @@
     <div v-if="places.length === 0" class="empty-state">
       <p>이 날짜에 일정이 없습니다. 새 장소를 추가해보세요.</p>
     </div>
-    
-    <draggable 
-      v-model="innerPlaces" 
-      item-key="id"
+
+    <draggable
+      v-model="innerPlaces"
+      :item-key="(item) => item.id"
       ghost-class="ghost"
       chosen-class="chosen"
       drag-class="dragging"
       @end="emitChange"
       handle=".drag-handle"
+      :force-fallback="true"
     >
       <template #item="{ element, index }">
         <div>
@@ -22,24 +23,45 @@
             <div class="transport-icon-container">
               <div class="transport-icon">
                 <span class="transport-emoji">
-                    {{ getTransportEmoji(element.transportFromPrevious ? element.transportFromPrevious.name : '이동') }}
+                  {{
+                    getTransportEmoji(
+                      element.transportFromPrevious
+                        ? element.transportFromPrevious.name
+                        : "이동"
+                    )
+                  }}
                 </span>
               </div>
-              <div class="transport-name">{{ element.transportFromPrevious ? element.transportFromPrevious.name : '이동' }}</div>
-              <div class="transport-duration">{{ calculateDuration(index) }}</div>
+              <div class="transport-name">
+                {{
+                  element.transportFromPrevious
+                    ? element.transportFromPrevious.name
+                    : "이동"
+                }}
+              </div>
+              <div class="transport-duration">
+                {{ calculateDuration(index) }}
+              </div>
             </div>
             <div class="transport-line"></div>
           </div>
-          
+
           <div class="place-item-wrapper">
             <div class="drag-handle">
-              <svg xmlns="http://www.w3.org/2000/svg" class="drag-icon" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M7 2a1 1 0 011 1v1h3V3a1 1 0 112 0v1h3V3a1 1 0 012 0v1h1a2 2 0 012 2v12a2 2 0 01-2 2H2a2 2 0 01-2-2V6a2 2 0 012-2h1V3a1 1 0 011-1h3zm0 2H2v12h16V4h-5v1a1 1 0 11-2 0V4H7V3a1 1 0 00-1-1 1 1 0 00-1 1v1zM2 2a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V4a2 2 0 00-2-2h-1v1a1 1 0 01-2 0V2h-3v1a1 1 0 01-2 0V2H7v1a1 1 0 01-2 0V2H2z" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="drag-icon"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  d="M7 2a2 2 0 00-2 2v1a1 1 0 000 2v1a1 1 0 000 2v1a1 1 0 000 2v1a1 1 0 000 2v1a2 2 0 002 2h1a1 1 0 002 0h1a1 1 0 002 0h1a1 1 0 002 0h1a2 2 0 002-2v-1a1 1 0 000-2v-1a1 1 0 000-2v-1a1 1 0 000-2v-1a1 1 0 000-2V4a2 2 0 00-2-2h-1a1 1 0 00-2 0h-1a1 1 0 00-2 0h-1a1 1 0 00-2 0H7z"
+                />
               </svg>
               <div class="place-order">{{ index + 1 }}</div>
             </div>
-            <PlaceItem 
-              :place="element" 
+            <PlaceItem
+              :place="element"
               @delete="$emit('delete-place', element.id)"
               @click="$emit('place-click', element)"
             />
@@ -47,11 +69,20 @@
         </div>
       </template>
     </draggable>
-    
+
     <div class="add-place-section">
       <button @click="$emit('add-place')" class="add-place-button">
-        <svg xmlns="http://www.w3.org/2000/svg" class="add-icon" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="add-icon"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+            clip-rule="evenodd"
+          />
         </svg>
         새 장소 추가
       </button>
@@ -60,90 +91,152 @@
 </template>
 
 <script>
-import { ref, computed, watch } from 'vue';
-import draggable from 'vuedraggable';
-import PlaceItem from './PlaceItem.vue';
+import { ref, computed, watch } from "vue";
+import draggable from "vuedraggable";
+import PlaceItem from "./PlaceItem.vue";
 
 export default {
-  name: 'PlaceList',
+  name: "PlaceList",
   components: {
     draggable,
-    PlaceItem
+    PlaceItem,
   },
   props: {
     places: {
       type: Array,
-      required: true
-    }
+      required: true,
+    },
   },
-  emits: ['update:places', 'delete-place', 'add-place', 'place-click'],
+  emits: ["update:places", "delete-place", "add-place", "place-click"],
   setup(props, { emit }) {
-    const innerPlaces = ref([...props.places]);
+    const innerPlaces = ref(JSON.parse(JSON.stringify(props.places)));
 
     const getTransportEmoji = (transportName) => {
-        switch (transportName.trim()) {
-            case '자가용': return '🚗';
-            case '택시': return '🚕';
-            case '자전거': return '🚲';
-            case '도보': return '🚶';
-            case '항공': return '✈️';
-            case '버스': return '🚌';
-            case '지하철': return '🚃';
-            case '기차': return '🚊';
-            default: return '🚗';
-        }
+      switch (transportName.trim()) {
+        case "자가용":
+          return "🚗";
+        case "택시":
+          return "🚕";
+        case "자전거":
+          return "🚲";
+        case "도보":
+          return "🚶";
+        case "항공":
+          return "✈️";
+        case "버스":
+          return "🚌";
+        case "지하철":
+          return "🚃";
+        case "기차":
+          return "🚊";
+        default:
+          return "🚗";
+      }
     };
 
     // 부모로부터 전달받은 places가 변경되면 내부 상태 업데이트
-    watch(() => props.places, (newPlaces) => {
-      innerPlaces.value = [...newPlaces];
-    }, { deep: true });
+    watch(
+      () => props.places,
+      (newPlaces) => {
+        if (JSON.stringify(innerPlaces.value) !== JSON.stringify(newPlaces)) {
+          innerPlaces.value = JSON.parse(JSON.stringify(newPlaces));
+        }
+      },
+      { deep: true }
+    );
 
-    // 순서 변경 이벤트 발생
-    const emitChange = () => {
-      // innerPlaces의 변경사항을 부모에게 전달
-      emit('update:places', [...innerPlaces.value]);
+    const emitChange = (evt) => {
+      console.log("드래그 이벤트:", evt);
+
+      if (evt.type === "end") {
+        // 첫 번째 장소의 시간을 기준으로 나머지 시간 재계산
+        const updatedPlaces = [...innerPlaces.value];
+
+        // 각 장소의 체류 시간 계산 (출발 - 도착)
+        const durations = updatedPlaces.map((place) => {
+          const arrival = normalizeTime(place.arrivalTime);
+          const departure = normalizeTime(place.departureTime);
+          const [aH, aM] = arrival.split(":").map(Number);
+          const [dH, dM] = departure.split(":").map(Number);
+
+          let duration = dH * 60 + dM - (aH * 60 + aM);
+          if (duration < 0) duration += 24 * 60; // 자정 넘어가는 경우
+
+          return duration;
+        });
+
+        // 첫 번째 장소부터 시간 재계산
+        for (let i = 1; i < updatedPlaces.length; i++) {
+          const prevDeparture = updatedPlaces[i - 1].departureTime;
+          const [h, m] = prevDeparture.split(":").map(Number);
+
+          // 이동 시간 30분 가정
+          let arrivalMinutes = h * 60 + m + 30;
+          if (arrivalMinutes >= 24 * 60) arrivalMinutes -= 24 * 60;
+
+          const arrivalHour = Math.floor(arrivalMinutes / 60);
+          const arrivalMin = arrivalMinutes % 60;
+
+          // 체류 시간 적용
+          const departureMinutes = arrivalMinutes + durations[i];
+          const departureHour = Math.floor(departureMinutes / 60) % 24;
+          const departureMin = departureMinutes % 60;
+
+          updatedPlaces[i].arrivalTime = `${arrivalHour
+            .toString()
+            .padStart(2, "0")}:${arrivalMin.toString().padStart(2, "0")}:00`;
+          updatedPlaces[i].departureTime = `${departureHour
+            .toString()
+            .padStart(2, "0")}:${departureMin.toString().padStart(2, "0")}:00`;
+        }
+
+        emit("update:places", updatedPlaces);
+      }
     };
 
     // 소요시간 계산 메서드 추가
     const calculateDuration = (currentIndex) => {
-      if (currentIndex <= 0 || !innerPlaces.value[currentIndex] || !innerPlaces.value[currentIndex-1]) {
-        return '정보 없음';
+      if (
+        currentIndex <= 0 ||
+        !innerPlaces.value[currentIndex] ||
+        !innerPlaces.value[currentIndex - 1]
+      ) {
+        return "정보 없음";
       }
-      
-      const prevPlace = innerPlaces.value[currentIndex-1];
+
+      const prevPlace = innerPlaces.value[currentIndex - 1];
       const currentPlace = innerPlaces.value[currentIndex];
-      
+
       if (!prevPlace.departureTime || !currentPlace.arrivalTime) {
-        return '정보 없음';
+        return "정보 없음";
       }
-      
+
       // 시간 포맷 변환 (HH:MM:SS -> 분 단위)
       const convertTimeToMinutes = (timeStr) => {
-        const parts = timeStr.split(':');
+        const parts = timeStr.split(":");
         const hours = parseInt(parts[0], 10);
         const minutes = parseInt(parts[1], 10);
         return hours * 60 + minutes;
       };
-      
+
       const departureMinutes = convertTimeToMinutes(prevPlace.departureTime);
       const arrivalMinutes = convertTimeToMinutes(currentPlace.arrivalTime);
-      
+
       // 소요 시간 계산 (분 단위)
       let durationMinutes = arrivalMinutes - departureMinutes;
-      
+
       // 날짜를 넘어가는 경우 (음수인 경우 처리)
       if (durationMinutes < 0) {
         durationMinutes += 24 * 60; // 하루를 더함
       }
-      
+
       // 시간과 분으로 변환
       const hours = Math.floor(durationMinutes / 60);
       const minutes = durationMinutes % 60;
-      
+
       // 포맷팅
       if (hours > 0) {
-        return `${hours}시간 ${minutes > 0 ? minutes + '분' : ''}`;
+        return `${hours}시간 ${minutes > 0 ? minutes + "분" : ""}`;
       }
       return `${minutes}분`;
     };
@@ -152,10 +245,10 @@ export default {
       innerPlaces,
       emitChange,
       calculateDuration,
-      getTransportEmoji
+      getTransportEmoji,
     };
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
@@ -188,6 +281,15 @@ export default {
   border-radius: 8px 0 0 8px;
   cursor: move;
   margin-right: 2px;
+  transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+  background-color: #e5e7eb;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 
 .drag-icon {
@@ -213,6 +315,7 @@ export default {
 .ghost {
   opacity: 0.5;
   background: #f0e7fd;
+  transform: scale(0.98);
 }
 
 .chosen {
@@ -221,6 +324,9 @@ export default {
 
 .dragging {
   cursor: grabbing;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  transform: scale(1.02);
+  z-index: 1000;
 }
 
 .add-place-section {
@@ -242,7 +348,7 @@ export default {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Marines', 'Pretendard', sans-serif;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .add-place-button:hover {

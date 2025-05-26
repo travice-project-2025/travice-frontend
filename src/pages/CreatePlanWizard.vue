@@ -1271,7 +1271,7 @@ onMounted(() => {
 
 /* 최종 확인 단계 */
 .summary-container {
-  max-width: 560px;
+  max-width: 590px;
   margin: 0 auto 35px;
 }
 

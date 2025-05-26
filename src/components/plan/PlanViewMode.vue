@@ -66,9 +66,16 @@
       <div class="summary-card">
         <div class="summary-header">
           <h3>🗓️ 여행 정보</h3>
-          <div class="summary-badge">
-            <span class="badge-icon">👥</span>
-            {{ planData.memberCount }}명
+          <div class="summary-actions">
+            <div class="summary-badge">
+              <span class="badge-icon">👥</span>
+              {{ planData.memberCount }}명
+            </div>
+            <button class="share-button" @click="openShareModal" title="공유하기">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 16.08C17.24 16.08 16.56 16.38 16.04 16.85L8.91 12.7C8.96 12.47 9 12.24 9 12C9 11.76 8.96 11.53 8.91 11.3L15.96 7.19C16.5 7.69 17.21 8 18 8C19.66 8 21 6.66 21 5C21 3.34 19.66 2 18 2C16.34 2 15 3.34 15 5C15 5.24 15.04 5.47 15.09 5.7L8.04 9.81C7.5 9.31 6.79 9 6 9C4.34 9 3 10.34 3 12C3 13.66 4.34 15 6 15C6.79 15 7.5 14.69 8.04 14.19L15.16 18.34C15.11 18.55 15.08 18.77 15.08 19C15.08 20.61 16.39 21.92 18 21.92C19.61 21.92 20.92 20.61 20.92 19C20.92 17.39 19.61 16.08 18 16.08Z" fill="currentColor"/>
+              </svg>
+            </button>
           </div>
         </div>
         
@@ -141,6 +148,112 @@
         </div>
       </div>
     </div>
+
+    <!-- 공유 링크 모달 -->
+    <div v-if="showShareModal" class="modal-overlay" @click="closeShareModal">
+      <div class="share-modal" @click.stop>
+        <div class="modal-header">
+          <div class="modal-title-section">
+            <div class="modal-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 16.08C17.24 16.08 16.56 16.38 16.04 16.85L8.91 12.7C8.96 12.47 9 12.24 9 12C9 11.76 8.96 11.53 8.91 11.3L15.96 7.19C16.5 7.69 17.21 8 18 8C19.66 8 21 6.66 21 5C21 3.34 19.66 2 18 2C16.34 2 15 3.34 15 5C15 5.24 15.04 5.47 15.09 5.7L8.04 9.81C7.5 9.31 6.79 9 6 9C4.34 9 3 10.34 3 12C3 13.66 4.34 15 6 15C6.79 15 7.5 14.69 8.04 14.19L15.16 18.34C15.11 18.55 15.08 18.77 15.08 19C15.08 20.61 16.39 21.92 18 21.92C19.61 21.92 20.92 20.61 20.92 19C20.92 17.39 19.61 16.08 18 16.08Z" fill="currentColor"/>
+              </svg>
+            </div>
+            <h3>여행 계획 공유</h3>
+          </div>
+          <button class="close-button" @click="closeShareModal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="modal-body">
+          <p class="modal-description">
+            이 링크를 공유하여 다른 사용자와 함께 여행 계획을 편집할 수 있습니다.
+          </p>
+          
+          <div class="share-options">
+            <div class="share-option view-option">
+              <div class="option-header">
+                <div class="option-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 12C1 12 5 4 12 4C19 4 23 12 23 12C23 12 19 20 12 20C5 20 1 12 1 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="option-content">
+                  <span class="option-title">보기 전용</span>
+                  <p class="option-description">다른 사용자가 계획을 볼 수만 있습니다</p>
+                </div>
+              </div>
+              <div class="link-container">
+                <input 
+                  type="text" 
+                  :value="viewOnlyLink" 
+                  readonly 
+                  class="link-input"
+                  ref="viewLinkInput"
+                >
+                <button class="copy-button" @click="copyLink('view')">
+                  <svg v-if="!copiedStates.view" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polyline points="20,6 9,17 4,12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="share-option edit-option">
+              <div class="option-header">
+                <div class="option-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="option-content">
+                  <span class="option-title">편집 가능</span>
+                  <p class="option-description">다른 사용자가 계획을 함께 편집할 수 있습니다</p>
+                </div>
+              </div>
+              <div class="link-container">
+                <input 
+                  type="text" 
+                  :value="editableLink" 
+                  readonly 
+                  class="link-input"
+                  ref="editLinkInput"
+                >
+                <button class="copy-button" @click="copyLink('edit')">
+                  <svg v-if="!copiedStates.edit" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polyline points="20,6 9,17 4,12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal-actions">
+            <button class="regenerate-button" @click="regenerateLinks">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <polyline points="23,4 23,10 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="1,20 1,14 7,14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              새 링크 생성
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -157,6 +270,15 @@ const props = defineProps({
 })
 
 const activeDay = ref(1)
+const showShareModal = ref(false)
+const copiedStates = ref({
+  view: false,
+  edit: false
+})
+
+// 공유 링크 (실제로는 서버에서 생성된 링크를 사용해야 함)
+const viewOnlyLink = ref(`${window.location.origin}/plan/${props.planData.id}/view?token=${generateToken()}`)
+const editableLink = ref(`${window.location.origin}/plan/${props.planData.id}/edit?token=${generateToken()}`)
 
 // 현재 선택된 일자의 장소들
 const filteredPlaces = computed(() => {
@@ -164,6 +286,55 @@ const filteredPlaces = computed(() => {
     .filter(detail => detail.day === activeDay.value)
     .sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime))
 })
+
+// 공유 모달 열기/닫기
+const openShareModal = () => {
+  showShareModal.value = true
+}
+
+const closeShareModal = () => {
+  showShareModal.value = false
+  // 복사 상태 초기화
+  copiedStates.value = { view: false, edit: false }
+}
+
+// 링크 복사
+const copyLink = async (type) => {
+  try {
+    const link = type === 'view' ? viewOnlyLink.value : editableLink.value
+    await navigator.clipboard.writeText(link)
+    
+    copiedStates.value[type] = true
+    
+    // 2초 후 복사 상태 초기화
+    setTimeout(() => {
+      copiedStates.value[type] = false
+    }, 2000)
+  } catch (err) {
+    console.error('링크 복사 실패:', err)
+    // 폴백: 텍스트 선택
+    const input = type === 'view' ? 
+      document.querySelector('.link-input[readonly]') : 
+      document.querySelectorAll('.link-input[readonly]')[1]
+    input.select()
+    document.execCommand('copy')
+    copiedStates.value[type] = true
+    setTimeout(() => {
+      copiedStates.value[type] = false
+    }, 2000)
+  }
+}
+
+// 새 링크 생성
+const regenerateLinks = () => {
+  viewOnlyLink.value = `${window.location.origin}/plan/${props.planData.id}/view?token=${generateToken()}`
+  editableLink.value = `${window.location.origin}/plan/${props.planData.id}/edit?token=${generateToken()}`
+}
+
+// 토큰 생성 (실제로는 서버에서 생성해야 함)
+function generateToken() {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+}
 
 // 시간 포맷팅
 const formatTime = (timeStr) => {
@@ -280,7 +451,8 @@ const getDailySummary = () => {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 60px);
-  background-color: #f9fafb;
+  background-color: #fbfaff;
+  font-family: "Marines", "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", sans-serif;
 }
 
 .plan-content {
@@ -297,8 +469,8 @@ const getDailySummary = () => {
   flex: 1;
   height: calc(100vh - 10rem);
   background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(142, 106, 217, 0.04);
   overflow: hidden;
 }
 
@@ -307,13 +479,13 @@ const getDailySummary = () => {
   display: flex;
   flex-direction: column;
   background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(142, 106, 217, 0.04);
   overflow: hidden;
 }
 
 .itinerary-header {
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #efe6ff;
 }
 
 .itinerary-body {
@@ -325,9 +497,9 @@ const getDailySummary = () => {
 .empty-state {
   padding: 3rem;
   text-align: center;
-  color: #6b7280;
-  background-color: #f9fafb;
-  border-radius: 12px;
+  color: #667080;
+  background-color: #f7f2ff;
+  border-radius: 20px;
   margin: 1rem 0;
 }
 
@@ -355,20 +527,21 @@ const getDailySummary = () => {
 }
 
 .place-card-view {
-  background-color: #f9f7ff;
-  border-radius: 12px;
+  background-color: #f7f2ff;
+  border-radius: 16px;
   padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid #f0e7fd;
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.08);
+  border: 1px solid #efe6ff;
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .place-card-view:hover {
-  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.15);
-  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(142, 106, 217, 0.15);
+  transform: translateY(-2px);
+  border-color: #d4c2f0;
 }
 
 .place-order {
@@ -383,6 +556,7 @@ const getDailySummary = () => {
   font-size: 0.875rem;
   font-weight: 600;
   flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(142, 106, 217, 0.3);
 }
 
 .place-content {
@@ -399,24 +573,25 @@ const getDailySummary = () => {
 .place-time {
   background-color: #8e6ad9;
   color: white;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(142, 106, 217, 0.2);
 }
 
 .place-name {
   margin: 0.5rem 0;
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #2c3e50;
   font-family: 'Marines', 'Pretendard', sans-serif;
 }
 
 .place-memo {
   margin: 0.25rem 0;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #667080;
   line-height: 1.4;
 }
 
@@ -444,7 +619,7 @@ const getDailySummary = () => {
 .transport-line {
   flex: 1;
   height: 2px;
-  background: linear-gradient(to right, #e5e7eb, #cbd5e1, #e5e7eb);
+  background: linear-gradient(to right, #efe6ff, #d4c2f0, #efe6ff);
 }
 
 .transport-icon-container {
@@ -459,12 +634,12 @@ const getDailySummary = () => {
   height: 2.5rem;
   border-radius: 50%;
   background-color: white;
-  border: 2px solid #e5e7eb;
+  border: 2px solid #efe6ff;
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 0.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(142, 106, 217, 0.1);
 }
 
 .transport-emoji {
@@ -478,32 +653,33 @@ const getDailySummary = () => {
 
 .transport-name {
   font-size: 0.75rem;
-  font-weight: 500;
-  color: #4b5563;
+  font-weight: 600;
+  color: #667080;
   margin-bottom: 0.25rem;
 }
 
 .transport-duration {
   font-size: 0.75rem;
-  color: #6b7280;
-  background-color: #f3f4f6;
+  color: #8e6ad9;
+  background-color: #efe6ff;
   padding: 0.2rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-weight: 500;
 }
 
 /* 계획 요약 */
 .plan-summary {
   padding: 1rem;
-  background-color: #f9fafb;
+  background-color: #fbfaff;
 }
 
 .summary-card {
   max-width: 1600px;
   margin: 0 auto;
   background-color: white;
-  border-radius: 12px;
+  border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(142, 106, 217, 0.04);
 }
 
 .summary-header {
@@ -516,25 +692,57 @@ const getDailySummary = () => {
 .summary-header h3 {
   margin: 0;
   font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 700;
+  color: #2c3e50;
   font-family: 'Marines', 'Pretendard', sans-serif;
+}
+
+.summary-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .summary-badge {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: #a78bda;
-  color: white;
+  background-color: #efe6ff;
+  color: #8e6ad9;
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(142, 106, 217, 0.1);
 }
 
 .badge-icon {
   font-size: 1rem;
+}
+
+.share-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #8e6ad9;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.3);
+}
+
+.share-button:hover {
+  background-color: #7c59c5;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(142, 106, 217, 0.4);
+}
+
+.share-button:active {
+  transform: translateY(0);
 }
 
 .summary-grid {
@@ -555,8 +763,8 @@ const getDailySummary = () => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 500;
-  color: #6b7280;
+  font-weight: 600;
+  color: #667080;
 }
 
 .label-icon {
@@ -565,15 +773,15 @@ const getDailySummary = () => {
 
 .summary-value {
   font-size: 0.875rem;
-  color: #1f2937;
-  font-weight: 500;
+  color: #2c3e50;
+  font-weight: 600;
 }
 
 .visibility-badge {
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .visibility-badge.public {
@@ -588,15 +796,15 @@ const getDailySummary = () => {
 
 /* 일자별 요약 */
 .daily-summary {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #efe6ff;
   padding-top: 1.5rem;
 }
 
 .daily-summary h4 {
   margin: 0 0 1rem 0;
   font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 700;
+  color: #2c3e50;
   font-family: 'Marines', 'Pretendard', sans-serif;
 }
 
@@ -607,40 +815,301 @@ const getDailySummary = () => {
 }
 
 .daily-item {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background-color: #f7f2ff;
+  border: 1px solid #efe6ff;
+  border-radius: 12px;
   padding: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-align: center;
 }
 
 .daily-item:hover {
   background-color: #f0e7fd;
-  border-color: #a78bda;
-  transform: translateY(-1px);
+  border-color: #d4c2f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(142, 106, 217, 0.1);
 }
 
 .daily-number {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #8e6ad9;
   margin-bottom: 0.25rem;
 }
 
 .daily-info {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: #667080;
 }
 
 .daily-count {
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.25rem;
 }
 
 .daily-time {
   color: #9ca3af;
+}
+
+/* 공유 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(17, 24, 39, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.share-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 0;
+  width: 90vw;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(142, 106, 217, 0.25);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+  background-color: #f7f2ff;
+  border-bottom: 1px solid #efe6ff;
+}
+
+.modal-title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-icon {
+  width: 32px;
+  height: 32px;
+  background-color: #8e6ad9;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 8px rgba(142, 106, 217, 0.3);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2c3e50;
+  font-family: 'Marines', 'Pretendard', sans-serif;
+}
+
+.close-button {
+  background-color: #f0e7fd;
+  border: none;
+  color: #8e6ad9;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background-color: #e5d1fd;
+  color: #7c59c5;
+}
+
+.modal-body {
+  padding: 28px;
+}
+
+.modal-description {
+  margin: 0 0 24px 0;
+  color: #667080;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.share-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.share-option {
+  border: 1px solid #efe6ff;
+  border-radius: 16px;
+  padding: 20px;
+  background-color: #f7f2ff;
+  transition: all 0.3s ease;
+}
+
+.share-option:hover {
+  border-color: #d4c2f0;
+  box-shadow: 0 4px 12px rgba(142, 106, 217, 0.1);
+  transform: translateY(-1px);
+}
+
+.view-option {
+  border-left: 4px solid #06b6d4;
+}
+
+.edit-option {
+  border-left: 4px solid #8e6ad9;
+}
+
+.option-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.option-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.view-option .option-icon {
+  background: linear-gradient(135deg, #67e8f9 0%, #06b6d4 100%);
+  color: white;
+}
+
+.edit-option .option-icon {
+  background-color: #8e6ad9;
+  color: white;
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2c3e50;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.option-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #667080;
+  line-height: 1.4;
+}
+
+.link-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.link-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #efe6ff;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  background-color: white;
+  color: #667080;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  transition: all 0.2s ease;
+}
+
+.link-input:focus {
+  outline: none;
+  border-color: #8e6ad9;
+  box-shadow: 0 0 0 3px rgba(142, 106, 217, 0.15);
+}
+
+.copy-button {
+  padding: 12px;
+  background-color: #f7f2ff;
+  color: #8e6ad9;
+  border: 1px solid #efe6ff;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.copy-button:hover {
+  background-color: #8e6ad9;
+  color: white;
+  border-color: #8e6ad9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(142, 106, 217, 0.3);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 1px solid #efe6ff;
+}
+
+.regenerate-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f7f2ff;
+  color: #8e6ad9;
+  border: 1px solid #efe6ff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.regenerate-button:hover {
+  background-color: #8e6ad9;
+  color: white;
+  border-color: #8e6ad9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(142, 106, 217, 0.3);
 }
 
 /* 반응형 */
@@ -660,6 +1129,12 @@ const getDailySummary = () => {
   .summary-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
+
+  .summary-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
 }
 
 @media (max-width: 768px) {
@@ -677,6 +1152,14 @@ const getDailySummary = () => {
     gap: 1rem;
   }
 
+  .summary-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .summary-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -684,6 +1167,48 @@ const getDailySummary = () => {
 
   .daily-grid {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+
+  .share-modal {
+    width: 95vw;
+    margin: 1rem;
+  }
+
+  .modal-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .link-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .copy-button {
+    width: 100%;
+  }
+
+  .share-options {
+    gap: 1rem;
+  }
+
+  .share-option {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .share-button {
+    justify-content: center;
   }
 }
 
@@ -693,16 +1218,56 @@ const getDailySummary = () => {
 }
 
 .itinerary-body::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f7f2ff;
   border-radius: 3px;
 }
 
 .itinerary-body::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d4c2f0;
   border-radius: 3px;
 }
 
 .itinerary-body::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #c4b1e8;
+}
+
+.share-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.share-modal::-webkit-scrollbar-track {
+  background: #f7f2ff;
+  border-radius: 3px;
+}
+
+.share-modal::-webkit-scrollbar-thumb {
+  background: #d4c2f0;
+  border-radius: 3px;
+}
+
+.share-modal::-webkit-scrollbar-thumb:hover {
+  background: #c4b1e8;
+}
+
+/* 트랜지션 및 애니메이션 효과 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  transform: translateY(10px);
+  opacity: 0;
 }
 </style>
