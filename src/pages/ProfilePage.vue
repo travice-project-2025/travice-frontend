@@ -249,13 +249,13 @@ const userStats = ref({
   // 방문한 지역들 - 스탬프 표시용
   visitedRegions: [
     { code: 'seoul', name: '서울', visited: true },
-    { code: 'busan', name: '부산', visited: true },
     { code: 'jeju', name: '제주', visited: true },
     { code: 'ulsan', name: '울산', visited: true },
     { code: 'daejeon', name: '대전', visited: true },
     { code: 'gyeongju', name: '경주', visited: true },
     { code: 'jeonju', name: '전주', visited: true },
-    { code: 'yangyang', name: '양양', visited: false },
+    { code: 'yangyang', name: '양양', visited: true },
+    { code: 'busan', name: '부산', visited: false },
     { code: 'pohang', name: '포항', visited: false },
     { code: 'andong', name: '안동', visited: false },
     { code: 'geoje', name: '거제', visited: false },

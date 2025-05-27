@@ -258,9 +258,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DayTab from '@/components/plan/DayTab.vue'
 import TripMap from '@/components/plan/TripMap.vue'
+import { inviteService } from '@/services/inviteService'
 
 const props = defineProps({
   planData: {
@@ -276,9 +277,10 @@ const copiedStates = ref({
   edit: false
 })
 
-// 공유 링크 (실제로는 서버에서 생성된 링크를 사용해야 함)
-const viewOnlyLink = ref(`${window.location.origin}/plan/${props.planData.id}/view?token=${generateToken()}`)
-const editableLink = ref(`${window.location.origin}/plan/${props.planData.id}/edit?token=${generateToken()}`)
+// 공유 링크 상태
+const viewOnlyLink = ref('')
+const editableLink = ref('')
+const isLoadingLinks = ref(false)
 
 // 현재 선택된 일자의 장소들
 const filteredPlaces = computed(() => {
@@ -287,9 +289,33 @@ const filteredPlaces = computed(() => {
     .sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime))
 })
 
+// 초대 링크 생성
+const createInviteLinks = async () => {
+  isLoadingLinks.value = true
+  try {
+    // 보기 전용 링크 생성
+    const viewOnlyResponse = await inviteService.createInviteLink(props.planData.id, 'VIEW_ONLY')
+    viewOnlyLink.value = viewOnlyResponse.shareUrl
+    
+    // 편집 가능 링크 생성
+    const editableResponse = await inviteService.createInviteLink(props.planData.id, 'EDITABLE')
+    editableLink.value = editableResponse.shareUrl
+  } catch (error) {
+    console.error('초대 링크 생성 실패:', error)
+    // 에러 처리 (토스트 메시지 등)
+    alert('초대 링크 생성에 실패했습니다. 다시 시도해주세요.')
+  } finally {
+    isLoadingLinks.value = false
+  }
+}
+
 // 공유 모달 열기/닫기
-const openShareModal = () => {
+const openShareModal = async () => {
   showShareModal.value = true
+  // 모달이 열릴 때 초대 링크 생성
+  if (!viewOnlyLink.value || !editableLink.value) {
+    await createInviteLinks()
+  }
 }
 
 const closeShareModal = () => {
@@ -297,6 +323,7 @@ const closeShareModal = () => {
   // 복사 상태 초기화
   copiedStates.value = { view: false, edit: false }
 }
+
 
 // 링크 복사
 const copyLink = async (type) => {
@@ -314,8 +341,8 @@ const copyLink = async (type) => {
     console.error('링크 복사 실패:', err)
     // 폴백: 텍스트 선택
     const input = type === 'view' ? 
-      document.querySelector('.link-input[readonly]') : 
-      document.querySelectorAll('.link-input[readonly]')[1]
+      document.querySelector('.view-option .link-input') : 
+      document.querySelector('.edit-option .link-input')
     input.select()
     document.execCommand('copy')
     copiedStates.value[type] = true
@@ -326,14 +353,25 @@ const copyLink = async (type) => {
 }
 
 // 새 링크 생성
-const regenerateLinks = () => {
-  viewOnlyLink.value = `${window.location.origin}/plan/${props.planData.id}/view?token=${generateToken()}`
-  editableLink.value = `${window.location.origin}/plan/${props.planData.id}/edit?token=${generateToken()}`
-}
-
-// 토큰 생성 (실제로는 서버에서 생성해야 함)
-function generateToken() {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+const regenerateLinks = async () => {
+  isLoadingLinks.value = true
+  try {
+    // 보기 전용 링크 재생성
+    const viewOnlyResponse = await inviteService.regenerateInviteLink(props.planData.id, 'VIEW_ONLY')
+    viewOnlyLink.value = viewOnlyResponse.shareUrl
+    
+    // 편집 가능 링크 재생성
+    const editableResponse = await inviteService.regenerateInviteLink(props.planData.id, 'EDITABLE')
+    editableLink.value = editableResponse.shareUrl
+    
+    // 성공 메시지 표시
+    alert('새로운 초대 링크가 생성되었습니다.')
+  } catch (error) {
+    console.error('초대 링크 재생성 실패:', error)
+    alert('초대 링크 재생성에 실패했습니다. 다시 시도해주세요.')
+  } finally {
+    isLoadingLinks.value = false
+  }
 }
 
 // 시간 포맷팅

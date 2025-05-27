@@ -132,40 +132,36 @@
         </div>
       </section>
 
-      <!-- CTA 섹션 -->
+      <!-- CTA 섹션 - 수정된 버전 -->
       <section class="cta-section">
         <div class="cta-container">
           <div class="cta-content">
-            <div class="cta-emoji">🚀</div>
+            <div class="cta-emoji">✨</div>
             <h2 class="cta-title">
-              여행이 이렇게<br/>
-              <span class="cta-highlight">쉬워도 되나요?</span>
+              지금 바로<br/>
+              <span class="cta-highlight">시작해보세요!</span>
             </h2>
             <p class="cta-description">
-              지금 시작하면 첫 여행 계획은 무료!
+              완벽한 여행 계획, 더 이상 혼자 고민하지 마세요
             </p>
             <div class="cta-buttons">
               <button class="btn-primary">
-                무료로 시작하기
+                지금 바로 시작하기
                 <span class="btn-icon">→</span>
-              </button>
-              <button class="btn-secondary">
-                <span class="play-icon">▶</span>
-                2분만에 보는 데모
               </button>
             </div>
             <div class="trust-badges">
               <div class="badge">
                 <span class="badge-icon">⭐</span>
-                <span>4.9/5.0 사용자 만족도</span>
+                <span>5/5 만족도</span>
               </div>
               <div class="badge">
                 <span class="badge-icon">👥</span>
-                <span>10만+ 여행메이트</span>
+                <span>10만+ 사용자</span>
               </div>
               <div class="badge">
                 <span class="badge-icon">🎯</span>
-                <span>95% 매칭 성공률</span>
+                <span>95% 매칭 성공</span>
               </div>
             </div>
           </div>
@@ -706,14 +702,13 @@ onUnmounted(() => {
   font-weight: 700;
 }
 
-/* CTA 섹션 - 새로운 스타일 */
+/* CTA 섹션 - 밝은 테마로 수정 */
 .cta-section {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d1b69 50%, #6231cb 100%);
+  background: linear-gradient(135deg, #fef7ff 0%, #f0f4ff 50%, #e0f2fe 100%);
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
   position: relative;
   overflow: hidden;
   scroll-snap-align: start;
@@ -726,7 +721,7 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(255,255,255,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(255,255,255,0.1)"/></svg>');
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="25" cy="25" r="1" fill="rgba(98,49,203,0.1)"/><circle cx="75" cy="75" r="1" fill="rgba(98,49,203,0.1)"/><circle cx="50" cy="10" r="0.5" fill="rgba(98,49,203,0.1)"/><circle cx="90" cy="40" r="0.5" fill="rgba(98,49,203,0.1)"/><circle cx="10" cy="60" r="0.5" fill="rgba(98,49,203,0.1)"/></svg>');
   animation: starMove 20s linear infinite;
 }
 
@@ -743,7 +738,7 @@ onUnmounted(() => {
   font-size: 4rem;
   margin-bottom: 32px;
   display: block;
-  animation: rocketFloat 3s ease-in-out infinite;
+  animation: sparkle 3s ease-in-out infinite;
 }
 
 .cta-title {
@@ -751,21 +746,31 @@ onUnmounted(() => {
   font-weight: 900;
   margin-bottom: 24px;
   line-height: 1.1;
+  color: #1a1a1a;
   font-family: 'MarinesBold', sans-serif;
 }
 
 .cta-highlight {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #6231cb;
   position: relative;
+}
+
+.cta-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  width: 100%;
+  height: 16px;
+  background: linear-gradient(135deg, rgba(98, 49, 203, 0.2), rgba(143, 92, 246, 0.2));
+  border-radius: 8px;
+  z-index: -1;
 }
 
 .cta-description {
   font-size: 1.5rem;
   margin-bottom: 48px;
-  opacity: 0.9;
+  color: #6b7280;
   font-family: 'MarinesBold', sans-serif;
 }
 
@@ -778,8 +783,8 @@ onUnmounted(() => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
-  color: #1a1a1a;
+  background: linear-gradient(135deg, #6231cb, #8b5fbf);
+  color: white;
   border: none;
   padding: 18px 36px;
   border-radius: 50px;
@@ -787,7 +792,7 @@ onUnmounted(() => {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 30px rgba(251, 191, 36, 0.3);
+  box-shadow: 0 10px 30px rgba(98, 49, 203, 0.3);
   font-family: 'MarinesBold', sans-serif;
   display: flex;
   align-items: center;
@@ -813,7 +818,7 @@ onUnmounted(() => {
 
 .btn-primary:hover {
   transform: translateY(-3px);
-  box-shadow: 0 15px 40px rgba(251, 191, 36, 0.4);
+  box-shadow: 0 15px 40px rgba(98, 49, 203, 0.4);
 }
 
 .btn-icon {
@@ -826,31 +831,32 @@ onUnmounted(() => {
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: white;
+  color: #6231cb;
+  border: 2px solid #6231cb;
   padding: 18px 36px;
   border-radius: 50px;
   font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
-  backdrop-filter: blur(10px);
   font-family: 'MarinesBold', sans-serif;
   display: flex;
   align-items: center;
   gap: 12px;
+  box-shadow: 0 8px 25px rgba(98, 49, 203, 0.1);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: #6231cb;
+  color: white;
   transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(98, 49, 203, 0.2);
 }
 
 .play-icon {
   font-size: 1rem;
-  color: #fbbf24;
+  color: inherit;
 }
 
 .trust-badges {
@@ -864,32 +870,36 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: white;
   padding: 12px 20px;
   border-radius: 50px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(98, 49, 203, 0.1);
   font-size: 0.9rem;
   font-weight: 500;
+  color: #4a5568;
   font-family: 'MarinesBold', sans-serif;
   transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(98, 49, 203, 0.08);
 }
 
 .badge:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: #f8f4ff;
+  border-color: rgba(98, 49, 203, 0.2);
   transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(98, 49, 203, 0.15);
 }
 
 .badge-icon {
   font-size: 1rem;
 }
 
-/* 푸터 - 새로운 스타일 */
+/* 푸터 */
 .footer {
-  background: #0f0f0f;
-  color: white;
+  background: #f8fafc;
+  color: #4a5568;
   position: relative;
   z-index: 5;
+  border-top: 1px solid #e2e8f0;
 }
 
 .footer-content {
@@ -914,7 +924,7 @@ onUnmounted(() => {
 }
 
 .footer-tagline {
-  color: #9ca3af;
+  color: #6b7280;
   font-size: 1.1rem;
   margin-bottom: 24px;
   font-family: 'MarinesBold', sans-serif;
@@ -928,7 +938,8 @@ onUnmounted(() => {
 .social-link {
   width: 44px;
   height: 44px;
-  background: rgba(255, 255, 255, 0.1);
+  background: white;
+  border: 2px solid #e2e8f0;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -936,11 +947,13 @@ onUnmounted(() => {
   text-decoration: none;
   font-size: 1.2rem;
   transition: all 0.3s;
-  backdrop-filter: blur(10px);
+  color: #6b7280;
 }
 
 .social-link:hover {
-  background: rgba(98, 49, 203, 0.2);
+  background: #6231cb;
+  border-color: #6231cb;
+  color: white;
   transform: translateY(-2px);
 }
 
@@ -959,12 +972,12 @@ onUnmounted(() => {
   font-size: 1rem;
   font-weight: 700;
   margin-bottom: 8px;
-  color: white;
+  color: #1a1a1a;
   font-family: 'MarinesBold', sans-serif;
 }
 
 .link-group a {
-  color: #9ca3af;
+  color: #6b7280;
   text-decoration: none;
   font-size: 0.9rem;
   transition: color 0.2s;
@@ -972,11 +985,11 @@ onUnmounted(() => {
 }
 
 .link-group a:hover {
-  color: #fbbf24;
+  color: #6231cb;
 }
 
 .footer-bottom {
-  border-top: 1px solid #1f2937;
+  border-top: 1px solid #e2e8f0;
   padding: 24px 40px;
   text-align: center;
   max-width: 1200px;
@@ -999,6 +1012,15 @@ onUnmounted(() => {
   }
   60% {
     transform: translateY(-5px);
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg) scale(1.1);
   }
 }
 
@@ -1041,15 +1063,6 @@ onUnmounted(() => {
   100% {
     transform: translateX(0);
     opacity: 1;
-  }
-}
-
-@keyframes rocketFloat {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-15px) rotate(5deg);
   }
 }
 

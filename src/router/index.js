@@ -10,6 +10,15 @@ import PlanCreatePage from '../pages/PlanCreatePage.vue'
 import CreateBoard from '../pages/CreateBoard.vue'
 import BoardDetail from '../pages/BoardDetail.vue'
 import PlanDetailPage from '../pages/PlanDetailPage.vue'
+import JoinPlan from '../pages/JoinPlan.vue'
+
+// 쿠키에서 값 가져오기 헬퍼 함수
+const getCookieValue = (name) => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+};
 
 const routes = [
   {
@@ -70,8 +79,16 @@ const routes = [
     name: 'PlanDetail', 
     component: PlanDetailPage,
     props: true
+  },
+  // 초대 링크로 접속하는 페이지 추가
+  {
+    path: '/plan/join',
+    name: 'JoinPlan',
+    component: JoinPlan,
+    meta: {
+      requiresAuth: true  // 로그인 필요
+    }
   }
-
 ]
 
 const router = createRouter({
@@ -79,6 +96,26 @@ const router = createRouter({
   routes
 })
 
-
+// 네비게이션 가드 - 쿠키 기반 인증 확인
+router.beforeEach((to, from, next) => {
+  // JWT-TOKEN 쿠키 확인
+  const isAuthenticated = getCookieValue('JWT-TOKEN')
+  
+  console.log('Route Guard - To:', to.path)
+  console.log('Route Guard - Authenticated:', !!isAuthenticated)
+  console.log('Route Guard - Requires Auth:', to.meta.requiresAuth)
+  
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    // 로그인이 필요한 페이지인데 로그인이 안 되어 있으면
+    // 초대 코드를 쿼리 파라미터로 유지하면서 로그인 페이지로 리다이렉트
+    console.log('Redirecting to login with redirect:', to.fullPath)
+    next({
+      name: 'Login',
+      query: { redirect: to.fullPath }
+    })
+  } else {
+    next()
+  }
+})
 
 export default router
