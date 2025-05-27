@@ -4,77 +4,135 @@
     <main class="container main-content">
       <!-- 사용자 환영 메시지 -->
       <div class="welcome-section">
-        <h1 class="welcome-title">안녕하세요, <span class="highlight">{{ userNickname ? userNickname : userName }}</span>님!</h1>
+        <h1 class="welcome-title">
+          안녕하세요,
+          <span class="highlight">{{
+            userNickname ? userNickname : userName
+          }}</span
+          >님!
+        </h1>
         <p class="welcome-subtitle">여행 계획을 생성하거나 관리해보세요</p>
       </div>
-      
+
       <!-- 여행 계획이 없을 때 - 중앙 배치된 새 여행 추가 블록 -->
       <div v-if="!hasPlans && !isLoading" class="empty-state">
         <div class="empty-card" @click="goToCreate">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5V19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M5 12H19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 5V19"
+              stroke="white"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M5 12H19"
+              stroke="white"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
           <span class="create-text">새 여행</span>
         </div>
-        <p class="empty-text">아직 여행 일정이 없습니다. 첫 여행을 계획해보세요!</p>
+        <p class="empty-text">
+          아직 여행 일정이 없습니다. 첫 여행을 계획해보세요!
+        </p>
       </div>
-      
+
       <!-- 여행 계획 목록 (로딩 중 상태) -->
       <div v-if="isLoading" class="loading-state">
         <div class="loading-spinner"></div>
         <p>여행 계획을 불러오는 중...</p>
       </div>
-      
+
       <!-- 여행 계획 목록 그리드 -->
       <div v-if="hasPlans && !isLoading" class="plans-grid">
         <!-- 여행 계획 카드들 -->
-        <div 
-          v-for="plan in plans" 
-          :key="plan.id" 
+        <div
+          v-for="plan in plans"
+          :key="plan.id"
           class="plan-card"
           @click="viewPlanDetails(plan.id)"
         >
           <div class="plan-image" @click.stop>
-            <img :src="plan.thumbnail || defaultPlanImage" alt="여행 이미지">
+            <img :src="plan.thumbnail || defaultPlanImage" alt="여행 이미지" />
             <!-- 이미지 수정 버튼 (호버 시에만 표시) -->
             <div class="image-edit-overlay">
-              <button 
+              <button
                 @click="openImageEdit(plan)"
                 class="image-edit-btn"
                 title="이미지 변경"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"
+                    fill="currentColor"
+                  />
                 </svg>
               </button>
             </div>
           </div>
           <div class="plan-info">
             <h3>{{ plan.title }}</h3>
-            <p class="plan-date">{{ formatDate(plan.startDate) }} - {{ formatDate(plan.endDate) }}</p>
+            <p class="plan-date">
+              {{ formatDate(plan.startDate) }} - {{ formatDate(plan.endDate) }}
+            </p>
             <p class="plan-location">{{ getCityName(plan.cityName) }}</p>
             <div class="plan-meta">
               <span class="member-count">인원: {{ plan.memberCount }}명</span>
-              <span class="visibility-badge" :class="{ 'private': !plan.isPublic }">
-                {{ plan.isPublic ? '공개' : '비공개' }}
+              <span
+                class="visibility-badge"
+                :class="{ private: !plan.isPublic }"
+              >
+                {{ plan.isPublic ? "공개" : "비공개" }}
               </span>
             </div>
           </div>
         </div>
-        
+
         <!-- 새 여행 추가 카드 -->
         <div class="plan-card add-card" @click="goToCreate">
           <div class="add-icon">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 5V19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M5 12H19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 5V19"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M5 12H19"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
           </div>
           <p class="add-text">새로 여행을 추가해보세요</p>
         </div>
       </div>
-      
+
       <!-- 오류 메시지 -->
       <div v-if="apiError" class="error-container">
         <div class="error-content">
@@ -91,15 +149,30 @@
       <div v-if="showProfileModal" class="modal-overlay">
         <div class="profile-modal">
           <div class="modal-icon">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#8e6ad9" strokeWidth="2"/>
-              <path d="M12 16V12" stroke="#8e6ad9" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="12" cy="8" r="1" fill="#8e6ad9"/>
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                stroke="#8e6ad9"
+                strokeWidth="2"
+              />
+              <path
+                d="M12 16V12"
+                stroke="#8e6ad9"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <circle cx="12" cy="8" r="1" fill="#8e6ad9" />
             </svg>
           </div>
           <h3 class="modal-title">개인 정보를 설정하시겠어요?</h3>
           <div class="modal-description">
-            나이와 성별을 설정하시면<br>
+            나이와 성별을 설정하시면<br />
             더 정확한 AI 맞춤 여행 추천을 받으실 수 있습니다.
           </div>
           <div class="modal-buttons">
@@ -114,7 +187,11 @@
       </div>
 
       <!-- 이미지 수정 모달 -->
-      <div v-if="showImageEditModal" class="modal-overlay" @click="closeImageEdit">
+      <div
+        v-if="showImageEditModal"
+        class="modal-overlay"
+        @click="closeImageEdit"
+      >
         <div class="image-edit-modal" @click.stop>
           <div class="modal-header">
             <h3>여행 이미지 변경</h3>
@@ -122,46 +199,72 @@
           </div>
           <div class="modal-body">
             <div class="current-image">
-              <img :src="selectedPlan?.thumbnail || defaultPlanImage" alt="현재 이미지">
+              <img
+                :src="selectedPlan?.thumbnail || defaultPlanImage"
+                alt="현재 이미지"
+              />
               <p class="image-label">현재 이미지</p>
             </div>
-            
+
             <div class="image-upload-section">
-              <input 
+              <input
                 ref="fileInput"
-                type="file" 
-                accept="image/*" 
+                type="file"
+                accept="image/*"
                 @change="handleImageSelect"
                 style="display: none"
-              >
-              <button 
-                @click="$refs.fileInput.click()"
-                class="upload-button"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <polyline points="7,10 12,15 17,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              />
+              <button @click="$refs.fileInput.click()" class="upload-button">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <polyline
+                    points="7,10 12,15 17,10"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <line
+                    x1="12"
+                    y1="15"
+                    x2="12"
+                    y2="3"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
                 </svg>
                 새 이미지 선택
               </button>
-              
+
               <!-- 미리보기 -->
               <div v-if="previewImage" class="preview-section">
-                <img :src="previewImage" alt="미리보기">
+                <img :src="previewImage" alt="미리보기" />
                 <p class="image-label">미리보기</p>
               </div>
             </div>
           </div>
-          
+
           <div class="modal-footer">
             <button @click="closeImageEdit" class="cancel-button">취소</button>
-            <button 
-              @click="updatePlanImage" 
+            <button
+              @click="updatePlanImage"
               :disabled="!previewImage || isUpdating"
               class="save-button"
             >
-              {{ isUpdating ? '저장 중...' : '저장' }}
+              {{ isUpdating ? "저장 중..." : "저장" }}
             </button>
           </div>
         </div>
@@ -171,13 +274,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { useRouter } from 'vue-router';
-import AppHeader from '@/components/common/AppHeader.vue';
-import { useAuth } from '../composables/userAuth';
-import axios from 'axios';
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { useRouter } from "vue-router";
+import AppHeader from "@/components/common/AppHeader.vue";
+import { useAuth } from "../composables/userAuth";
+import axios from "axios";
 // 디폴트 이미지 import
-import defaultPlanImage from '@/assets/images/default_plan.png';
+import defaultPlanImage from "@/assets/images/default_plan.png";
 
 const router = useRouter();
 
@@ -186,7 +289,14 @@ const showProfileModal = ref(false);
 const userAge = ref(null);
 
 // 인증 컴포저블 사용
-const { loggedIn, userName, userNickname, checkLoginStatus, logout, goToLogin } = useAuth()
+const {
+  loggedIn,
+  userName,
+  userNickname,
+  checkLoginStatus,
+  logout,
+  goToLogin,
+} = useAuth();
 
 // 반응형 상태 정의
 const isScrolled = ref(false);
@@ -194,7 +304,7 @@ const isLoading = ref(true);
 const hasPlans = ref(false);
 const plans = ref([]);
 const apiError = ref(false);
-const apiErrorMessage = ref('');
+const apiErrorMessage = ref("");
 
 // 이미지 수정 관련 상태들
 const showImageEditModal = ref(false);
@@ -204,24 +314,24 @@ const selectedFile = ref(null);
 const isUpdating = ref(false);
 
 // API URL
-const API_URL = 'http://localhost:8080/api/v1/plans';
+const API_URL = "http://localhost:8080/api/v1/plans";
 
 // 사용자 정보 가져오기
 const fetchUserInfo = async () => {
   try {
-    const response = await axios.get('http://localhost:8080/api/v1/users/me', {
+    const response = await axios.get("http://localhost:8080/api/v1/users/me", {
       withCredentials: true,
       headers: {
-        'Accept': 'application/json'
-      }
+        Accept: "application/json",
+      },
     });
-    
+
     if (response.data) {
       userAge.value = response.data.age || 0;
-      console.log('사용자 나이:', userAge.value);
+      console.log("사용자 나이:", userAge.value);
     }
   } catch (error) {
-    console.error('사용자 정보를 불러오는 중 오류 발생:', error);
+    console.error("사용자 정보를 불러오는 중 오류 발생:", error);
   }
 };
 
@@ -232,20 +342,20 @@ const goToCreate = async () => {
     showProfileModal.value = true;
   } else {
     // 바로 생성 페이지로 이동
-    router.push('/create-plan');
+    router.push("/create-plan");
   }
 };
 
 // 계속해서 생성 페이지로 이동
 const continueToCreate = () => {
   showProfileModal.value = false;
-  router.push('/create-plan');
+  router.push("/create-plan");
 };
 
 // 프로필 페이지로 이동
 const goToProfile = () => {
   showProfileModal.value = false;
-  router.push('/profile');
+  router.push("/profile");
 };
 
 // 여행 상세보기 페이지로 이동 (수정됨)
@@ -275,18 +385,18 @@ const handleImageSelect = (event) => {
   if (file) {
     // 파일 크기 검증 (5MB 제한)
     if (file.size > 5 * 1024 * 1024) {
-      alert('파일 크기는 5MB 이하로 선택해주세요.');
+      alert("파일 크기는 5MB 이하로 선택해주세요.");
       return;
     }
-    
+
     // 파일 타입 검증
-    if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 선택할 수 있습니다.');
+    if (!file.type.startsWith("image/")) {
+      alert("이미지 파일만 선택할 수 있습니다.");
       return;
     }
-    
+
     selectedFile.value = file;
-    
+
     // 미리보기 생성
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -299,13 +409,13 @@ const handleImageSelect = (event) => {
 // 이미지 업데이트 (실제 API 호출)
 const updatePlanImage = async () => {
   if (!selectedFile.value || !selectedPlan.value) return;
-  
+
   isUpdating.value = true;
-  
+
   try {
     const formData = new FormData();
-    formData.append('image', selectedFile.value);
-    
+    formData.append("image", selectedFile.value);
+
     // API 호출 (실제 엔드포인트에 맞게 수정 필요)
     const response = await axios.put(
       `${API_URL}/${selectedPlan.value.id}/image`,
@@ -313,25 +423,27 @@ const updatePlanImage = async () => {
       {
         withCredentials: true,
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       }
     );
-    
+
     // 성공 시 로컬 상태 업데이트
-    const planIndex = plans.value.findIndex(p => p.id === selectedPlan.value.id);
+    const planIndex = plans.value.findIndex(
+      (p) => p.id === selectedPlan.value.id
+    );
     if (planIndex !== -1) {
-      plans.value[planIndex].thumbnail = response.data.thumbnailUrl || previewImage.value;
+      plans.value[planIndex].thumbnail =
+        response.data.thumbnailUrl || previewImage.value;
     }
-    
+
     closeImageEdit();
-    
+
     // 성공 메시지 (선택사항)
-    console.log('이미지가 성공적으로 업데이트되었습니다.');
-    
+    console.log("이미지가 성공적으로 업데이트되었습니다.");
   } catch (error) {
-    console.error('이미지 업데이트 중 오류 발생:', error);
-    alert('이미지 업데이트에 실패했습니다. 다시 시도해주세요.');
+    console.error("이미지 업데이트 중 오류 발생:", error);
+    alert("이미지 업데이트에 실패했습니다. 다시 시도해주세요.");
   } finally {
     isUpdating.value = false;
   }
@@ -344,86 +456,86 @@ const handleScroll = () => {
 
 // 날짜 형식 변환 함수
 const formatDate = (dateString) => {
-  if (!dateString) return '날짜 미정';
+  if (!dateString) return "날짜 미정";
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '날짜 형식 오류';
-    return date.toLocaleDateString('ko-KR', { 
-      year: 'numeric', 
-      month: '2-digit', 
-      day: '2-digit'
+    if (isNaN(date.getTime())) return "날짜 형식 오류";
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   } catch (error) {
-    console.error('날짜 변환 오류:', error);
-    return '날짜 형식 오류';
+    console.error("날짜 변환 오류:", error);
+    return "날짜 형식 오류";
   }
 };
 
 const getCityName = (cityId) => {
   const cityMap = {
-    1: '서울',
-    2: '부산',
-    3: '제주',
-    4: '강릉',
-    5: '경주',
-    6: '전주',
-    7: '속초',
-    8: '여수',
-    9: '수원',
-    10: '인천',
-    11: '대구',
-    12: '대전',
-    13: '광주',
-    14: '울산',
-    15: '안동',
-    16: '양양',
-    17: '고성',
-    18: '가평',
-    19: '순천',
-    20: '남해',
-    21: '목포',
-    22: '천안',
-    23: '보성',
-    24: '포항',
-    25: '무주'
-    
+    1: "서울",
+    2: "부산",
+    3: "제주",
+    4: "강릉",
+    5: "경주",
+    6: "전주",
+    7: "속초",
+    8: "여수",
+    9: "수원",
+    10: "인천",
+    11: "대구",
+    12: "대전",
+    13: "광주",
+    14: "울산",
+    15: "안동",
+    16: "양양",
+    17: "고성",
+    18: "가평",
+    19: "순천",
+    20: "남해",
+    21: "목포",
+    22: "천안",
+    23: "보성",
+    24: "포항",
+    25: "무주",
   };
-  return cityMap[cityId] || '알 수 없는 지역';
+  return cityMap[cityId] || "알 수 없는 지역";
 };
 
 // 여행 계획 데이터 가져오기
 const fetchPlans = async () => {
-  console.log('여행 계획 가져오기 시작');
+  console.log("여행 계획 가져오기 시작");
   isLoading.value = true;
   apiError.value = false;
-  
+
   try {
     const response = await axios.get(API_URL, {
       withCredentials: true,
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
     });
-    
-    console.log('API 응답 받음:', response);
-    
+
+    console.log("API 응답 받음:", response);
+
     // 데이터 받아오기 성공
     if (response.data && Array.isArray(response.data)) {
       plans.value = response.data;
       hasPlans.value = plans.value.length > 0;
-      console.log('받아온 여행 계획 데이터:', plans.value);
+      console.log("받아온 여행 계획 데이터:", plans.value);
     } else {
-      console.warn('API 응답이 배열이 아닙니다:', response.data);
-      throw new Error('잘못된 데이터 형식');
+      console.warn("API 응답이 배열이 아닙니다:", response.data);
+      throw new Error("잘못된 데이터 형식");
     }
   } catch (error) {
-    console.error('여행 계획을 불러오는 중 오류 발생:', error);
+    console.error("여행 계획을 불러오는 중 오류 발생:", error);
     apiError.value = true;
-    apiErrorMessage.value = '데이터를 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.';
+    apiErrorMessage.value =
+      "데이터를 불러오는 중 오류가 발생했습니다. 다시 시도해주세요.";
 
     if (error.response?.status === 401) {
-      apiErrorMessage.value = '인증이 필요합니다. 다시 로그인해주세요.';
+      apiErrorMessage.value = "인증이 필요합니다. 다시 로그인해주세요.";
     }
   } finally {
     isLoading.value = false;
@@ -435,12 +547,12 @@ onMounted(async () => {
   await checkLoginStatus();
   await fetchUserInfo();
   await fetchPlans();
-  window.addEventListener('scroll', handleScroll);
+  window.addEventListener("scroll", handleScroll);
 });
 
 // 컴포넌트 언마운트 시 이벤트 리스너 제거
 onBeforeUnmount(() => {
-  window.removeEventListener('scroll', handleScroll);
+  window.removeEventListener("scroll", handleScroll);
 });
 </script>
 
@@ -534,21 +646,25 @@ onBeforeUnmount(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* 여행 계획 그리드 */
 .plans-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px;
+  gap: 28px;
 }
 
 .plan-card {
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   background-color: white;
@@ -657,7 +773,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background-color: #f7f2ff;
-  height: 276px;
+  min-height: 276px;
   border: 2px dashed #a78bfa;
 }
 
@@ -966,7 +1082,7 @@ onBeforeUnmount(() => {
 .error-content h3 {
   margin: 0 0 0.5rem 0;
   color: #2d3748;
-  font-family: 'Marines', 'Pretendard', sans-serif;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .error-message {
@@ -990,7 +1106,7 @@ onBeforeUnmount(() => {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Marines', 'Pretendard', sans-serif;
+  font-family: "Marines", "Pretendard", sans-serif;
 }
 
 .retry-button:hover {
@@ -1009,27 +1125,29 @@ onBeforeUnmount(() => {
   }
 
   .plans-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 24px;
+    align-items: stretch;
   }
 
   .image-edit-modal {
     width: 95%;
     max-height: 90vh;
   }
-  
+
   .modal-header,
   .modal-body,
   .modal-footer {
     padding: 1rem;
   }
-  
+
   .current-image img,
   .preview-section img {
     width: 160px;
     height: 96px;
   }
-  
+
   .modal-footer {
     flex-direction: column;
   }

@@ -998,17 +998,22 @@ onBeforeUnmount(() => {
 });
 
 </script>
-
 <style scoped>
 
 /* 폰트 정의 */
 @font-face { 
   font-family: 'MarinesBold'; 
   src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2502-1@1.0/MarinesBold.woff2') format('woff2'); 
-  font-weight: 700;
+  font-weight: 400; /* 700 → 400 */
   font-style: normal; 
 }
 
+@font-face { 
+  font-family: 'HakgyoansimAllimjangTTF-B'; 
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-5@1.0/HakgyoansimAllimjangTTF-B.woff2') format('woff2'); 
+  font-weight: 300; /* 400 → 300 */
+  font-style: normal; 
+}
 
 /* 드래그 핸들 스타일 */
 .drag-handle {
@@ -1062,9 +1067,6 @@ onBeforeUnmount(() => {
   transition: all 0.1s;
 }
 
-
-
-
 /* 기본 스타일 */
 * {
   box-sizing: border-box;
@@ -1078,6 +1080,7 @@ onBeforeUnmount(() => {
   font-family: 'MarinesBold', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   color: #333;
   padding-top: 60px;
+  font-weight: 300; /* 전체적으로 얇게 */
 }
 
 .page-container {
@@ -1109,7 +1112,7 @@ onBeforeUnmount(() => {
 
 .logo-text {
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 400; /* 700 → 400 */
   color: #8e6ad9;
 }
 
@@ -1142,7 +1145,7 @@ onBeforeUnmount(() => {
 
 .page-title {
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 400; /* 700 → 400 */
   margin-bottom: 8px;
   color: #333;
   font-family: 'MarinesBold', sans-serif;
@@ -1156,6 +1159,7 @@ onBeforeUnmount(() => {
   font-size: 16px;
   color: #666;
   font-family: 'MarinesBold', sans-serif;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 /* 메인 콘텐츠 영역 */
@@ -1224,7 +1228,7 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   background-color: #ddd;
   color: white;
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
   font-size: 13px;
   display: flex;
   align-items: center;
@@ -1248,15 +1252,16 @@ onBeforeUnmount(() => {
   font-size: 12px;
   color: #888;
   transition: all 0.3s;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .step.active .step-label {
   color: #8e6ad9;
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
 }
 
 .step.current .step-label {
-  font-weight: 600;
+  font-weight: 400; /* 600 → 400 */
 }
 
 /* 단계별 폼 컨테이너 */
@@ -1284,7 +1289,7 @@ onBeforeUnmount(() => {
 
 .section-title {
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 400; /* 600 → 400 */
   margin: 0 0 20px 0;
   color: #333;
   padding-bottom: 12px;
@@ -1295,6 +1300,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
   color: #666;
   margin: -15px 0 20px;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 /* 폼 요소 */
@@ -1316,13 +1322,13 @@ onBeforeUnmount(() => {
   display: block;
   margin-bottom: 8px;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
   color: #444;
 }
 
 .form-input {
   width: 100%;
-  padding: 12px 15px; /* height: 220px 제거 */
+  padding: 12px 15px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 15px;
@@ -1337,19 +1343,20 @@ onBeforeUnmount(() => {
   border-color: #8e6ad9;
   box-shadow: 0 0 0 2px rgba(142, 106, 217, 0.1);
 }
+
 .form-textarea {
   width: 100%;
   height: 220px;
   padding: 16px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  font-size: 15px; /* 10px에서 15px로 다시 조정 - 너무 작을 수 있어요 */
+  font-size: 15px;
   line-height: 1.6;
   resize: none;
   background-color: #fcfcfc;
   transition: all 0.2s;
   font-family: 'HakgyoansimAllimjangTTF-B', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-weight: 300; /* 얇은 굵기로 설정 */
+  font-weight: 300;
 }
 
 /* 읽기 전용 입력 필드 */
@@ -1426,7 +1433,7 @@ onBeforeUnmount(() => {
 }
 
 .duration-text {
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
   font-size: 14px;
 }
 
@@ -1473,7 +1480,7 @@ onBeforeUnmount(() => {
 
 .count-value {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
   color: #333;
   min-width: 40px;
   text-align: center;
@@ -1533,7 +1540,7 @@ onBeforeUnmount(() => {
 }
 
 .preference-btn span {
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
   color: #555;
 }
 
@@ -1572,7 +1579,7 @@ onBeforeUnmount(() => {
   padding-right: 35px;
   text-align: center;
   font-size: 18px;
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
 }
 
 .age-unit {
@@ -1582,12 +1589,14 @@ onBeforeUnmount(() => {
   transform: translateY(-50%);
   color: #888;
   font-size: 14px;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .age-separator {
   font-size: 24px;
   color: #888;
   margin: 0 5px;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .age-graph-container {
@@ -1599,28 +1608,13 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
-.age-graph-bar {
-  height: 8px;
-  background-color: #eee;
-  border-radius: 4px;
-  position: relative;
-  margin-bottom: 10px;
-}
-
-.age-graph-fill {
-  position: absolute;
-  height: 100%;
-  background: linear-gradient(135deg, #8e6ad9, #a78bfa);
-  border-radius: 4px;
-  transition: all 0.3s;
-}
-
 .age-labels {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
   color: #888;
   padding: 0 2px;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .age-presets {
@@ -1639,6 +1633,7 @@ onBeforeUnmount(() => {
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .age-preset-btn:hover {
@@ -1664,31 +1659,12 @@ onBeforeUnmount(() => {
   transform: translateY(-50%);
   color: #555;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
   pointer-events: none;
 }
 
 .detail-input-container {
   position: relative;
-}
-
-.form-textarea {
-  width: 100%;
-  height: 220px;
-  padding: 16px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 15px;
-  line-height: 1.6;
-  resize: none;
-  background-color: #fcfcfc;
-  transition: all 0.2s;
-}
-
-.form-textarea:focus {
-  outline: none;
-  border-color: #8e6ad9;
-  box-shadow: 0 0 0 2px rgba(142, 106, 217, 0.1);
 }
 
 .textarea-tools {
@@ -1700,6 +1676,7 @@ onBeforeUnmount(() => {
 .character-count {
   font-size: 13px;
   color: #888;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .character-count.warning {
@@ -1742,6 +1719,7 @@ onBeforeUnmount(() => {
   color: #666;
   font-size: 15px;
   margin-bottom: 10px;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .create-plan-btn {
@@ -1754,7 +1732,7 @@ onBeforeUnmount(() => {
   border: none;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
   cursor: pointer;
   transition: all 0.2s;
   margin-top: 10px;
@@ -1815,7 +1793,7 @@ onBeforeUnmount(() => {
 
 .plan-title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 400; /* 600 → 400 */
   color: #333;
   margin: 0;
   padding-right: 30px;
@@ -1828,6 +1806,7 @@ onBeforeUnmount(() => {
   padding: 3px 8px;
   border-radius: 4px;
   white-space: nowrap;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .plan-content {
@@ -1863,6 +1842,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   font-size: 14px;
   color: #555;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .info-icon {
@@ -1878,13 +1858,14 @@ onBeforeUnmount(() => {
 }
 
 .info-label {
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
   color: #666;
   min-width: 70px;
 }
 
 .info-value {
   color: #333;
+  font-weight: 300; /* 기본값보다 얇게 */
 }
 
 .plan-select-indicator {
@@ -1909,7 +1890,7 @@ onBeforeUnmount(() => {
   padding: 12px 20px;
   border-radius: 8px;
   font-size: 15px;
-  font-weight: 500;
+  font-weight: 400; /* 500 → 400 */
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -1991,6 +1972,59 @@ onBeforeUnmount(() => {
   transform: translateY(10px);
 }
 
+/* 성공 토스트 */
+.success-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 100;
+  max-width: 400px;
+}
+
+.toast-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.toast-content {
+  flex: 1;
+}
+
+.toast-title {
+  font-size: 1rem;
+  font-weight: 400; /* 600 → 400 */
+  margin-bottom: 0.25rem;
+}
+
+.toast-subtitle {
+  font-size: 0.875rem;
+  opacity: 0.9;
+  font-weight: 300; /* 기본값보다 얇게 */
+}
+
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.4s ease;
+}
+
+.toast-enter-from {
+  opacity: 0;
+  transform: translateX(100%) scale(0.8);
+}
+
+.toast-leave-to {
+  opacity: 0;
+  transform: translateX(100%) scale(0.8);
+}
+
 /* 반응형 스타일 */
 @media (max-width: 768px) {
   .page-container {
@@ -2031,73 +2065,5 @@ onBeforeUnmount(() => {
     display: none;
   }
 }
-
-@font-face { 
-  font-family: 'HakgyoansimAllimjangTTF-B'; 
-  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-5@1.0/HakgyoansimAllimjangTTF-B.woff2') format('woff2'); 
-  font-weight: 400; /* 700에서 400으로 변경 */
-  font-style: normal; 
-}
-
-
-.success-toast {
-  position: fixed;
-  top: 100px;
-  right: 20px;
-  background: linear-gradient(135deg, 
-#10b981 0%, 
-#059669 100%);
-  color: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  z-index: 100;
-  max-width: 400px;
-}
-.toast-icon {
-  font-size: 2rem;
-  flex-shrink: 0;
-}
-.toast-content {
-  flex: 1;
-}
-.toast-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-.toast-subtitle {
-  font-size: 0.875rem;
-  opacity: 0.9;
-}
-
-.toast-enter-active,
-.toast-leave-active {
-  transition: all 0.4s ease;
-}
-.toast-enter-from {
-  opacity: 0;
-  transform: translateX(100%) scale(0.8);
-}
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(100%) scale(0.8);
-}
-  .success-toast {
-    right: 10px;
-    left: 10px;
-    top: 80px;
-  }
- .toast-title {
-    font-size: 0.875rem;
-  }
-
-  .toast-subtitle {
-    font-size: 0.75rem;
-  }
-
 
 </style>

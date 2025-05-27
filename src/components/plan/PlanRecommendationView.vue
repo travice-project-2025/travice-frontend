@@ -129,7 +129,7 @@ const getTransportEmoji = (transportType) => {
 .recommendation-view {
   width: 100%;
   min-height: calc(100vh - 60px);
-  background-color: #f9fafb;
+  background-color: #fafafa;
   padding: 1rem;
 }
 
@@ -147,7 +147,7 @@ const getTransportEmoji = (transportType) => {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f4f6;
-  border-top: 4px solid #a78bda;
+  border-top: 4px solid #c4b5fd;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -158,7 +158,7 @@ const getTransportEmoji = (transportType) => {
 }
 
 .loading-container p {
-  color: #4b5563;
+  color: #6b7280;
   font-size: 1rem;
   font-weight: 500;
 }
@@ -172,41 +172,65 @@ const getTransportEmoji = (transportType) => {
 
 .recommendation-content {
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(196, 181, 253, 0.08);
   overflow: hidden;
+  border: 1px solid rgba(196, 181, 253, 0.15);
 }
 
-/* 헤더 스타일 */
+/* 헤더 스타일 - 매우 연한 보라 */
 .recommendation-header {
   text-align: center;
-  padding: 2rem;
-  background: linear-gradient(135deg, #a78bda 0%, #8e6ad9 100%);
-  color: white;
+  padding: 2.5rem 2rem;
+  background: linear-gradient(135deg, #f3f0ff 0%, #e9e5ff 100%);
+  color: #374151;
+  position: relative;
 }
 
 .recommendation-header h2 {
   margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.6rem;
+  font-weight: 700;
   font-family: 'Marines', 'Pretendard', sans-serif;
+  color: #1f2937;
 }
 
 .recommendation-header p {
   margin: 0;
-  opacity: 0.9;
-  font-size: 0.95rem;
+  color: #6b7280;
+  font-size: 1rem;
 }
 
 .days-container {
-  padding: 2rem;
+  padding: 2.5rem;
   max-height: 60vh;
   overflow-y: auto;
+  background: linear-gradient(135deg, #f8f6ff 0%, #f3f0ff 100%);
 }
 
-/* 각 날짜 계획 스타일 */
+/* 각 날짜 계획 스타일 - 경계 강화 */
 .day-plan {
-  margin-bottom: 2rem;
+  margin-bottom: 3rem;
+  background: linear-gradient(135deg, #ffffff 0%, #fefeff 100%);
+  border-radius: 20px;
+  padding: 2.5rem;
+  border: 2px solid rgba(139, 92, 246, 0.12);
+  box-shadow: 
+    0 4px 20px rgba(139, 92, 246, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  position: relative;
+}
+
+.day-plan::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #c4b5fd 0%, #ddd6fe 50%, #c4b5fd 100%);
+  border-radius: 20px 20px 0 0;
 }
 
 .day-plan:last-child {
@@ -215,40 +239,40 @@ const getTransportEmoji = (transportType) => {
 
 .day-title {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  margin-top: -0.5rem;
 }
 
 .day-number {
   display: inline-block;
-  background: linear-gradient(135deg, #a78bda 0%, #8e6ad9 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
   color: white;
-  padding: 0.5rem 1.5rem;
-  border-radius: 25px;
+  padding: 0.75rem 2rem;
+  border-radius: 30px;
   font-size: 1.1rem;
-  font-weight: 600;
+  font-weight: 700;
   font-family: 'Marines', 'Pretendard', sans-serif;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* 장소 리스트 */
-.places-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* 장소 카드 스타일 */
+/* 장소 카드 스타일 - 더 뚜렷한 구분 */
 .place-card {
-  background: #f8fafc;
+  background: #fafafa;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  padding: 1.5rem;
-  transition: all 0.3s ease;
-  margin-bottom: 0.5rem;
+  padding: 1.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 0.75rem;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .place-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.3);
+  background: white;
 }
 
 .place-info {
@@ -257,14 +281,15 @@ const getTransportEmoji = (transportType) => {
   gap: 0.75rem;
 }
 
+/* 시간 태그 - 연한 보라 */
 .place-time {
   align-self: flex-start;
-  background: #a78bda;
-  color: white;
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  background: #c4b5fd;
+  color: #4c1d95;
+  padding: 0.5rem 1.25rem;
+  border-radius: 25px;
+  font-size: 0.875rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -276,9 +301,9 @@ const getTransportEmoji = (transportType) => {
 
 .place-name {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #2d3748;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #111827;
   font-family: 'Marines', 'Pretendard', sans-serif;
   flex-shrink: 0;
   min-width: 120px;
@@ -286,9 +311,9 @@ const getTransportEmoji = (transportType) => {
 
 .place-activity {
   margin: 0;
-  color: #4a5568;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  color: #4b5563;
+  font-size: 0.95rem;
+  line-height: 1.5;
   flex: 1;
 }
 
@@ -310,7 +335,7 @@ const getTransportEmoji = (transportType) => {
   transform: translateX(-50%);
   width: 2px;
   height: 20px;
-  background: linear-gradient(to bottom, #e2e8f0, #a0aec0);
+  background: linear-gradient(to bottom, #f3f4f6, #d1d5db);
 }
 
 .transport-info::before {
@@ -326,12 +351,12 @@ const getTransportEmoji = (transportType) => {
   align-items: center;
   gap: 0.75rem;
   background: white;
-  padding: 0.75rem 1.25rem;
-  border-radius: 25px;
-  font-size: 0.85rem;
-  color: #4a5568;
-  border: 2px solid #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 0.875rem 1.5rem;
+  border-radius: 30px;
+  font-size: 0.875rem;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   position: relative;
   z-index: 1;
 }
@@ -342,25 +367,25 @@ const getTransportEmoji = (transportType) => {
 
 .transport-type {
   font-weight: 600;
-  color: #2d3748;
+  color: #374151;
 }
 
 .transport-duration {
-  color: #718096;
+  color: #6b7280;
   font-weight: 500;
 }
 
 .transport-arrow {
   font-size: 1.2rem;
-  color: #a0aec0;
+  color: #d1d5db;
   font-weight: bold;
 }
 
 /* 액션 버튼 컨테이너 */
 .action-buttons-container {
-  padding: 2rem;
-  background: #f7fafc;
-  border-top: 1px solid #e2e8f0;
+  padding: 2.5rem;
+  background: #fafafa;
+  border-top: 1px solid #f3f4f6;
 }
 
 .action-buttons {
@@ -390,26 +415,28 @@ const getTransportEmoji = (transportType) => {
 }
 
 .back-button {
-  background: #f7fafc;
-  color: #4a5568;
-  border: 2px solid #e2e8f0;
+  background: white;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
 }
 
 .back-button:hover {
-  background: #edf2f7;
-  border-color: #cbd5e0;
+  background: #f9fafb;
+  border-color: #d1d5db;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .proceed-button {
-  background: linear-gradient(135deg, #a78bda 0%, #8e6ad9 100%);
-  color: white;
+  background: linear-gradient(135deg, #c4b5fd 0%, #ddd6fe 100%);
+  color: #4c1d95;
+  font-weight: 700;
 }
 
 .proceed-button:hover {
-  background: linear-gradient(135deg, #9979d5 0%, #7c5dd0 100%);
+  background: linear-gradient(135deg, #a78bfa 0%, #c4b5fd 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(167, 139, 218, 0.3);
+  box-shadow: 0 4px 12px rgba(196, 181, 253, 0.3);
 }
 
 /* 다음 단계 안내 */
@@ -422,10 +449,10 @@ const getTransportEmoji = (transportType) => {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #f9eeff 0%, #fde6ff 100%);
-  border-radius: 12px;
-  border: 1px solid #f2d9ff;
+  padding: 1.75rem;
+  background: #fef7ff;
+  border-radius: 16px;
+  border: 1px solid #f3e8ff;
 }
 
 .info-icon {
@@ -435,14 +462,14 @@ const getTransportEmoji = (transportType) => {
 }
 
 .info-text {
-  font-size: 0.875rem;
-  line-height: 1.5;
-  color: #92400e;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #6b7280;
 }
 
 .info-text strong {
-  color: #78350f;
-  font-weight: 600;
+  color: #374151;
+  font-weight: 700;
 }
 
 /* 데이터 없음 스타일 */
@@ -458,8 +485,9 @@ const getTransportEmoji = (transportType) => {
   background: white;
   padding: 3rem;
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   max-width: 400px;
+  border: 1px solid #f3f4f6;
 }
 
 .no-data-icon {
@@ -469,13 +497,13 @@ const getTransportEmoji = (transportType) => {
 
 .no-data-content h3 {
   margin: 0 0 0.5rem 0;
-  color: #2d3748;
+  color: #111827;
   font-family: 'Marines', 'Pretendard', sans-serif;
 }
 
 .no-data-content p {
   margin: 0 0 2rem 0;
-  color: #718096;
+  color: #6b7280;
 }
 
 .no-data-content .action-buttons {
@@ -568,17 +596,17 @@ const getTransportEmoji = (transportType) => {
 }
 
 .days-container::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f9fafb;
   border-radius: 3px;
 }
 
 .days-container::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d1d5db;
   border-radius: 3px;
 }
 
 .days-container::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #9ca3af;
 }
 
 /* 애니메이션 효과 */

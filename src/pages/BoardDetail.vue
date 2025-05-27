@@ -2759,12 +2759,13 @@ onBeforeUnmount(() => {
   }
 }
 
-/* 성공 토스트 */
 .success-toast {
   position: fixed;
-  top: 100px;
+  top: 20px;
   right: 20px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, 
+#10b981 0%, 
+#059669 100%);
   color: white;
   padding: 1.5rem;
   border-radius: 12px;
@@ -2812,20 +2813,5 @@ onBeforeUnmount(() => {
   opacity: 0;
   transform: translateX(100%) scale(0.8);
 }
-
-
-  .success-toast {
-    right: 10px;
-    left: 10px;
-    top: 80px;
-  }
-
- .toast-title {
-    font-size: 0.875rem;
-  }
-  
-  .toast-subtitle {
-    font-size: 0.75rem;
-  }
 
 </style>

@@ -65,7 +65,7 @@
 
           <div v-if="tripDuration > 0" class="trip-duration">
             총 <span class="duration-highlight">{{ tripDuration }}</span
-            >일 여행입니다
+            >박 <span class="duration-highlight">{{ tripDuration+1 }}</span> 일 여행입니다
           </div>
         </div>
 
@@ -1271,7 +1271,7 @@ onMounted(() => {
 
 /* 최종 확인 단계 */
 .summary-container {
-  max-width: 560px;
+  max-width: 590px;
   margin: 0 auto 35px;
 }
 

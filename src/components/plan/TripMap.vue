@@ -14,7 +14,28 @@
       <p>실제 경로를 계산하는 중...</p>
     </div>
     
-    
+    <div class="map-controls">
+      <!-- 지도 경계 초기화 버튼 -->
+      <button @click="resetMapBounds" class="map-control-button" title="모든 장소 보기">
+        <svg class="control-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+        </svg>
+      </button>
+      
+      <!-- 경로 표시/숨기기 버튼 -->
+      <button @click="togglePolyline" class="map-control-button" title="경로 표시/숨기기">
+        <svg v-if="showPolyline" class="control-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464M9.878 9.878l-.889-.889M14.12 14.12l.889.889M14.12 14.12L15.535 15.535"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"/>
+        </svg>
+        <svg v-else class="control-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        </svg>
+      </button>
+      
+
+    </div>
   </div>
 </template>
 
@@ -53,108 +74,103 @@ export default {
     const TMAP_API_KEY = 'qsI32FHZYl6EcWCdt3Pa26bLC74LlTQO1tcYMS00'; // 실제 API 키로 교체
     const TMAP_BASE_URL = 'https://apis.openapi.sk.com/tmap';
 
-    // ... (기존 initMap, createMap, createCustomMarker 함수들 유지)
+    // 지도 초기화
+    const initMap = async () => {
+      if (!window.kakao || !window.kakao.maps) {
+        console.log("카카오맵 API 로딩 중...");
 
-// TripMap.vue의 script 부분에 추가할 함수들
-
-// 지도 초기화
-const initMap = async () => {
-  if (!window.kakao || !window.kakao.maps) {
-    console.log("카카오맵 API 로딩 중...");
-
-    try {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=68e8b97d381d75363cc6b9be98056de8&libraries=services&autoload=false`;
-        script.onload = () => {
-          window.kakao.maps.load(() => {
-            console.log("카카오맵 API 로드 완료");
-            createMap();
-            resolve();
+        try {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=68e8b97d381d75363cc6b9be98056de8&libraries=services&autoload=false`;
+            script.onload = () => {
+              window.kakao.maps.load(() => {
+                console.log("카카오맵 API 로드 완료");
+                createMap();
+                resolve();
+              });
+            };
+            script.onerror = (e) => {
+              console.error("카카오맵 API 로드 실패", e);
+              reject(new Error("카카오맵 API 로드 실패"));
+            };
+            document.head.appendChild(script);
           });
-        };
-        script.onerror = (e) => {
-          console.error("카카오맵 API 로드 실패", e);
-          reject(new Error("카카오맵 API 로드 실패"));
-        };
-        document.head.appendChild(script);
-      });
-    } catch (error) {
-      console.error("카카오맵 API 로드 오류:", error);
-      mapContainer.value.innerHTML =
-        '<div class="map-placeholder">카카오맵 API를 불러오는 중 오류가 발생했습니다</div>';
-      return;
-    }
-  } else {
-    createMap();
-  }
-};
-
-// 지도 생성 함수
-const createMap = () => {
-  try {
-    const mapOptions = {
-      center: new window.kakao.maps.LatLng(33.4, 126.5),
-      level: 9,
+        } catch (error) {
+          console.error("카카오맵 API 로드 오류:", error);
+          mapContainer.value.innerHTML =
+            '<div class="map-placeholder">카카오맵 API를 불러오는 중 오류가 발생했습니다</div>';
+          return;
+        }
+      } else {
+        createMap();
+      }
     };
 
-    map = new window.kakao.maps.Map(mapContainer.value, mapOptions);
-    mapLoaded.value = true;
-    updateMapMarkers();
-  } catch (error) {
-    console.error("지도 초기화 오류:", error);
-    mapContainer.value.innerHTML =
-      '<div class="map-placeholder">지도를 불러오는 중 오류가 발생했습니다</div>';
-  }
-};
+    // 지도 생성 함수
+    const createMap = () => {
+      try {
+        const mapOptions = {
+          center: new window.kakao.maps.LatLng(33.4, 126.5),
+          level: 9,
+        };
 
-// 커스텀 마커 HTML 생성
-const createCustomMarker = (number, isActive = false) => {
-  return `
-    <div class="custom-marker ${isActive ? 'active' : ''}">
-      <div class="marker-pin">
-        <div class="marker-number">${number}</div>
-        <div class="marker-point"></div>
-      </div>
-    </div>
-  `;
-};
+        map = new window.kakao.maps.Map(mapContainer.value, mapOptions);
+        mapLoaded.value = true;
+        updateMapMarkers();
+      } catch (error) {
+        console.error("지도 초기화 오류:", error);
+        mapContainer.value.innerHTML =
+          '<div class="map-placeholder">지도를 불러오는 중 오류가 발생했습니다</div>';
+      }
+    };
 
-// 모든 인포윈도우 닫기
-const closeAllInfoWindows = () => {
-  // 기존에 열린 인포윈도우들을 추적하여 닫을 수 있도록 개선 필요
-};
+    // 커스텀 마커 HTML 생성
+    const createCustomMarker = (number, isActive = false) => {
+      return `
+        <div class="custom-marker ${isActive ? 'active' : ''}">
+          <div class="marker-pin">
+            <div class="marker-number">${number}</div>
+            <div class="marker-point"></div>
+          </div>
+        </div>
+      `;
+    };
 
-// 지도 경계 초기화
-const resetMapBounds = () => {
-  if (!map || props.places.length === 0) return;
+    // 모든 인포윈도우 닫기
+    const closeAllInfoWindows = () => {
+      // 기존에 열린 인포윈도우들을 추적하여 닫을 수 있도록 개선 필요
+    };
 
-  const bounds = new window.kakao.maps.LatLngBounds();
-  props.places.forEach(place => {
-    if (place.latitude && place.longitude) {
-      bounds.extend(new window.kakao.maps.LatLng(place.latitude, place.longitude));
-    }
-  });
+    // 지도 경계 초기화
+    const resetMapBounds = () => {
+      if (!map || props.places.length === 0) return;
 
-  map.setBounds(bounds);
-  
-  if (props.places.length === 1) {
-    map.setLevel(3);
-  }
-};
+      const bounds = new window.kakao.maps.LatLngBounds();
+      props.places.forEach(place => {
+        if (place.latitude && place.longitude) {
+          bounds.extend(new window.kakao.maps.LatLng(place.latitude, place.longitude));
+        }
+      });
 
-// 경로 표시/숨기기 토글
-const togglePolyline = () => {
-  showPolyline.value = !showPolyline.value;
-  updateMapMarkers();
-};
+      map.setBounds(bounds);
+      
+      if (props.places.length === 1) {
+        map.setLevel(3);
+      }
+    };
 
-// 시간 포맷팅
-const formatTime = (timeStr) => {
-  if (!timeStr) return "";
-  return timeStr.substring(0, 5);
-};
+    // 경로 표시/숨기기 토글
+    const togglePolyline = () => {
+      showPolyline.value = !showPolyline.value;
+      updateMapMarkers();
+    };
 
+    // 시간 포맷팅
+    const formatTime = (timeStr) => {
+      if (!timeStr) return "";
+      return timeStr.substring(0, 5);
+    };
 
     // T map 경로 탐색 함수들
     const getCarRoute = async (startLat, startLon, endLat, endLon) => {
@@ -383,7 +399,7 @@ const formatTime = (timeStr) => {
       // 지도 경계 설정용 객체
       const bounds = new window.kakao.maps.LatLngBounds();
 
-      // 마커 생성 (기존 코드와 동일)
+      // 마커 생성
       props.places.forEach((place, index) => {
         if (!place.latitude || !place.longitude) return;
 
@@ -403,7 +419,7 @@ const formatTime = (timeStr) => {
         customOverlay.setMap(map);
         overlays.push(customOverlay);
 
-        // 인포윈도우 생성 (기존 코드와 동일)
+        // 인포윈도우 생성
         const infoContent = `
           <div class="map-info-window">
             <div class="info-header">
@@ -486,21 +502,11 @@ const formatTime = (timeStr) => {
       }
     };
 
-    // 경로 타입 전환 함수
-    const changeRouteType = async (newType) => {
-      if (props.routeType !== newType) {
-        // 부모 컴포넌트에서 prop을 변경해야 함
-        // 또는 emit으로 이벤트 전달
-        await updateMapMarkers();
-      }
-    };
-
-    // ... (기존 함수들 유지: closeAllInfoWindows, resetMapBounds, togglePolyline, formatTime)
-
     // places prop 또는 관련 설정 변경 시 지도 업데이트
     watch(
       [() => props.places, () => props.showRealRoutes, () => props.routeType],
       () => {
+        console.log('Places changed:', props.places); // 디버깅용
         updateMapMarkers();
       },
       { deep: true }
@@ -514,15 +520,13 @@ const formatTime = (timeStr) => {
       mapContainer,
       mapLoaded,
       isLoadingRoutes,
+      showPolyline,
       resetMapBounds,
       togglePolyline,
-      changeRouteType,
     };
   },
 };
 </script>
-
-
 
 <style scoped>
 .trip-map-container {
@@ -539,7 +543,8 @@ const formatTime = (timeStr) => {
   height: 100%;
 }
 
-.map-loading {
+.map-loading,
+.route-loading {
   position: absolute;
   top: 0;
   left: 0;
@@ -549,8 +554,16 @@ const formatTime = (timeStr) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.8);
-  z-index: 2;
+  background-color: rgba(255, 255, 255, 0.9);
+  z-index: 1000;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.route-loading {
+  background-color: rgba(142, 106, 217, 0.1);
+  color: #8e6ad9;
+  font-weight: 500;
 }
 
 .loading-spinner {
@@ -561,6 +574,13 @@ const formatTime = (timeStr) => {
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;
+}
+
+.loading-spinner.small {
+  width: 24px;
+  height: 24px;
+  border-width: 2px;
+  margin-bottom: 0.5rem;
 }
 
 @keyframes spin {
@@ -589,7 +609,7 @@ const formatTime = (timeStr) => {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  z-index: 1;
+  z-index: 100;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -601,7 +621,7 @@ const formatTime = (timeStr) => {
   border-radius: 50%;
   background-color: white;
   border: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -611,14 +631,20 @@ const formatTime = (timeStr) => {
 
 .map-control-button:hover {
   background-color: #f9f7ff;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
+}
+
+.map-control-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .control-icon {
   width: 1.25rem;
   height: 1.25rem;
   color: #4b5563;
+  stroke-width: 2;
 }
 
 /* 커스텀 마커 스타일 */

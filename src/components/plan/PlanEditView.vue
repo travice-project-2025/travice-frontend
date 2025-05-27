@@ -123,13 +123,14 @@ const calculateTotalDays = computed(() => {
   return diffDays + 1 // 당일 포함
 })
 
-// 현재 일자에 해당하는 장소들 - 지도에 전달할 형태로 정리
+// 현재 일자에 해당하는 장소들 - 도착 시간 기준으로 정렬
 const currentDayPlaces = computed(() => {
   if (!localPlanData.value?.details) return []
   
   return localPlanData.value.details
     .filter(detail => detail.day === activeDay.value)
     .sort((a, b) => {
+      // 항상 도착 시간 기준으로 정렬
       const timeA = normalizeTime(a.arrivalTime)
       const timeB = normalizeTime(b.arrivalTime)
       return timeA.localeCompare(timeB)
@@ -169,22 +170,28 @@ const normalizeTime = (time) => {
 
 // 현재 일자의 장소들 업데이트
 const updateCurrentDayPlaces = (newPlaces) => {
+  console.log('updateCurrentDayPlaces 호출됨:', newPlaces);
   // 다른 날의 장소들 보존
   const otherDayPlaces = localPlanData.value.details.filter(
     detail => detail.day !== activeDay.value
-  )
+  );
   
   // 새로운 장소들을 현재 날짜로 설정 (day 속성 추가)
   const updatedPlaces = newPlaces.map(place => ({
     ...place,
     day: activeDay.value
-  }))
+  }));
+
+  const newDetails = [...otherDayPlaces, ...updatedPlaces];
   
   // 새로운 장소들과 합치기
-  localPlanData.value.details = [...otherDayPlaces, ...updatedPlaces]
+  localPlanData.value = {
+    ...localPlanData.value,
+    details: newDetails
+  };
   
   // 부모 컴포넌트에 변경사항 전달
-  emitUpdate()
+  emitUpdate();
 }
 
 // 장소 삭제
